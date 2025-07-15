@@ -13,7 +13,6 @@ dependencies = [
     "fsspec==2025.2.0",
     "pyproj",
     "xarray",
-    "s3fs==2025.5.1",             
     "zarr==2.18"
 ]
 [tool.setuptools.packages.find]
