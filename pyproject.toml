@@ -17,7 +17,6 @@ dependencies = [
     "s3fs==2025.5.1",
     "rioxarray"
 ]
-[tool.setuptools.packages.find]
-where = ["eoforeststac"]
-
+[tool.setuptools]
+packages = ["eoforeststac"]
 
