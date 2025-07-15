@@ -13,7 +13,8 @@ dependencies = [
     "fsspec==2025.2.0",
     "pyproj",
     "xarray",
-    "zarr==2.18"
+    "zarr==2.18",
+    "rioxarray"
 ]
 [tool.setuptools.packages.find]
 where = ["eoforeststac"]
