@@ -1,0 +1,31 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": [
+          "arn:aws:iam:::user/dog-oidc-besnard",
+          "arn:aws:iam:::user/dog-oidc-magnus",
+          "arn:aws:iam:::user/dog-oidc-stassin",
+          "arn:aws:iam:::user/dog-oidc-homa"
+        ]
+      },
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": "arn:aws:s3:::dog.atlaseo-glm.eo-gridded-data/*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": ["s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::dog.atlaseo-glm.eo-gridded-data",
+        "arn:aws:s3:::dog.atlaseo-glm.eo-gridded-data/*"
+      ]
+    }
+  ]
+}
