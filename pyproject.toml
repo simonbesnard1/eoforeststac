@@ -1,18 +1,20 @@
 [project]
-name = "foreststac"
+name = "eoforeststac"
 version = "0.1.0"
 description = "Python tools for generating STAC catalogs of forest EO data"
 authors = [{ name="Simon", email="you@example.com" }]
 license = "MIT"
 dependencies = [
-    "pystac",
+    "pystac==1.12.1",
     "stactools",
     "boto3",
     "rasterio",
-    "fsspec",
-    "pyproj"
+    "fsspec==2025.2.0",
+    "pyproj",
+    "xarray",
+    "s3fs"
 ]
 
 [tool.setuptools.packages.find]
-where = ["foreststac"]
+where = ["eoforeststac"]
 
