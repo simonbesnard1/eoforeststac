@@ -24,3 +24,11 @@ def create_netcdf_asset(href: str, title: str) -> pystac.Asset:
         title=title
     )
 
+def create_geotiff_asset(href: str, title: str, description: str) -> pystac.Asset:
+    return pystac.Asset(
+        href=href,
+        media_type=pystac.MediaType.GEOTIFF,
+        roles=["data"],
+        title=title,
+        description=description
+    )

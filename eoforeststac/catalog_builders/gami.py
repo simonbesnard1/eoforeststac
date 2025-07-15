@@ -1,7 +1,7 @@
 import pystac
 import datetime
-from foreststac.config import BASE_S3_URL
-from foreststac.assets import create_zarr_asset
+from eoforeststac.core.config import BASE_S3_URL
+from eoforeststac.core.assets import create_zarr_asset
 
 def create_gami_collection() -> pystac.Collection:
     return pystac.Collection(
