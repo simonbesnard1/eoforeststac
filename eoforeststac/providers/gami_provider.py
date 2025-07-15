@@ -2,7 +2,7 @@ import xarray as xr
 from eoforeststac.providers.base_provider import BaseProvider
 
 class GAMIProvider(BaseProvider):
-    def load_zarr(self, version: str) -> xr.Dataset:
+    def load_data(self, version: str) -> xr.Dataset:
         item_id = f"GAMI_v{version}"
         item = self.get_item("GAMI", item_id)
 
