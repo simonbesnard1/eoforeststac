@@ -6,7 +6,8 @@ import fsspec
 BASE_S3_URL = "s3://dog.atlaseo-glm.eo-gridded-data/collections"
 
 # 1️⃣ Configure the S3 File System
-s3_fs = fsspec.filesystem('s3', profile='atlaseo-glm', endpoint_url='https://s3.gfz-potsdam.de')
+s3_fs = fsspec.filesystem('s3', profile='atlaseo-glm', 
+                          endpoint_url='https://s3.gfz-potsdam.de')
 
 # 2️⃣ Custom STAC I/O Class for S3
 class S3StacIO(pystac.StacIO):
@@ -92,8 +93,8 @@ def create_gami_item(version: str):
     return item
 
 # Add Items to the Collection
-GAMI_collection.add_item(create_gami_item("2.1"))
-GAMI_collection.add_item(create_gami_item("2.0"))
+GAMI_collection.add_item(create_gami_item("3.0"))
+#GAMI_collection.add_item(create_gami_item("2.0"))
 
 # 6️⃣ Normalize HREFs and Save to S3
 catalog.normalize_hrefs(BASE_S3_URL)
