@@ -9,5 +9,8 @@ Created on Tue Jul 15 12:14:07 2025
 from eoforeststac.providers.gami_provider import GAMIProvider
 
 provider = GAMIProvider("s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json")
-ds = provider.load_data(version="2.1")
+ds = provider.load_data(version="3.1")
 print(ds)
+
+
+
