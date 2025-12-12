@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional, Dict
 
 from eoforeststac.writers.base import BaseZarrWriter
+from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 
 class CCI_BiomassWriter(BaseZarrWriter):
@@ -14,13 +15,12 @@ class CCI_BiomassWriter(BaseZarrWriter):
 
     def load_dataset(
         self,
-        input_zarr: str,
-        chunks: Dict[str, int] | None = None,
+        input_zarr: str
     ) -> xr.Dataset:
         """
         Load ESA CCI Biomass from an existing Zarr store.
         """
-        return xr.open_zarr(input_zarr, chunks=chunks)
+        return xr.open_zarr(input_zarr)
 
     def process_dataset(
         self,
@@ -28,6 +28,7 @@ class CCI_BiomassWriter(BaseZarrWriter):
         fill_value: int = -9999,
         crs: str = "EPSG:4326",
         version: str = "6.0",
+        chunks: dict | None = None,
     ) -> xr.Dataset:
 
         # --- Fill values and dtype ---
@@ -35,6 +36,10 @@ class CCI_BiomassWriter(BaseZarrWriter):
 
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
+        
+        # --- Chunking ---
+        if chunks is not None:
+            ds = ds.chunk(chunks)
 
         # --- Variable-level metadata ---
         if "aboveground_biomass" in ds:
@@ -69,8 +74,8 @@ class CCI_BiomassWriter(BaseZarrWriter):
                 "NERC EDS Centre for Environmental Data Analysis"
             ),
             "source_dataset": "doi:10.5285/95913ffb6467447ca72c4e9d8cf30501",
-            "created_by": "Simon Besnard",
-            "contact": "Simon Besnard (GFZ Potsdam)",
+            "created_by": "Santoro et al.",
+            "contact": "Maurizio Santoro (GAMMA RS)",
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "description": (
                 "Global forest aboveground biomass maps for 2007–2022 derived from "
@@ -100,10 +105,10 @@ class CCI_BiomassWriter(BaseZarrWriter):
         """
 
         if chunks is None:
-            chunks = {"time": -1, "latitude": 1000, "longitude": 1000}
+            chunks = {"time": -1, "latitude": 500, "longitude": 500}
 
         print("Loading dataset...")
-        ds = self.load_dataset(input_zarr, chunks=chunks)
+        ds = self.load_dataset(input_zarr)
 
         print("Processing dataset...")
         ds = self.process_dataset(
@@ -111,15 +116,16 @@ class CCI_BiomassWriter(BaseZarrWriter):
             fill_value=fill_value,
             crs=crs,
             version=version,
+            chunks = chunks
         )
-
-        print("Chunking...")
-        ds = ds.chunk(chunks)
-
+        
         encoding = {
-            var: {"chunks": (chunks["time"], chunks["latitude"], chunks["longitude"])}
-            for var in ds.data_vars
-        }
+                    var: {
+                        "chunks": ds[var].chunksize,
+                        "compressor": DEFAULT_COMPRESSOR,
+                    }
+                    for var in ds.data_vars
+                }
 
-        print("Writing Zarr to Ceph…")
+        print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

@@ -83,7 +83,7 @@ class TMFWriter(BaseZarrWriter):
         ds = self.process_dataset(ds)
 
         if chunks is None:
-            chunks = {"time": len(years), "y": 1000, "x": 1000}
+            chunks = {"time": -1, "y": 1000, "x": 1000}
 
         ds = ds.chunk(chunks)
 

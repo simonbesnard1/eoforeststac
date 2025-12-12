@@ -1,60 +1,114 @@
 import xarray as xr
+import rioxarray
 from datetime import datetime
+from typing import Dict, Optional
 
 from eoforeststac.writers.base import BaseZarrWriter
+from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 
 class PotapovHeightWriter(BaseZarrWriter):
     """
     Writer for global canopy height product (Potapov et al.).
 
-    Assumes a single global GeoTIFF, e.g.
-      canopy_height_potapov_2020.tif
+    Native input: single-band global GeoTIFF.
+    Output: chunked, compressed Zarr on Ceph/S3.
     """
 
-    def build_dataset(
+    # ------------------------------------------------------------------
+    # Load
+    # ------------------------------------------------------------------
+    def load_dataset(
         self,
         geotiff_path: str,
         var_name: str = "canopy_height",
     ) -> xr.Dataset:
-        da = xr.open_dataarray(geotiff_path, engine="rasterio")
-        if "band" in da.dims:
-            da = da.isel(band=0, drop=True)
-        da = da.rename(var_name)
-        ds = da.to_dataset(name=var_name)
-        return ds
+        """
+        Load GeoTIFF lazily and return a Dataset.
+        """
+        da = (
+            rioxarray.open_rasterio(geotiff_path)
+            .squeeze(drop=True)
+            .rename(var_name)
+        )
 
+        return da.to_dataset()
+
+    # ------------------------------------------------------------------
+    # Process
+    # ------------------------------------------------------------------
     def process_dataset(
         self,
         ds: xr.Dataset,
         fill_value: int = -9999,
         crs: str = "EPSG:4326",
         var_name: str = "canopy_height",
-        reference_year: int | None = 2020,
+        reference_year: Optional[int] = 2020,
+        chunks: Optional[Dict[str, int]] = None,
     ) -> xr.Dataset:
+        """
+        Apply fill values, CRS, chunking, and metadata harmonization.
+        """
+
+        # --- Fill values + dtype ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int16")
+
+        # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
+        
+        # ------------------------------------------------------------------
+        # Rename raster dimensions to geodetic ones
+        # ------------------------------------------------------------------
+        rename_dims = {}
+        if "x" in ds.dims:
+            rename_dims["x"] = "longitude"
+        if "y" in ds.dims:
+            rename_dims["y"] = "latitude"
+    
+        if rename_dims:
+            ds = ds.rename(rename_dims)
+    
+            # also rename coordinates explicitly if present
+            for old, new in rename_dims.items():
+                if old in ds.coords:
+                    ds = ds.rename({old: new})
 
-        ds[var_name].attrs.update({
-            "long_name": "Canopy top height",
-            "units": "m",
-            "grid_mapping": "crs",
-            "_FillValue": fill_value,
-        })
+        # --- Chunking ---
+        if chunks is not None:
+            ds = ds.chunk(chunks)
 
+        # --- Variable metadata ---
+        if var_name in ds:
+            ds[var_name].attrs.update({
+                "long_name": "Canopy top height",
+                "units": "m",
+                "grid_mapping": "crs",
+                "valid_min": 0,
+                "_FillValue": fill_value,
+            })
+
+        # --- Global metadata ---
         meta = {
-            "product_name": "Global Canopy Height (Potapov et al.)",
-            "created_by": "eoforeststac",
+            "title": "Global Canopy Height (Potapov et al.)",
+            "product_name": "Global Canopy Height",
+            "institution": "University of Maryland / GLAD",
+            "created_by": "Potapov et al.",
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "_FillValue": fill_value,
+            "spatial_resolution": "100 m",
             "crs": crs,
+            "_FillValue": fill_value,
         }
+
         if reference_year is not None:
             meta["reference_year"] = reference_year
 
         self.set_global_metadata(ds, meta)
+
         return ds
 
+    # ------------------------------------------------------------------
+    # Write
+    # ------------------------------------------------------------------
     def write(
         self,
         geotiff_path: str,
@@ -62,27 +116,41 @@ class PotapovHeightWriter(BaseZarrWriter):
         var_name: str = "canopy_height",
         fill_value: int = -9999,
         crs: str = "EPSG:4326",
-        chunks: dict | None = None,
-        reference_year: int | None = 2020,
+        chunks: Optional[Dict[str, int]] = None,
+        reference_year: Optional[int] = 2020,
     ) -> str:
-        ds = self.build_dataset(geotiff_path=geotiff_path, var_name=var_name)
+        """
+        End-to-end transform:
+            GeoTIFF → Dataset → harmonization → Zarr-on-Ceph
+        """
+
+        if chunks is None:
+            chunks = {"latitude": 1000, "longitude": 1000}
+
+        print("Loading dataset…")
+        ds = self.load_dataset(
+            geotiff_path,
+            var_name=var_name,
+        )
+
+        print("Processing dataset…")
         ds = self.process_dataset(
             ds,
             fill_value=fill_value,
             crs=crs,
             var_name=var_name,
             reference_year=reference_year,
+            chunks=chunks,
         )
 
-        if chunks is None:
-            # no time dim here: (y, x)
-            chunks = {"y": 1000, "x": 1000}
-
-        ds = ds.chunk(chunks)
-
+        # Zarr encoding derived from actual Dask chunks
         encoding = {
-            var: {"chunks": (chunks["y"], chunks["x"])}
+            var: {
+                "chunks": ds[var].chunksize,
+                "compressor": DEFAULT_COMPRESSOR,
+            }
             for var in ds.data_vars
         }
 
+        print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
