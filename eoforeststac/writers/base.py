@@ -18,17 +18,30 @@ class BaseZarrWriter:
         bucket: str,
         key: Optional[str] = None,
         secret: Optional[str] = None,
+        profile: Optional[str] = None,
         region: str = "eu-central-1",
+        anon: bool = False,
     ):
         self.bucket = bucket
         self.endpoint_url = endpoint_url
 
-        self.s3 = s3fs.S3FileSystem(
-            key=key,
-            secret=secret,
-            client_kwargs={"endpoint_url": endpoint_url, "region_name": region},
-        )
+        fs_kwargs = {
+            "client_kwargs": {
+                "endpoint_url": endpoint_url,
+                "region_name": region,
+            }
+        }
 
+        if anon:
+            fs_kwargs["anon"] = True
+        elif profile is not None:
+            fs_kwargs["profile"] = profile
+        else:
+            fs_kwargs["key"] = key
+            fs_kwargs["secret"] = secret
+
+        self.s3 = s3fs.S3FileSystem(**fs_kwargs)
+        
     # ---------- core helpers ----------
 
     def make_store(self, zarr_path: str):
