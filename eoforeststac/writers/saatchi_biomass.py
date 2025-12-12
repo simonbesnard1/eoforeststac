@@ -85,9 +85,11 @@ class SaatchiBiomassWriter(BaseZarrWriter):
                 "valid_min": 0,
                 "valid_max": 1000,
                 "_FillValue": fill_value,
+                "scale_factor": 0.1,
+                "add_offset": 0.0,
                 "source": "Saatchi et al. 2020 Harmonized Global Biomass dataset",
             })
-    
+
         # --- Global metadata ---
         meta = {
             "title": "Global Aboveground Biomass 2020 (Saatchi et al.)",
@@ -113,7 +115,6 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         self.set_global_metadata(ds, meta)
     
         return ds
-
 
     # ------------------------------------------------------------------
     # Write
