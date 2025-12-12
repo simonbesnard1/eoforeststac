@@ -41,7 +41,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "TMF": ["3.0"],
     "EFDA": ["1.0"],
     "POTAPOV_HEIGHT": ["1.0"],
-    "GAMI": ["2.1", '3.0', '3.1'],
+    "GAMI": ["2.0", "2.1", '3.0', '3.1'],
 }
 
 
