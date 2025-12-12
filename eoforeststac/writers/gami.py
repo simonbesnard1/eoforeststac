@@ -117,12 +117,17 @@ class GAMIWriter(BaseZarrWriter):
 
         # 🔑 Encoding derived from *actual* Dask chunks
         encoding = {
-            var: {
-                "chunks": ds[var].chunksize,
-                "compressor": DEFAULT_COMPRESSOR,
+                var: {
+                    "chunks": (
+                        chunks["latitude"],
+                        chunks["longitude"],
+                        chunks["time"],
+                    ),
+                    "compressor": DEFAULT_COMPRESSOR,
+                }
+                for var in ds.data_vars
             }
-            for var in ds.data_vars
-        }
+
 
         print("Writing Zarr to Ceph…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

@@ -120,12 +120,17 @@ class CCI_BiomassWriter(BaseZarrWriter):
         )
         
         encoding = {
-                    var: {
-                        "chunks": ds[var].chunksize,
-                        "compressor": DEFAULT_COMPRESSOR,
-                    }
-                    for var in ds.data_vars
+                var: {
+                    "chunks": (
+                        chunks["latitude"],
+                        chunks["longitude"],
+                        chunks["time"],
+                    ),
+                    "compressor": DEFAULT_COMPRESSOR,
                 }
+                for var in ds.data_vars
+            }
+
 
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
