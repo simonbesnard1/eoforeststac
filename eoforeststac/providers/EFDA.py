@@ -1,5 +1,5 @@
 import rioxarray as rxr
-from eoforeststac.providers.base_provider import BaseProvider
+from eoforeststac.providers.base import BaseProvider
 
 class EFDAProvider(BaseProvider):
     def _s3_to_https(self, s3_href: str) -> str:
