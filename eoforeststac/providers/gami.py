@@ -1,5 +1,5 @@
 import xarray as xr
-from eoforeststac.providers.base_provider import BaseProvider
+from eoforeststac.providers.base import BaseProvider
 
 class GAMIProvider(BaseProvider):
     def load_data(self, version: str) -> xr.Dataset:

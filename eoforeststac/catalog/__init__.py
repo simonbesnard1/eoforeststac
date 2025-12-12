@@ -1,5 +1,5 @@
 from .factory import create_collection, create_item
-from .root import create_root_catalog
+from .root import build_root_catalog
 
 from .cci_biomass import (
     create_cci_biomass_collection,
@@ -29,7 +29,7 @@ from .tmf import (
 __all__ = [
     "create_collection",
     "create_item",
-    "create_root_catalog",
+    "build_root_catalog",
     "create_cci_biomass_collection",
     "create_cci_biomass_item",
     "create_saatchi_biomass_collection",

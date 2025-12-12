@@ -40,7 +40,7 @@ from eoforeststac.writers.potapov_height import PotapovHeightWriter
 # -----------------------------------------------------------------------------
 # Catalog builders (collections + items)
 # -----------------------------------------------------------------------------
-from eoforeststac.catalog.root import create_root_catalog
+from eoforeststac.catalog.root import build_root_catalog
 from eoforeststac.catalog.factory import (
     create_collection,
     create_item,
@@ -78,7 +78,7 @@ __all__ = [
     "PotapovHeightWriter",
 
     # catalog builders
-    "create_root_catalog",
+    "build_root_catalog",
     "create_collection",
     "create_item",
 
@@ -86,4 +86,3 @@ __all__ = [
     "BASE_S3_URL",
     "S3_ENDPOINT_URL",
 ]
-
