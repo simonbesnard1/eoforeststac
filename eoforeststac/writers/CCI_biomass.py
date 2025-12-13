@@ -31,15 +31,22 @@ class CCI_BiomassWriter(BaseZarrWriter):
         chunks: dict | None = None,
     ) -> xr.Dataset:
 
-        # --- Fill values and dtype ---
-        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
-
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
         
         # --- Chunking ---
         if chunks is not None:
             ds = ds.chunk(chunks)
+            
+        # --- Zero → NaN → fill_value → dtype (SAFE) ---
+        for var in ds.data_vars:
+            ds[var] = (
+                ds[var]
+                .where(ds[var] != 0)
+            )
+                    
+        # --- Fill values and dtype ---
+        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
 
         # --- Variable-level metadata ---
         if "aboveground_biomass" in ds:
