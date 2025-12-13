@@ -25,13 +25,18 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         """
         Load GeoTIFF lazily and return a Dataset with variable name `agb`.
         """
+    
         da = (
-            rioxarray.open_rasterio(tif_path)
+            rioxarray.open_rasterio(
+                tif_path,
+                masked=True,       
+            )
             .squeeze(drop=True)
             .rename("agb")
         )
-
+    
         return da.to_dataset()
+
 
     # ------------------------------------------------------------------
     # Process
@@ -48,9 +53,6 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         Apply fill values, CRS, dimension harmonization, chunking,
         and metadata harmonization.
         """
-    
-        # --- Fill values + dtype ---
-        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
     
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
@@ -75,6 +77,9 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         # --- Chunking (after renaming!) ---
         if chunks is not None:
             ds = ds.chunk(chunks)
+            
+        # --- Fill values + dtype ---
+        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
     
         # --- Variable metadata ---
         if "agb" in ds:
