@@ -42,15 +42,15 @@ class GAMIWriter(BaseZarrWriter):
         and metadata.
         """
 
-        # --- Fill values and dtype ---
-        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int16")
-
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
 
         # --- Chunking ---
         if chunks is not None:
             ds = ds.chunk(chunks)
+        
+        # --- Fill values and dtype ---
+        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int16")
 
         # --- Variable-level metadata ---
         if "forest_age" in ds:

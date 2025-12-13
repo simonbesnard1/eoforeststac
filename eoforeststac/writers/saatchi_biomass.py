@@ -78,6 +78,13 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         if chunks is not None:
             ds = ds.chunk(chunks)
             
+        # --- Zero → NaN → fill_value → dtype (SAFE) ---
+        for var in ds.data_vars:
+            ds[var] = (
+                ds[var]
+                .where(ds[var] != 0)
+            )
+            
         # --- Fill values + dtype ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
     
