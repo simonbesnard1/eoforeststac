@@ -273,23 +273,15 @@ class EFDAWriter(BaseZarrWriter):
                 crs=crs,
             )
     
-            if i == 0:
-                print("EFDA: initializing Zarr (mode='w')")
-                ds_year.to_zarr(
-                    store=store,
-                    mode="w",
-                    encoding=encoding,
-                    consolidated=False,
-                )
-            else:
-                print("EFDA: appending along time (mode='a')")
-                ds_year.to_zarr(
-                    store=store,
-                    mode="a",
-                    append_dim="time",
-                    encoding=encoding,
-                    consolidated=False,  
-                )
+            encoding_kw = encoding if i == 0 else None
+
+            ds_year.to_zarr(
+                store=store,
+                mode="w" if i == 0 else "a",
+                append_dim=None if i == 0 else "time",
+                encoding=encoding_kw,
+                consolidated=False,
+            )
     
             # help GC on very large loops
             del ds_year
