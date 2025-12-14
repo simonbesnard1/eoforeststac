@@ -18,113 +18,109 @@ class EFDAWriter(BaseZarrWriter):
       - yearly disturbance agent GeoTIFFs
     Projection:
       - EPSG:3035 (LAEA Europe)
+
+    Output:
+      - a single Zarr store with variables:
+          efda_disturbance(time, latitude, longitude)
+          efda_agent(time, latitude, longitude)
+
+    Strategy:
+      - stream year-by-year and APPEND along time (no concat, no big lists)
     """
 
     # ------------------------------------------------------------------
-    # Load
+    # Low-level I/O
     # ------------------------------------------------------------------
-    def _open_year(
+    def _open_year_da(
         self,
         input_dir: str,
         year: int,
         pattern: str,
         var_name: str,
-        chunks: Dict[str, int],
+        chunks_xy: Dict[str, int],
     ) -> xr.DataArray:
         """
-        Load one yearly GeoTIFF lazily and attach time coordinate.
+        Open one yearly GeoTIFF lazily (dask-chunked) and return DataArray (y, x).
         """
         tif_path = Path(input_dir) / pattern.format(year=year)
 
         da = (
-            rioxarray.open_rasterio(tif_path, chunks=chunks)
-            .squeeze(drop=True)
-            .rename(var_name)
+            rioxarray.open_rasterio(
+                tif_path,
+                chunks={"y": chunks_xy["latitude"], "x": chunks_xy["longitude"]},
+            )
+            .squeeze(drop=True)               # drop band
+            .rename(var_name)                 # name variable
         )
 
-        da = da.assign_coords(time=np.datetime64(f"{year}-01-01"))
-        da = da.expand_dims("time")
-
+        # attach time coordinate but keep it as a length-1 time dimension
+        da = da.assign_coords(time=np.datetime64(f"{year}-01-01")).expand_dims("time")
         return da
 
-    def load_dataset(
+    def _standardize_xy_names(self, obj: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
+        """
+        Rename projected x/y dimensions to longitude/latitude (projected coords).
+        """
+        rename_dims = {}
+        if "x" in obj.dims:
+            rename_dims["x"] = "longitude"
+        if "y" in obj.dims:
+            rename_dims["y"] = "latitude"
+
+        if rename_dims:
+            obj = obj.rename(rename_dims)
+            # also rename coordinate variables if present
+            for old, new in rename_dims.items():
+                if old in obj.coords:
+                    obj = obj.rename({old: new})
+        return obj
+
+    # ------------------------------------------------------------------
+    # Per-year build + process
+    # ------------------------------------------------------------------
+    def build_year_dataset(
         self,
         mosaic_dir: str,
         agent_dir: str,
-        years: Sequence[int],
+        year: int,
         mosaic_pattern: str,
         agent_pattern: str,
+        crs: str,
         chunks: Dict[str, int],
+        dtype: str = "uint8",
     ) -> xr.Dataset:
         """
-        Load all EFDA yearly layers and concatenate along time.
+        Build a 1-year Dataset(time=1, latitude, longitude) containing both vars.
         """
+        # open both layers lazily + chunked
+        da_mosaic = self._open_year_da(
+            mosaic_dir, year, mosaic_pattern, "efda_disturbance", chunks_xy=chunks
+        )
+        da_agent = self._open_year_da(
+            agent_dir, year, agent_pattern, "efda_agent", chunks_xy=chunks
+        )
 
-        mosaics = [
-            self._open_year(
-                mosaic_dir,
-                int(year),
-                mosaic_pattern,
-                "efda_disturbance",
-                chunks,
-            )
-            for year in years
-        ]
+        # standardize dim names
+        da_mosaic = self._standardize_xy_names(da_mosaic)
+        da_agent  = self._standardize_xy_names(da_agent)
 
-        agents = [
-            self._open_year(
-                agent_dir,
-                int(year),
-                agent_pattern,
-                "efda_agent",
-                chunks,
-            )
-            for year in years
-        ]
-
-        return xr.Dataset(
+        ds = xr.Dataset(
             {
-                "efda_disturbance": xr.concat(mosaics, dim="time"),
-                "efda_agent": xr.concat(agents, dim="time"),
+                "efda_disturbance": da_mosaic,
+                "efda_agent": da_agent,
             }
         )
 
-    def process_dataset(
-        self,
-        ds: xr.Dataset,
-        fill_value: int = -9999,
-        crs: str = "EPSG:3035",
-        chunks: Optional[Dict[str, int]] = None,
-    ) -> xr.Dataset:
-        """
-        Apply fill values, CRS, coordinate harmonization,
-        chunking, and metadata.
-        """
-    
-        # --- Fill values + dtype ---
-        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int16")
-    
-        # --- CRS ---
+        # CRS (write to dataset once)
         ds = self.set_crs(ds, crs=crs)
-    
-        # ------------------------------------------------------------------
-        # Rename projected x/y to longitude/latitude (explicitly projected)
-        # ------------------------------------------------------------------
-        rename_dims = {}
-        if "x" in ds.dims:
-            rename_dims["x"] = "longitude"
-        if "y" in ds.dims:
-            rename_dims["y"] = "latitude"
-    
-        if rename_dims:
-            ds = ds.rename(rename_dims)
-    
-            # rename coordinates explicitly
-            for old, new in rename_dims.items():
-                if old in ds.coords:
-                    ds = ds.rename({old: new})
-    
-        # --- Coordinate metadata (VERY IMPORTANT) ---
+
+        # dtype (EFDA is categorical; keep small)
+        ds = ds.astype(dtype)
+
+        # chunk once more at dataset level (ensures alignment)
+        ds = ds.chunk({"time": 1, "latitude": chunks["latitude"], "longitude": chunks["longitude"]})
+
+        # coordinate attrs (projected LAEA meters)
         if "longitude" in ds.coords:
             ds["longitude"].attrs.update({
                 "long_name": "Projected x coordinate (LAEA Europe)",
@@ -132,7 +128,6 @@ class EFDAWriter(BaseZarrWriter):
                 "units": "m",
                 "axis": "X",
             })
-    
         if "latitude" in ds.coords:
             ds["latitude"].attrs.update({
                 "long_name": "Projected y coordinate (LAEA Europe)",
@@ -140,30 +135,32 @@ class EFDAWriter(BaseZarrWriter):
                 "units": "m",
                 "axis": "Y",
             })
-    
-        # --- Chunking (after renaming!) ---
-        if chunks is not None:
-            ds = ds.chunk(chunks)
-    
-        # --- Variable metadata ---
+
+        return ds
+
+    def add_metadata(
+        self,
+        ds: xr.Dataset,
+        _FillValue: int,
+        crs: str,
+    ) -> xr.Dataset:
+        """
+        Add variable + global metadata. (Does not force loading.)
+        """
         ds["efda_disturbance"].attrs.update({
             "long_name": "EFDA disturbance mosaic",
             "description": "Annual forest disturbance mosaic from EFDA.",
             "grid_mapping": "crs",
-            "_FillValue": fill_value,
+            "_FillValue": _FillValue,
         })
-    
+
         ds["efda_agent"].attrs.update({
             "long_name": "EFDA disturbance agent",
-            "description": (
-                "Disturbance agent classification "
-                "(e.g., wind, bark beetle, harvest)."
-            ),
+            "description": "Disturbance agent classification (e.g., wind, bark beetle, harvest).",
             "grid_mapping": "crs",
-            "_FillValue": fill_value,
+            "_FillValue": _FillValue,
         })
-    
-        # --- Global metadata ---
+
         meta = {
             "title": "European Forest Disturbance Atlas (EFDA)",
             "product_name": "European Forest Disturbance Atlas",
@@ -172,16 +169,39 @@ class EFDAWriter(BaseZarrWriter):
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "spatial_resolution": "100 m",
             "crs": crs,
-            "_FillValue": fill_value,
+            "_FillValue": _FillValue,
         }
-    
         self.set_global_metadata(ds, meta)
-    
         return ds
 
+    # ------------------------------------------------------------------
+    # Zarr encoding
+    # ------------------------------------------------------------------
+    def make_encoding(
+        self,
+        chunks: Dict[str, int],
+        _FillValue: int,
+        dtype: str,
+    ) -> Dict[str, Dict]:
+        """
+        Encoding must be tuples of ints in DIM ORDER.
+        We write variables as (time, latitude, longitude).
+        """
+        zchunks = (1, chunks["latitude"], chunks["longitude"])
+        return {
+            "efda_disturbance": {
+                "chunks": zchunks,
+                "compressor": DEFAULT_COMPRESSOR,
+                "dtype": np.dtype(dtype),
+            },
+            "efda_agent": {
+                "chunks": zchunks,
+                "compressor": DEFAULT_COMPRESSOR,
+            },
+        }
 
     # ------------------------------------------------------------------
-    # Write
+    # Main write (STREAM + APPEND)
     # ------------------------------------------------------------------
     def write(
         self,
@@ -191,46 +211,64 @@ class EFDAWriter(BaseZarrWriter):
         output_zarr: str,
         mosaic_pattern: str = "{year}_disturb_mosaic_v211_22_epsg3035.tif",
         agent_pattern: str = "{year}_disturb_agent_v211_reclass_compv211_epsg3035.tif",
-        fill_value: int = -9999,
+        crs: str = "EPSG:3035",
+        _FillValue: int = -9999,
         chunks: Optional[Dict[str, int]] = None,
+        dtype: str = "uint8",
+        consolidated: bool = False,
     ) -> str:
         """
-        End-to-end transform:
-            yearly GeoTIFFs → Dataset → harmonization → Zarr-on-Ceph
+        Stream yearly GeoTIFFs → append into one Zarr store along time.
+
+        Notes:
+          - Default _FillValue=0 is deliberate for EFDA categorical layers.
+          - If you *really* need -9999, use dtype=int16 and set _FillValue=-9999.
         """
+        years = [int(y) for y in years]
 
         if chunks is None:
-            chunks = {"time": len(years), "y": 1000, "x": 1000}
+            chunks = {"latitude": 1000, "longitude": 1000}
 
-        print("Loading EFDA dataset…")
-        ds = self.load_dataset(
-            mosaic_dir=mosaic_dir,
-            agent_dir=agent_dir,
-            years=years,
-            mosaic_pattern=mosaic_pattern,
-            agent_pattern=agent_pattern,
-            chunks={"y": chunks["y"], "x": chunks["x"]},
-        )
+        encoding = self.make_encoding(chunks=chunks, _FillValue=_FillValue, dtype=dtype)
 
-        print("Processing dataset…")
-        ds = self.process_dataset(
-            ds,
-            fill_value=fill_value,
-            chunks=chunks,
-        )
+        # s3 store
+        store = self.make_store(output_zarr)
 
-        # 🔑 Zarr encoding derived from actual Dask chunks
-        encoding = {
-                var: {
-                    "chunks": (
-                        chunks["latitude"],
-                        chunks["longitude"],
-                        chunks["time"],
-                    ),
-                    "compressor": DEFAULT_COMPRESSOR,
-                }
-                for var in ds.data_vars
-            }
+        # --- write first year (mode="w") then append (mode="a", append_dim="time")
+        for i, year in enumerate(years):
+            print(f"EFDA: processing {year} ({i+1}/{len(years)})")
 
-        print("Writing Zarr to Ceph/S3…")
-        return self.write_to_zarr(ds, output_zarr, encoding=encoding)
+            ds_year = self.build_year_dataset(
+                mosaic_dir=mosaic_dir,
+                agent_dir=agent_dir,
+                year=year,
+                mosaic_pattern=mosaic_pattern,
+                agent_pattern=agent_pattern,
+                crs=crs,
+                chunks=chunks,
+                dtype=dtype,
+            )
+
+            # metadata (safe; doesn’t load data)
+            ds_year = self.add_metadata(ds_year, _FillValue=_FillValue, crs=crs)
+
+            if i == 0:
+                print("EFDA: initializing Zarr (mode='w')")
+                ds_year.to_zarr(
+                    store=store,
+                    mode="w",
+                    encoding=encoding,
+                    consolidated=consolidated,
+                )
+            else:
+                print("EFDA: appending along time (mode='a', append_dim='time')")
+                ds_year.to_zarr(
+                    store=store,
+                    mode="a",
+                    append_dim="time",
+                    encoding=encoding,
+                    consolidated=consolidated,
+                )
+
+        print(f"EFDA: done → {output_zarr}")
+        return output_zarr
