@@ -201,7 +201,7 @@ class EFDAWriter(BaseZarrWriter):
         }
 
     # ------------------------------------------------------------------
-    # Main write (STREAM + APPEND)
+    # Main write (STREAM + APPEND + FINAL CONSOLIDATION)
     # ------------------------------------------------------------------
     def write(
         self,
@@ -212,32 +212,49 @@ class EFDAWriter(BaseZarrWriter):
         mosaic_pattern: str = "{year}_disturb_mosaic_v211_22_epsg3035.tif",
         agent_pattern: str = "{year}_disturb_agent_v211_reclass_compv211_epsg3035.tif",
         crs: str = "EPSG:3035",
-        _FillValue: int = -9999,
+        _FillValue: int = 0,
         chunks: Optional[Dict[str, int]] = None,
         dtype: str = "uint8",
-        consolidated: bool = False,
+        consolidate_at_end: bool = True,
     ) -> str:
         """
-        Stream yearly GeoTIFFs → append into one Zarr store along time.
-
+        Stream yearly EFDA GeoTIFFs into a single Zarr store along time.
+    
+        Design guarantees:
+          - constant memory usage
+          - safe append semantics
+          - explicit metadata consolidation (no silent failures)
+    
         Notes:
-          - Default _FillValue=0 is deliberate for EFDA categorical layers.
-          - If you *really* need -9999, use dtype=int16 and set _FillValue=-9999.
+          - Default _FillValue=0 is correct for EFDA categorical layers.
+          - For signed nodata, use dtype=int16 and _FillValue=-9999.
         """
+    
         years = [int(y) for y in years]
-
+    
         if chunks is None:
             chunks = {"latitude": 1000, "longitude": 1000}
-
-        encoding = self.make_encoding(chunks=chunks, _FillValue=_FillValue, dtype=dtype)
-
-        # s3 store
+    
+        # --------------------------------------------------------------
+        # Encoding (fixed, chunk-aligned, compressor-aware)
+        # --------------------------------------------------------------
+        encoding = self.make_encoding(
+            chunks=chunks,
+            _FillValue=_FillValue,
+            dtype=dtype,
+        )
+    
+        # --------------------------------------------------------------
+        # Zarr store (S3 / Ceph / FS)
+        # --------------------------------------------------------------
         store = self.make_store(output_zarr)
-
-        # --- write first year (mode="w") then append (mode="a", append_dim="time")
+    
+        # --------------------------------------------------------------
+        # STREAM: write year-by-year
+        # --------------------------------------------------------------
         for i, year in enumerate(years):
-            print(f"EFDA: processing {year} ({i+1}/{len(years)})")
-
+            print(f"EFDA: processing {year} ({i + 1}/{len(years)})")
+    
             ds_year = self.build_year_dataset(
                 mosaic_dir=mosaic_dir,
                 agent_dir=agent_dir,
@@ -248,27 +265,43 @@ class EFDAWriter(BaseZarrWriter):
                 chunks=chunks,
                 dtype=dtype,
             )
-
-            # metadata (safe; doesn’t load data)
-            ds_year = self.add_metadata(ds_year, _FillValue=_FillValue, crs=crs)
-
+    
+            # metadata only (no data touch)
+            ds_year = self.add_metadata(
+                ds_year,
+                _FillValue=_FillValue,
+                crs=crs,
+            )
+    
             if i == 0:
                 print("EFDA: initializing Zarr (mode='w')")
                 ds_year.to_zarr(
                     store=store,
                     mode="w",
                     encoding=encoding,
-                    consolidated=consolidated,
+                    consolidated=False,
                 )
             else:
-                print("EFDA: appending along time (mode='a', append_dim='time')")
+                print("EFDA: appending along time (mode='a')")
                 ds_year.to_zarr(
                     store=store,
                     mode="a",
                     append_dim="time",
                     encoding=encoding,
-                    consolidated=consolidated,
+                    consolidated=False,  
                 )
-
+    
+            # help GC on very large loops
+            del ds_year
+    
+        # --------------------------------------------------------------
+        # FINAL METADATA CONSOLIDATION (ONE TIME ONLY)
+        # --------------------------------------------------------------
+        if consolidate_at_end:
+            print("EFDA: consolidating Zarr metadata (.zmetadata)")
+            import zarr
+            zarr.consolidate_metadata(store)
+    
         print(f"EFDA: done → {output_zarr}")
         return output_zarr
+
