@@ -108,12 +108,11 @@ For any questions or inquiries, please contact:
 ## 🤝 Acknowledgements
 
 We acknowledge funding support by the European Union through the [FORWARDS](https://forwards-project.eu/) project. 
----
+
 
 ## 📄 License
 
 This project is licensed under the EUROPEAN UNION PUBLIC LICENCE v.1.2 License - see the LICENSE file for details.
----
 
 ## 🌍 Citation
 
