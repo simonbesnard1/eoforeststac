@@ -33,6 +33,11 @@ from eoforeststac.catalog.gami import (
     create_gami_item,
 )
 
+from eoforeststac.catalog.jrc_gfc import (
+    create_jrc_gfc_collection,
+    create_jrc_gfc_item,
+)
+
 
 # Optional: declare which versions you want to register as items
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
@@ -42,6 +47,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", '3.0', '3.1'],
+    "JRC_GFC2020": ["1.0", "2.0", "3.0"],
 }
 
 
@@ -114,7 +120,12 @@ def build_root_catalog(
     gami_col = create_gami_collection()
     catalog.add_child(gami_col)
     collections["GAMI"] = (gami_col, create_gami_item)
-
+    
+    # JRC_GFC
+    jrc_gfc_col = create_jrc_gfc_collection()
+    catalog.add_child(jrc_gfc_col)
+    collections["JRC_GFC2020"] = (jrc_gfc_col, create_jrc_gfc_item)
+    
     # ------------------------------------------------------------------
     # 3. Create items for each version (if specified)
     # ------------------------------------------------------------------
