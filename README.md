@@ -23,6 +23,7 @@ It provides a STAC-first interface to cloud-hosted, analysis-ready datasets
 ```bash
 pip install git+https://github.com/simonbesnard1/eoforeststac.git
 
+```
 
 ## 🔍 Explore the Catalog
 
