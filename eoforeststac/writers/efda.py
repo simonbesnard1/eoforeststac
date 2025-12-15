@@ -10,6 +10,7 @@ from typing import Dict, Optional, Sequence
 import numpy as np
 import rioxarray
 import xarray as xr
+import zarr
 
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 from eoforeststac.writers.base import BaseZarrWriter
@@ -47,13 +48,22 @@ class EFDAWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-    @staticmethod
-    def _strip_cf_serialization_attrs(ds: xr.Dataset) -> xr.Dataset:
-        """Remove CF serialization attrs that break append encoding."""
-        ds = ds.copy()
-        for v in ds.data_vars:
-            for k in _CF_SERIALIZATION_ATTRS:
-                ds[v].attrs.pop(k, None)
+    def _strip_cf_serialization_attrs(self, ds: xr.Dataset) -> xr.Dataset:
+        """
+        Remove CF/Zarr serialization-related attributes that must NOT
+        be present when appending to an existing Zarr store.
+        """
+        STRIP_KEYS = {
+            "_FillValue",
+            "missing_value",
+            "scale_factor",
+            "add_offset",
+        }
+    
+        for var in ds.data_vars:
+            for key in STRIP_KEYS:
+                ds[var].attrs.pop(key, None)
+    
         return ds
 
     @staticmethod
@@ -99,7 +109,7 @@ class EFDAWriter(BaseZarrWriter):
             )
             .squeeze(drop=True)
             .rename(var_name)
-        )
+        ).isel(x=slice(0, 100), y=slice(0, 100))
 
         # Attach time coordinate and keep it as length-1 dimension
         da = da.assign_coords(time=np.datetime64(f"{year}-01-01")).expand_dims("time")
@@ -169,7 +179,7 @@ class EFDAWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Metadata
     # ------------------------------------------------------------------
-    def add_metadata(self, ds: xr.Dataset, _FillValue: int, crs: str) -> xr.Dataset:
+    def add_metadata(self, ds: xr.Dataset, _FillValue: int, crs: str, version: str = "1.0") -> xr.Dataset:
         """
         Add variable + global metadata. (Does not compute/load data.)
         """
@@ -184,11 +194,11 @@ class EFDAWriter(BaseZarrWriter):
         if "efda_agent" in ds:
             ds["efda_agent"].attrs.update({
                 "long_name": "EFDA disturbance agent",
-                "description": "Disturbance agent classification (e.g., wind, bark beetle, harvest).",
+                "description": "The causal agents assigned are wind/bark beetle complex (1), fire (2), harvest (3) and mixed agents (4, where more than one agent occurred.",
                 "grid_mapping": "crs",
                 "_FillValue": _FillValue,
             })
-
+            
         meta = {
                 "title": "European Forest Disturbance Atlas (EFDA) v2.1.1",
                 "description": (
@@ -199,7 +209,7 @@ class EFDAWriter(BaseZarrWriter):
                     "European countries in EPSG:3035 (ETRS89 / LAEA Europe), capturing disturbance "
                     "patterns such as natural disturbances and harvest events."
                 ),
-                "version": "2.1.1",
+                "version": version,
                 "doi": "10.5281/zenodo.13333034",
                 "references": "Viana-Soto & Senf (2024) European Forest Disturbance Atlas; dataset available at https://doi.org/10.5281/zenodo.13333034",
                 "institution": "Technical University of Munich (Earth Observation for Ecosystem Management)",
@@ -216,32 +226,17 @@ class EFDAWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Zarr encoding
     # ------------------------------------------------------------------
-    def make_encoding(
-        self,
-        chunks: Dict[str, int],
-        _FillValue: int,
-        dtype: str,
-    ) -> Dict[str, Dict]:
-        """
-        Zarr encoding expects tuples of ints, in *dimension order*.
-        Here: (time, latitude, longitude) = (1, lat_chunk, lon_chunk)
-        """
+    def make_encoding(self, chunks: Dict[str, int]) -> Dict[str, Dict]:
         zchunks = (1, chunks["latitude"], chunks["longitude"])
-        dt = np.dtype(dtype)
-
-        # Note: set dtype for both variables for consistency
+    
         return {
             "efda_disturbance": {
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
-                "dtype": dt,
-                "_FillValue": _FillValue,
             },
             "efda_agent": {
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
-                "dtype": dt,
-                "_FillValue": _FillValue,
             },
         }
 
@@ -254,12 +249,13 @@ class EFDAWriter(BaseZarrWriter):
         agent_dir: str,
         years: Sequence[int],
         output_zarr: str,
+        version: str = "2.1.1",
         mosaic_pattern: str = "{year}_disturb_mosaic_v211_22_epsg3035.tif",
         agent_pattern: str = "{year}_disturb_agent_v211_reclass_compv211_epsg3035.tif",
         crs: str = "EPSG:3035",
-        _FillValue: int = -9999,
+        _FillValue: int = 0,
         chunks: Optional[Dict[str, int]] = None,
-        dtype: str = "uint32",
+        dtype: str = "uint8",
         consolidate_at_end: bool = True,
     ) -> str:
         """
@@ -275,14 +271,14 @@ class EFDAWriter(BaseZarrWriter):
             chunks = {"latitude": 1000, "longitude": 1000}
 
         # fixed encoding for initialization
-        encoding = self.make_encoding(chunks=chunks, _FillValue=_FillValue, dtype=dtype)
+        encoding = self.make_encoding(chunks=chunks)
 
         # store
         store = self.make_store(output_zarr)
 
         for i, year in enumerate(years):
             print(f"EFDA: processing {year} ({i + 1}/{len(years)})")
-
+        
             ds_year = self.build_year_dataset(
                 mosaic_dir=mosaic_dir,
                 agent_dir=agent_dir,
@@ -293,36 +289,25 @@ class EFDAWriter(BaseZarrWriter):
                 chunks=chunks,
                 dtype=dtype,
             )
-
-            ds_year = self.add_metadata(ds_year, _FillValue=_FillValue, crs=crs)
-
-            # Critical: prevent add_offset/scale_factor collisions on append
-            ds_year = self._strip_cf_serialization_attrs(ds_year)
-
-            if i == 0:
-                # Only the first write gets encoding; later appends must NOT provide it
-                print("EFDA: initializing Zarr (mode='w')")
-                ds_year.to_zarr(
-                    store=store,
-                    mode="w",
-                    encoding=encoding,
-                    consolidated=False,
-                )
-            else:
-                print("EFDA: appending along time (mode='a', append_dim='time')")
-                ds_year.to_zarr(
-                    store=store,
-                    mode="a",
-                    append_dim="time",
-                    consolidated=False,
-                )
-
+        
+            # Add human-readable metadata
+            ds_year = self.add_metadata(ds_year, _FillValue=_FillValue, crs=crs, version=version)
+        
+            if i > 0:
+                ds_year = self._strip_cf_serialization_attrs(ds_year)
+        
+            ds_year.to_zarr(
+                store=store,
+                mode="w" if i == 0 else "a",
+                append_dim=None if i == 0 else "time",
+                encoding=encoding if i == 0 else None,
+                consolidated=False,
+            )
+        
             del ds_year
             gc.collect()
 
         if consolidate_at_end:
-            print("EFDA: consolidating Zarr metadata (.zmetadata)")
-            import zarr
             zarr.consolidate_metadata(store)
 
         print(f"EFDA: done → {output_zarr}")
