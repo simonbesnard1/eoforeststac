@@ -38,6 +38,11 @@ from eoforeststac.catalog.jrc_gfc import (
     create_jrc_gfc_item,
 )
 
+from eoforeststac.catalog.robinson_cr import (
+    create_robinson_cr_collection,
+    create_robinson_cr_item,
+)
+
 
 # Optional: declare which versions you want to register as items
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
@@ -48,8 +53,8 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", '3.0', '3.1'],
     "JRC_GFC2020": ["1.0", "2.0", "3.0"],
+    "ROBINSON_CR": ["1.0"]   
 }
-
 
 def build_root_catalog(
     versions: Dict[str, List[str]] | None = None,
@@ -125,6 +130,11 @@ def build_root_catalog(
     jrc_gfc_col = create_jrc_gfc_collection()
     catalog.add_child(jrc_gfc_col)
     collections["JRC_GFC2020"] = (jrc_gfc_col, create_jrc_gfc_item)
+    
+    # ROBINSON_CR
+    robinson_cr_col = create_robinson_cr_collection()
+    catalog.add_child(robinson_cr_col)
+    collections["ROBINSON_CR"] = (robinson_cr_col, create_robinson_cr_item)
     
     # ------------------------------------------------------------------
     # 3. Create items for each version (if specified)
