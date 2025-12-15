@@ -161,7 +161,5 @@ class JRCGFC2020Writer(BaseZarrWriter):
             for var in ds.data_vars
         }
         
-        print(ds)
-
-        # print("Writing Zarr to Ceph/S3…")
-        # return self.write_to_zarr(ds, output_zarr, encoding=encoding)
+        print("Writing Zarr to Ceph/S3…")
+        return self.write_to_zarr(ds, output_zarr, encoding=encoding)
