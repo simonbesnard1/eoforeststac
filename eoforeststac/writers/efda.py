@@ -109,8 +109,8 @@ class EFDAWriter(BaseZarrWriter):
             )
             .squeeze(drop=True)
             .rename(var_name)
-        ).isel(x=slice(0, 100), y=slice(0, 100))
-
+        )
+        
         # Attach time coordinate and keep it as length-1 dimension
         da = da.assign_coords(time=np.datetime64(f"{year}-01-01")).expand_dims("time")
         return da
