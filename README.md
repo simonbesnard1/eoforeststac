@@ -1,7 +1,7 @@
 <p align="center">
 <a href="https://github.com/simonbesnard1/eoforeststac">
         <img src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/gediDB_logo.svg"
-         alt="gediDB Logo" height="200px" hspace="0px" vspace="30px" align="left">
+         alt="eoforeststac Logo" height="200px" hspace="0px" vspace="30px" align="left">
 </a>
 </p>
 
@@ -69,6 +69,12 @@ df
 For a complete and exhaustive overview of all available products, see  
 ➡️ **[CATALOG.md](CATALOG.md)**
 
+<p align="center">
+<a href="https://github.com/simonbesnard1/eoforeststac">
+        <img src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/images/data_catalog.png"
+         alt="data catalog" height="200px" hspace="0px" vspace="30px" align="left">
+</a>
+</p>
 
 ## 📥 Read Data
 
@@ -132,13 +138,10 @@ ds_sel = subset(
     time=("2007-01-01", "2020-12-31"),  # optional
 )
 ```
-Notes
+**Notes**
 
-If a dataset has no time dimension, the time filter is silently ignored.
-
-If a dataset contains ensemble members, they are reduced using the median by default.
-
-Exact geometry masking (mask=True) is optional; by default a fast bounding-box subset is applied.
+- If a dataset has **no time dimension**, the time filter is silently ignored.
+- Exact geometry masking (`mask=True`) is optional; by default a fast **bounding-box subset** is applied.
 
 
 ## 🔐 Data Access Modes
