@@ -1,4 +1,11 @@
-# eoforeststac: a forest EO data catalog.
+<p align="center">
+<a href="https://github.com/simonbesnard1/eoforeststac">
+        <img src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/gediDB_logo.svg"
+         alt="gediDB Logo" height="200px" hspace="0px" vspace="30px" align="left">
+</a>
+</p>
+
+# eoforeststac: A toolbox for accessing the GFZ forest EO data catalog.
 
 **eoforeststac** is a lightweight Python package for discovering and accessing
 forest Earth Observation (EO) datasets through **SpatioTemporal Asset Catalogs (STAC)**.
@@ -85,6 +92,54 @@ print(ds)
 
 
 ```
+
+### Spatial and temporal subsetting
+
+All datasets can be lazily subset in space and time using the built-in subsetting utilities.
+Geometries are always provided in EPSG:4326 and are automatically reprojected to the dataset CRS if needed.
+
+```python
+import geopandas as gpd
+from eoforeststac.providers.zarr import ZarrProvider
+from eoforeststac.providers.subset import subset
+
+```
+
+```python
+provider = ZarrProvider(
+    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+    endpoint_url="https://s3.gfz-potsdam.de",
+    anon=True,
+)
+
+ds = provider.open_dataset(
+    collection_id="CCI_BIOMASS",
+    version="6.0",
+)
+```
+Load a region of interest (any vector format supported by GeoPandas):
+
+```python
+roi = gpd.read_file("DE-Hai.geojson")
+geometry = roi.to_crs("EPSG:4326").geometry.union_all()
+```
+Subset the dataset in space and time:
+
+```python
+ds_sel = subset(
+    ds,
+    geometry=geometry,                 # geometry in EPSG:4326
+    time=("2007-01-01", "2020-12-31"),  # optional
+)
+```
+Notes
+
+If a dataset has no time dimension, the time filter is silently ignored.
+
+If a dataset contains ensemble members, they are reduced using the median by default.
+
+Exact geometry masking (mask=True) is optional; by default a fast bounding-box subset is applied.
+
 
 ## 🔐 Data Access Modes
 

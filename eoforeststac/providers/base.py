@@ -1,6 +1,7 @@
 import fsspec
 import pystac
 import json
+from typing import List
 
 class BaseProvider:
     def __init__(self, catalog_url: str, endpoint_url: str = "https://s3.gfz-potsdam.de", anon: bool = True):
@@ -41,3 +42,31 @@ class BaseProvider:
     def get_item(self, collection_id: str, item_id: str) -> pystac.Item:
         collection = self.get_collection(collection_id)
         return collection.get_item(item_id)
+    
+    # ------------------------------------------------------------------
+    # Catalog helpers
+    # ------------------------------------------------------------------
+
+    def list_collections(self) -> List[pystac.Collection]:
+        """
+        Return all collections in the catalog.
+        """
+        return list(self.catalog.get_children())
+
+    def list_collection_ids(self) -> List[str]:
+        """
+        Return all collection IDs in the catalog.
+        """
+        return [c.id for c in self.list_collections()]
+
+    def list_items(self, collection_id: str) -> List[pystac.Item]:
+        """
+        Return all items for a given collection.
+        """
+        collection = self.get_collection(collection_id)
+        if collection is None:
+            raise KeyError(
+                f"Collection '{collection_id}' not found.\n"
+                f"Available collections: {', '.join(self.list_collection_ids())}"
+            )
+        return list(collection.get_items())
