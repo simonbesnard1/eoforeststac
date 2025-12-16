@@ -66,23 +66,19 @@ df = disc.collections_table()
 df
 
 ```
-<table>
-  <tr>
-    <td style="vertical-align: middle; padding-right: 20px;">
-      For a complete and exhaustive overview of all available products, see  
-      ➡️ <strong><a href="CATALOG.md">CATALOG.md</a></strong>
-    </td>
-    <td>
-      <a href="https://github.com/simonbesnard1/eoforeststac">
-        <img
-          src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/images/data_catalog.png"
-          alt="Data catalog"
-          height="200"
-        >
-      </a>
-    </td>
-  </tr>
-</table>
+<a href="https://github.com/simonbesnard1/eoforeststac">
+  <img
+    src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/images/data_catalog.png"
+    alt="Data catalog"
+    height="200"
+    align="right"
+    style="margin-left: 20px;"
+  >
+</a>
+
+For a complete and exhaustive overview of all available products, see  
+➡️ **[CATALOG.md](CATALOG.md)**
+
 
 
 ## 📥 Read Data
