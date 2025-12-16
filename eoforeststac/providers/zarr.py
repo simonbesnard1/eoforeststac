@@ -18,47 +18,69 @@ class ZarrProvider(BaseProvider):
         asset_key: str = "zarr",
         variables: Optional[Sequence[str]] = None,
     ) -> xr.Dataset:
-        """
-        Open a Zarr dataset referenced by a STAC Item asset.
-
-        Parameters
-        ----------
-        collection_id : str
-            STAC collection ID (e.g. 'GAMI')
-        version : str
-            Dataset version (e.g. '3.1')
-        asset_key : str
-            Asset key pointing to the Zarr store (default: 'zarr')
-        variables : list[str], optional
-            Subset of variables to load
-        """
-
+    
         # ----------------------------------------------------------
-        # Derive item ID (single source of truth)
+        # 0. Collection existence check
+        # ----------------------------------------------------------
+        collection = self.get_collection(collection_id)
+    
+        if collection is None:
+            available = sorted(c.id for c in self.catalog.get_collections())
+            raise ValueError(
+                f"Collection '{collection_id}' not found. "
+                f"Available collections: {', '.join(available)}"
+            )
+    
+        # ----------------------------------------------------------
+        # 1. Derive item ID
         # ----------------------------------------------------------
         item_id = f"{collection_id}_v{version}"
-
-        item = self.get_item(collection_id, item_id)
-
-        if asset_key not in item.assets:
-            raise KeyError(
-                f"No asset '{asset_key}' found for item '{item_id}' "
-                f"in collection '{collection_id}'. "
-                f"Available assets: {list(item.assets.keys())}"
+    
+        item = collection.get_item(item_id)
+    
+        # ----------------------------------------------------------
+        # 2. Version existence check
+        # ----------------------------------------------------------
+        if item is None:
+            versions = sorted(
+                i.id.replace(f"{collection_id}_v", "")
+                for i in collection.get_items()
+                if i.id.startswith(f"{collection_id}_v")
             )
-
+    
+            if versions:
+                raise ValueError(
+                    f"Version '{version}' not found for collection '{collection_id}'. "
+                    f"Available versions: {', '.join(versions)}"
+                )
+            else:
+                raise ValueError(
+                    f"No versioned items found for collection '{collection_id}'."
+                )
+    
+        # ----------------------------------------------------------
+        # 3. Asset existence check
+        # ----------------------------------------------------------
+        if asset_key not in item.assets:
+            raise ValueError(
+                f"Asset '{asset_key}' not found for item '{item_id}'. "
+                f"Available assets: {', '.join(item.assets.keys())}"
+            )
+    
         href = item.assets[asset_key].href
         store = self.s3_fs.get_mapper(href)
-
+    
         # ----------------------------------------------------------
-        # Robust consolidated-metadata handling
+        # 4. Open Zarr
         # ----------------------------------------------------------
         try:
             ds = xr.open_zarr(store=store, consolidated=True)
         except (KeyError, FileNotFoundError):
             ds = xr.open_zarr(store=store, consolidated=False)
-
+    
         if variables is not None:
             ds = ds[variables]
-
+    
         return ds
+
+
