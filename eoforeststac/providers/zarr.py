@@ -51,7 +51,7 @@ class ZarrProvider(BaseProvider):
             if versions:
                 raise ValueError(
                     f"Version '{version}' not found for collection '{collection_id}'. "
-                    f"Available versions: {', '.join(versions)}"
+                    f"Available version(s): {', '.join(versions)}"
                 )
             else:
                 raise ValueError(
