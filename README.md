@@ -87,27 +87,6 @@ df
 
 ## 📥 Read Data
 
-### Load a Zarr-backed dataset
-
-```python
-from eoforeststac.providers.zarr import ZarrProvider
-
-provider = ZarrProvider(
-    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
-    endpoint_url="https://s3.gfz-potsdam.de",
-    anon=True,
-)
-
-ds = provider.open_dataset(
-    collection_id="CCI_BIOMASS",
-    version="6.0",
-)
-
-print(ds)
-
-
-```
-
 ### Spatial and temporal subsetting
 
 All datasets can be lazily subset in space and time using the built-in subsetting utilities.
