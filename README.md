@@ -1,13 +1,13 @@
 <p align="center">
 <a href="https://github.com/simonbesnard1/eoforeststac">
-        <img src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/gediDB_logo.svg"
+        <img src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/eoforestact_logo.png"
          alt="eoforeststac Logo" height="200px" hspace="0px" vspace="30px" align="left">
 </a>
 </p>
 
-# eoforeststac: A toolbox for accessing the GFZ forest EO data catalog.
+# EOForestSTAC: A toolbox for accessing the GFZ forest EO data catalog.
 
-**eoforeststac** is a lightweight Python package for discovering and accessing
+**EOForestSTAC** is a lightweight Python package for discovering and accessing
 forest Earth Observation (EO) datasets through **SpatioTemporal Asset Catalogs (STAC)**.
 
 It provides a STAC-first interface to cloud-hosted, analysis-ready datasets
