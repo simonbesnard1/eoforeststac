@@ -42,7 +42,7 @@ dependencies = [
     # --- Raster ---
     "rasterio>=1.3",
     "rioxarray>=0.15",
-    "geopandas"
+    "geopandas",
 
     # --- STAC ---
     "pystac>=1.12,<2",
