@@ -11,17 +11,17 @@
 forest Earth Observation (EO) datasets through **SpatioTemporal Asset Catalogs (STAC)**.
 
 It provides a STAC-first interface to cloud-hosted, analysis-ready datasets
-(Zarr and GeoTIFF) stored on S3-compatible object storage.
+(Zarr) stored on Ceph object storage.
 
 ---
 
 ## 🌲 Features
 
 - 📚 Discover EO products and available versions from a STAC catalog
-- 📦 Load Zarr datasets directly from S3
+- 📦 Load Zarr datasets directly from Ceph
 - 🔍 Programmatic catalog exploration (collections, versions)
 - ⚡ Lazy, on-demand loading with `xarray`
-- 🌐 Supports public (anonymous) and authenticated S3 access
+- 🌐 Supports public (anonymous) and authenticated Ceph access
 
 ---
 
@@ -141,7 +141,7 @@ s3://dog.atlaseo-glm.eo-gridded-data/
 ```
 ---
 
-## About the authors
+## About the author
 
 Simon Besnard, a senior researcher in the Global Land Monitoring Group at GFZ Helmholtz Centre Potsdam, studies terrestrial ecosystems' dynamics and their feedback on environmental conditions. He specializes in developing methods to analyze large EO and climate datasets to understand ecosystem functioning in a changing climate. His current research focuses on forest structure changes over the past decade and their links to the carbon cycle. 
 
