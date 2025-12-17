@@ -2,6 +2,7 @@ import xarray as xr
 import rioxarray
 from datetime import datetime
 from typing import Dict, Optional
+import numpy as np
 
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
@@ -73,7 +74,15 @@ class SaatchiBiomassWriter(BaseZarrWriter):
             for old, new in rename_dims.items():
                 if old in ds.coords:
                     ds = ds.rename({old: new})
-    
+   
+        # --------------------------------------------------
+        # Add reference time coordinate (single epoch)
+        # --------------------------------------------------
+        if "time" not in ds.coords:
+            ds = ds.assign_coords(
+                time=np.datetime64("2020-01-01")
+            )
+
         # --- Chunking (after renaming!) ---
         if chunks is not None:
             ds = ds.chunk(chunks)
@@ -146,7 +155,10 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         """
 
         if chunks is None:
-            chunks = {"latitude": 500, "longitude": 500}
+            chunks = {
+                "latitude": 500,
+                "longitude": 500,
+            }
 
         print("Loading dataset…")
         ds = self.load_dataset(tif_path)
@@ -162,15 +174,15 @@ class SaatchiBiomassWriter(BaseZarrWriter):
 
         # Zarr encoding derived from actual Dask chunks
         encoding = {
-                var: {
-                    "chunks": (
-                        chunks["latitude"],
-                        chunks["longitude"]
-                    ),
-                    "compressor": DEFAULT_COMPRESSOR,
-                }
-                for var in ds.data_vars
+            var: {
+                "chunks": (
+                    chunks["latitude"],
+                    chunks["longitude"]
+                ),
+                "compressor": DEFAULT_COMPRESSOR,
             }
+            for var in ds.data_vars
+        }
 
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

@@ -2,6 +2,7 @@ import xarray as xr
 import rioxarray
 from datetime import datetime
 from typing import Dict, Optional
+import numpy as np
 
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
@@ -68,6 +69,14 @@ class JRCGFC2020Writer(BaseZarrWriter):
             for old, new in rename_dims.items():
                 if old in ds.coords:
                     ds = ds.rename({old: new})
+        
+        # --------------------------------------------------
+        # Add reference time coordinate (single epoch)
+        # --------------------------------------------------
+        if "time" not in ds.coords:
+            ds = ds.assign_coords(
+                time=np.datetime64("2020-01-01")
+            )
 
         # --- Chunking (after renaming) ---
         if chunks is not None:
@@ -154,7 +163,7 @@ class JRCGFC2020Writer(BaseZarrWriter):
             var: {
                 "chunks": (
                     chunks["latitude"],
-                    chunks["longitude"],
+                    chunks["longitude"]
                 ),
                 "compressor": DEFAULT_COMPRESSOR,
             }
