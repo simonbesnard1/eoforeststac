@@ -2,6 +2,7 @@ import xarray as xr
 import rioxarray
 from datetime import datetime
 from typing import Dict, Optional
+import numpy as np
 
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
@@ -83,6 +84,14 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
                 if old in ds.coords:
                     ds = ds.rename({old: new})
 
+        # --------------------------------------------------
+        # Add reference time coordinate (single epoch)
+        # --------------------------------------------------
+        if "time" not in ds.coords:
+            ds = ds.assign_coords(
+                time=np.datetime64("2020-01-01")
+            )
+    
         # --------------------------------------------------------------
         # Chunking (after renaming)
         # --------------------------------------------------------------
@@ -209,15 +218,14 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
         )
 
         encoding = {
-            "genus": {
+            var: {
                 "chunks": (
                     chunks["latitude"],
-                    chunks["longitude"],
+                    chunks["longitude"]
                 ),
                 "compressor": DEFAULT_COMPRESSOR,
-                "dtype": "uint8",
-                "_FillValue": fill_value,
             }
+            for var in ds.data_vars
         }
         
         print("Writing Zarr to Ceph/S3…")
