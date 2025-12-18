@@ -5,7 +5,7 @@
 </a>
 </p>
 
-# EOForestSTAC: A toolbox for accessing the GFZ forest EO data catalog.
+# EOForestSTAC: A toolbox for accessing the EO forest data catalog.
 
 **EOForestSTAC** is a lightweight Python package for discovering and accessing
 forest Earth Observation (EO) datasets through **SpatioTemporal Asset Catalogs (STAC)**.
