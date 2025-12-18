@@ -25,27 +25,34 @@ ds_biomass = subset(
     time=("2007-01-01", "2020-12-31"))  # optional
 
 ds = provider.open_dataset(
-    collection_id="SAATCHI_BIOMASS",
-    version="2.0",
+    collection_id="GAMI",
+    version="2.1",
 )
 
 ds_efda = subset(
     ds,
     geometry=geometry,                 # geometry in EPSG:4326
-    time=("2007-01-01", "2020-12-31"))#.median(dim='members')  # optional
+    time=("2020-01-01")).median(dim='members')  # optional
 
 
 aligner = DatasetAligner(
-    target="CCI_BIOMASS",          # reference dataset key
+    target="CCI_BIOMASS",
     resampling={
-        "EFDA": "average",
-        "CCI_BIOMASS": "average",
+        "CCI_BIOMASS": {"default": "average"},
+        "EFDA": {
+            "default": "average",
+            "vars": {
+                "disturbance": "nearest",
+                "forest_fraction": "average",
+            },
+        },
     },
 )
 
+
 aligned = aligner.align({
     "CCI_BIOMASS": ds_biomass.sel(time="2020-01-01"),
-    "EFDA": ds_efda
+    "EFDA": ds_efda.sel(time="2020-01-01")
 })
 
 aligned

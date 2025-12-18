@@ -1,15 +1,24 @@
 # eoforeststac/analysis/align.py
+# Copyright (c) 2024–2025
+# Licensed under the MIT License
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Mapping
+from dataclasses import dataclass
+from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
 
+import numpy as np
 import xarray as xr
-
-import rioxarray  # noqa
+import rioxarray  # noqa: F401
+from affine import Affine
 from rasterio.enums import Resampling
 
-_RESAMPLING_MAP = {
+
+# -----------------------------------------------------------------------------
+# Resampling registry
+# -----------------------------------------------------------------------------
+
+_RESAMPLING_MAP: dict[str, Resampling] = {
     "nearest": Resampling.nearest,
     "bilinear": Resampling.bilinear,
     "cubic": Resampling.cubic,
@@ -26,93 +35,293 @@ _RESAMPLING_MAP = {
     "rms": Resampling.rms,
 }
 
+# Coarsen aggregation methods, xcube-like
+_COARSEN_AGG_METHODS = {
+    "first",
+    "min",
+    "max",
+    "mean",
+    "median",
+    "mode",
+    "sum",
+}
 
 
-# ---------------------------------------------------------------------
-# CRS utilities
-# ---------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Grid spec
+# -----------------------------------------------------------------------------
 
-def _infer_crs(obj) -> Optional[str]:
-    """
-    Infer CRS from xarray Dataset or DataArray.
-    """
+@dataclass(frozen=True)
+class GridSpec:
+    """Immutable grid definition used as a spatial contract."""
+    crs: str
+    transform: Affine
+    shape: Tuple[int, int]  # (height, width)
+    x_dim: str = "longitude"
+    y_dim: str = "latitude"
+
+    @property
+    def height(self) -> int:
+        return int(self.shape[0])
+
+    @property
+    def width(self) -> int:
+        return int(self.shape[1])
+
+    @property
+    def res(self) -> Tuple[float, float]:
+        # Affine: a = xres, e = yres (negative for north-up rasters)
+        return (float(self.transform.a), float(abs(self.transform.e)))
+
+    def hash(self, ndigits: int = 9) -> str:
+        """Stable-ish hash for caching / diagnostics (rounded floats)."""
+        a, b, c, d, e, f = self.transform[:6]
+        vals = (
+            self.crs,
+            int(self.height),
+            int(self.width),
+            round(float(a), ndigits),
+            round(float(b), ndigits),
+            round(float(c), ndigits),
+            round(float(d), ndigits),
+            round(float(e), ndigits),
+            round(float(f), ndigits),
+        )
+        return "grid:" + str(abs(hash(vals)))
+
+
+# -----------------------------------------------------------------------------
+# CRS & dimension utilities
+# -----------------------------------------------------------------------------
+
+def _infer_crs(obj: xr.Dataset | xr.DataArray) -> Optional[str]:
+    """Infer CRS from rioxarray or CF grid-mapping metadata."""
     if isinstance(obj, xr.DataArray):
-        ds = obj.to_dataset(name="_tmp")
-    elif isinstance(obj, xr.Dataset):
-        ds = obj
-    else:
-        return None
+        obj = obj.to_dataset(name="_tmp")
 
-    # 1. rioxarray (preferred)
-    if hasattr(ds, "rio"):
+    if hasattr(obj, "rio"):
         try:
-            crs = ds.rio.crs
+            crs = obj.rio.crs
             if crs:
                 return crs.to_string()
         except Exception:
             pass
 
-    # 2. CF grid mapping variables
     for name in ("spatial_ref", "crs"):
-        if name in ds.variables:
-            var = ds[name]
+        if name in obj.variables:
+            var = obj[name]
             wkt = var.attrs.get("crs_wkt") or var.attrs.get("spatial_ref")
             if wkt:
                 return wkt
 
-    # 3. Fallback: global attribute
-    crs_attr = ds.attrs.get("crs")
+    crs_attr = obj.attrs.get("crs")
     if isinstance(crs_attr, str):
         return crs_attr
 
     return None
 
 
-def _require_crs(ds, name: str) -> str:
+def _require_crs(ds: xr.Dataset, name: str) -> str:
     if not isinstance(ds, xr.Dataset):
-        raise TypeError(
-            f"DatasetAligner expected an xarray.Dataset for '{name}', "
-            f"but received {type(ds)}.\n"
-            "Make sure you pass a mapping of {name: xr.Dataset}."
-        )
-
+        raise TypeError(f"Expected an xarray.Dataset for '{name}', got {type(ds).__name__}")
     crs = _infer_crs(ds)
     if crs is None:
         raise ValueError(
-            f"Could not infer CRS for dataset '{name}'. "
-            "Dataset must have either:\n"
-            "  - rioxarray CRS\n"
-            "  - a CF grid_mapping variable (crs or spatial_ref)"
+            f"Could not infer CRS for dataset '{name}'.\n"
+            "Dataset must define a CRS via:\n"
+            "  - rioxarray (.rio.crs)\n"
+            "  - CF grid-mapping variable (crs / spatial_ref)"
         )
     return crs
 
-def _infer_x_dim(da):
-    for d in ("x", "longitude"):
-        if d in da.dims:
-            return d
-    raise ValueError("Could not infer x dimension.")
 
-def _infer_y_dim(da):
-    for d in ("y", "latitude"):
-        if d in da.dims:
-            return d
-    raise ValueError("Could not infer y dimension.")
+def _infer_x_dim(da: xr.DataArray) -> str:
+    for name in ("x", "longitude", "lon"):
+        if name in da.dims:
+            return name
+    raise ValueError("Could not infer x-dimension name.")
 
 
-# ---------------------------------------------------------------------
-# Main class
-# ---------------------------------------------------------------------
+def _infer_y_dim(da: xr.DataArray) -> str:
+    for name in ("y", "latitude", "lat"):
+        if name in da.dims:
+            return name
+    raise ValueError("Could not infer y-dimension name.")
+
+
+def _parse_resampling(method: Union[str, Resampling], *, what: str) -> Resampling:
+    if isinstance(method, Resampling):
+        return method
+    if isinstance(method, str):
+        try:
+            return _RESAMPLING_MAP[method.lower()]
+        except KeyError:
+            raise ValueError(
+                f"Invalid resampling method '{method}' for {what}. "
+                f"Valid options: {sorted(_RESAMPLING_MAP)}"
+            )
+    raise TypeError(f"Invalid resampling method type for {what}: {type(method).__name__}")
+
+
+# -----------------------------------------------------------------------------
+# Resolution snapping
+# -----------------------------------------------------------------------------
+
+def _snap_resolution(
+    target_res: Tuple[float, float],
+    src_res: Tuple[float, float],
+    *,
+    mode: str = "auto",
+    tol: float = 1e-6,
+) -> Tuple[float, float]:
+    """
+    Snap a requested target resolution to a 'nice' multiple of the source resolution.
+
+    mode:
+      - "off": return target_res unchanged
+      - "auto": if target_res is within tol of k*src_res (k integer), snap to exact
+      - "nearest_multiple": always snap to nearest integer multiple of src_res
+    """
+    if mode == "off":
+        return target_res
+    if mode not in {"auto", "nearest_multiple"}:
+        raise ValueError("snap mode must be one of {'off','auto','nearest_multiple'}")
+
+    def snap_one(t, s):
+        if s <= 0:
+            return t
+        k = max(1, int(round(t / s)))
+        snapped = k * s
+        if mode == "nearest_multiple":
+            return snapped
+        # auto: only snap if close enough
+        return snapped if abs(snapped - t) <= tol * max(1.0, abs(t)) else t
+
+    return (snap_one(target_res[0], src_res[0]), snap_one(target_res[1], src_res[1]))
+
+
+# -----------------------------------------------------------------------------
+# Optional coarsening (fast-downsampling before reprojection)
+# -----------------------------------------------------------------------------
+
+def _coarsen_dataset(
+    ds: xr.Dataset,
+    *,
+    x_dim: str,
+    y_dim: str,
+    factor: int,
+    agg: Union[str, Mapping[str, str]] = "auto",
+) -> xr.Dataset:
+    """
+    Coarsen spatial dims by integer factor prior to reprojection (xcube-style).
+    Uses xarray.coarsen(boundary='pad', coord_func='min').
+
+    agg:
+      - "auto": integers -> "first", floats -> "mean"
+      - str: one of _COARSEN_AGG_METHODS
+      - mapping: per-variable aggregation method
+    """
+    if factor <= 1:
+        return ds
+
+    if isinstance(agg, str):
+        agg_map: Mapping[str, str] = {"*": agg}
+    else:
+        agg_map = agg
+
+    def pick_agg(var_name: str, da: xr.DataArray) -> str:
+        method = None
+        for pat, m in agg_map.items():
+            if pat == var_name or (pat == "*" and method is None):
+                method = m
+        if method in (None, "auto"):
+            return "first" if np.issubdtype(da.dtype, np.integer) else "mean"
+        if method not in _COARSEN_AGG_METHODS:
+            raise ValueError(
+                f"Invalid coarsen agg '{method}' for variable '{var_name}'. "
+                f"Valid options: {sorted(_COARSEN_AGG_METHODS)}"
+            )
+        return method
+
+    out_vars = {}
+    new_coords = None
+
+    for name, da in ds.data_vars.items():
+        if x_dim in da.dims or y_dim in da.dims:
+            dim = {}
+            if y_dim in da.dims:
+                dim[y_dim] = factor
+            if x_dim in da.dims:
+                dim[x_dim] = factor
+
+            co = da.coarsen(dim=dim, boundary="pad", coord_func="min")
+            method = pick_agg(name, da)
+
+            if method == "mode":
+                # xarray has no builtin mode reducer; use apply_ufunc on blocks
+                def _mode_np(x, axis=-1):
+                    # flatten along coarsen reduction dims handled by coarsen.reduce, so axis provided
+                    # simple, robust-ish fallback: nan-safe mode using unique counts
+                    x = np.asarray(x)
+                    x = x[~np.isnan(x)] if np.issubdtype(x.dtype, np.floating) else x
+                    if x.size == 0:
+                        return np.nan
+                    vals, counts = np.unique(x, return_counts=True)
+                    return vals[np.argmax(counts)]
+
+                da2 = co.reduce(_mode_np)
+            else:
+                da2 = getattr(co, method)()
+
+            if da2.dtype != da.dtype:
+                da2 = da2.astype(da.dtype)
+
+            da2.attrs.update(da.attrs)
+            da2.encoding.update(da.encoding)
+
+            if new_coords is None:
+                new_coords = dict(da2.coords)
+            else:
+                new_coords.update(da2.coords)
+
+            out_vars[name] = da2
+        else:
+            out_vars[name] = da
+
+    out = xr.Dataset(out_vars, attrs=ds.attrs)
+
+    if new_coords:
+        out = xr.Dataset(
+            {k: v.assign_coords({d: new_coords[d] for d in v.dims if d in new_coords})
+             for k, v in out.data_vars.items()},
+            attrs=out.attrs,
+        )
+
+    # Re-attach CRS if present
+    if ds.rio.crs:
+        out = out.rio.write_crs(ds.rio.crs, inplace=False)
+
+    return out
+
+
+# -----------------------------------------------------------------------------
+# Dataset aligner
+# -----------------------------------------------------------------------------
+
+ResamplingSpec = Union[str, Mapping[str, Union[str, Mapping[str, str]]]]
+
 
 class DatasetAligner:
     """
     Align multiple xarray Datasets onto a common spatial grid.
 
-    Design principles
-    -----------------
-    - Explicit reference grid (no silent guessing)
-    - CRS-aware reprojection using rioxarray
-    - Variable-specific resampling
-    - Lazy (Dask-safe)
+    Features
+    --------
+    - GridSpec contract (CRS + transform + shape + hash)
+    - Automatic resolution snapping (optional)
+    - Per-dataset and per-variable resampling overrides
+    - Optional coarsening before reprojection (fast-downsample)
+    - Strict merge semantics
     """
 
     def __init__(
@@ -120,203 +329,217 @@ class DatasetAligner:
         *,
         target: Optional[str] = None,
         crs: Optional[str] = None,
-        resolution: Optional[float | tuple[float, float]] = None,
-        resampling: str | Mapping[str, str] = "nearest",
+        resolution: Optional[float | Tuple[float, float]] = None,
+        resampling: Union[str, Mapping[str, Union[str, Mapping[str, str]]]] = "nearest",
+        snap_resolution: str = "auto",
+        snap_tolerance: float = 1e-6,
+        coarsen_factor: int = 1,
+        coarsen_agg: Union[str, Mapping[str, str]] = "auto",
+        canonical_spatial_dims: Tuple[str, str] = ("longitude", "latitude"),
     ):
-        """
-        Parameters
-        ----------
-        target : str, optional
-            Key of reference dataset (used as target grid).
-        crs : str, optional
-            Target CRS (e.g. "EPSG:3035").
-        resolution : float or (xres, yres), optional
-            Target resolution in CRS units.
-        resampling : str or dict
-            Resampling strategy per dataset key or a global default.
-            Examples: "nearest", "average", "bilinear", "sum"
-        """
+        if target is None and crs is None:
+            raise ValueError("Either 'target' or 'crs' must be provided.")
+
         self.target_key = target
         self.target_crs = crs
         self.target_resolution = resolution
+
         self.resampling = resampling
 
-        if target is None and crs is None:
-            raise ValueError(
-                "Either 'target' or 'crs' must be provided."
+        self.snap_resolution_mode = snap_resolution
+        self.snap_tolerance = snap_tolerance
+
+        self.coarsen_factor = int(coarsen_factor)
+        self.coarsen_agg = coarsen_agg
+
+        self.x_out, self.y_out = canonical_spatial_dims
+
+        # Cached for diagnostics / reuse
+        self._grid: Optional[GridSpec] = None
+
+    # -------------------------------------------------------------------------
+    # Target grid resolution
+    # -------------------------------------------------------------------------
+
+    def _resolve_target_grid(self, datasets: Dict[str, xr.Dataset]) -> GridSpec:
+        if self.target_key is None:
+            raise NotImplementedError(
+                "Explicit grid definition without a reference dataset "
+                "is not implemented yet."
             )
 
-    # -----------------------------------------------------------------
-    # Core logic
-    # -----------------------------------------------------------------
+        if self.target_key not in datasets:
+            raise KeyError(
+                f"Target dataset '{self.target_key}' not found. "
+                f"Available datasets: {list(datasets)}"
+            )
 
-    def _resolve_target_grid(
-        self,
-        datasets: Dict[str, xr.Dataset],
-    ):
-        """
-        Determine the full target grid definition:
-          - CRS
-          - affine transform
-          - raster shape (height, width)
-    
-        This guarantees pixel-perfect alignment.
-        """
-        if self.target_key is not None:
-            if self.target_key not in datasets:
-                raise KeyError(
-                    f"Target dataset '{self.target_key}' not found. "
-                    f"Available datasets: {list(datasets)}"
-                )
-    
-            ref = datasets[self.target_key]
-    
-            # --- CRS (required) ---
-            crs = _require_crs(ref, self.target_key)
-    
-            # --- Spatial metadata (required) ---
-            if not hasattr(ref, "rio"):
-                raise ValueError(
-                    f"Dataset '{self.target_key}' is not rioxarray-enabled."
-                )
-    
-            try:
-                transform = ref.rio.transform()
-                shape = ref.rio.shape
-            except Exception as exc:
-                raise ValueError(
-                    f"Failed to extract spatial grid from dataset '{self.target_key}'."
-                ) from exc
-    
-        else:
-            # User-defined grid (advanced use)
-            if self.target_crs is None or self.target_transform is None or self.target_shape is None:
-                raise ValueError(
-                    "When no target dataset is provided, "
-                    "target_crs, target_transform, and target_shape must be set."
-                )
-    
+        ref = datasets[self.target_key]
+        crs = _require_crs(ref, self.target_key)
+
+        if not hasattr(ref, "rio"):
+            raise ValueError(f"Dataset '{self.target_key}' is not rioxarray-enabled.")
+
+        try:
+            transform = Affine(*ref.rio.transform()[:6])
+            shape = tuple(ref.rio.shape)  # (height, width)
+        except Exception as exc:
+            raise ValueError(f"Failed to extract spatial grid from '{self.target_key}'.") from exc
+
+        # Optional override of CRS
+        if self.target_crs is not None:
             crs = self.target_crs
-            transform = self.target_transform
-            shape = self.target_shape
-    
-        return crs, transform, shape
 
+        # Optional override of resolution: rebuild transform and shape
+        if self.target_resolution is not None:
+            # Normalize resolution spec
+            if isinstance(self.target_resolution, (int, float)):
+                req_res = (float(self.target_resolution), float(self.target_resolution))
+            else:
+                req_res = (float(self.target_resolution[0]), float(self.target_resolution[1]))
 
+            # Snap requested resolution to ref resolution if desired
+            ref_res = (float(transform.a), float(abs(transform.e)))
+            req_res = _snap_resolution(
+                req_res, ref_res, mode=self.snap_resolution_mode, tol=self.snap_tolerance
+            )
 
-    def _get_resampling(self, key: str):
-        method = self.resampling.get(key)
+            # Keep same extent as reference grid; recompute width/height
+            # Extent from affine + shape
+            x0, y0 = transform.c, transform.f
+            x1 = x0 + transform.a * shape[1]
+            y1 = y0 + transform.e * shape[0]
 
-        if isinstance(method, Resampling):
-            return method
+            width = int(round(abs((x1 - x0) / req_res[0])))
+            height = int(round(abs((y1 - y0) / req_res[1])))
+            width = max(2, width)
+            height = max(2, height)
 
-        if isinstance(method, str):
-            try:
-                return _RESAMPLING_MAP[method.lower()]
-            except KeyError:
-                raise ValueError(
-                    f"Invalid resampling method '{method}' for dataset '{key}'. "
-                    f"Valid options are: {list(_RESAMPLING_MAP)}"
-                )
+            # North-up assumption: e negative
+            new_transform = Affine(req_res[0], 0.0, x0, 0.0, -req_res[1], y0)
+            transform = new_transform
+            shape = (height, width)
 
-        raise TypeError(
-            f"Resampling for dataset '{key}' must be a string or "
-            f"rasterio.enums.Resampling, got {type(method)}."
-        )
+        grid = GridSpec(crs=crs, transform=transform, shape=(int(shape[0]), int(shape[1])),
+                        x_dim=self.x_out, y_dim=self.y_out)
+        self._grid = grid
+        return grid
 
-    # -----------------------------------------------------------------
+    @property
+    def grid(self) -> Optional[GridSpec]:
+        """The last resolved target GridSpec (after calling align())."""
+        return self._grid
+
+    # -------------------------------------------------------------------------
+    # Resampling resolution
+    # -------------------------------------------------------------------------
+
+    def _get_dataset_resampling(self, key: str) -> Tuple[Resampling, Mapping[str, Resampling]]:
+        """
+        Returns:
+          (dataset_default, per_variable_overrides)
+        """
+        per_var: dict[str, Resampling] = {}
+
+        if isinstance(self.resampling, str):
+            return _parse_resampling(self.resampling, what=f"dataset '{key}'"), per_var
+
+        if not isinstance(self.resampling, Mapping):
+            raise TypeError("resampling must be a string or a mapping")
+
+        spec = self.resampling.get(key, "nearest")
+
+        # dataset-level string or enum
+        if isinstance(spec, (str, Resampling)):
+            return _parse_resampling(spec, what=f"dataset '{key}'"), per_var
+
+        # dataset-level dict like {"default": "average", "vars": {"biomass": "bilinear"}}
+        if isinstance(spec, Mapping):
+            default = spec.get("default", "nearest")
+            vars_map = spec.get("vars", {})
+            default_r = _parse_resampling(default, what=f"dataset '{key}' default")
+
+            if not isinstance(vars_map, Mapping):
+                raise TypeError(f"resampling['{key}']['vars'] must be a mapping")
+
+            for vname, vmethod in vars_map.items():
+                per_var[str(vname)] = _parse_resampling(vmethod, what=f"{key}.{vname}")
+
+            return default_r, per_var
+
+        raise TypeError(f"Invalid resampling spec for dataset '{key}': {spec!r}")
+
+    # -------------------------------------------------------------------------
     # Public API
-    # -----------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
-    def align(
-        self,
-        datasets: Dict[str, xr.Dataset],
-    ) -> xr.Dataset:
-        """
-        Align datasets onto a common grid and merge them.
-    
-        All outputs will share:
-          - identical CRS
-          - identical transform
-          - identical shape
-          - identical spatial dimension names
-        """
+    def align(self, datasets: Dict[str, xr.Dataset]) -> xr.Dataset:
         if not datasets:
             raise ValueError("No datasets provided for alignment.")
-    
-        target_crs, target_transform, target_shape = self._resolve_target_grid(datasets)
-    
-        aligned_datasets = []
-    
+
+        grid = self._resolve_target_grid(datasets)
+
+        aligned: list[xr.Dataset] = []
+
         for key, ds in datasets.items():
+
             if not isinstance(ds, xr.Dataset):
-                raise TypeError(
-                    f"DatasetAligner expected an xarray.Dataset for '{key}', "
-                    f"but received {type(ds)}."
-                )
-    
+                raise TypeError(f"Expected xr.Dataset for '{key}', got {type(ds).__name__}")
+
             ds_crs = _require_crs(ds, key)
-            method = self._get_resampling(key)
-    
-            # --------------------------------------------------
-            # Normalize CRS
-            # --------------------------------------------------
-            if ds_crs != target_crs:
+
+            if not ds.rio.crs:
                 ds = ds.rio.write_crs(ds_crs, inplace=False)
-    
-            # --------------------------------------------------
-            # Reproject VARIABLE BY VARIABLE
-            # --------------------------------------------------
-            reproj_vars = {}
-    
-            for var in ds.data_vars:
-                da = ds[var]
-    
-                # ensure rioxarray spatial dims are set
-                da = da.rio.set_spatial_dims(
-                    x_dim=_infer_x_dim(da),
-                    y_dim=_infer_y_dim(da),
-                    inplace=False,
+
+            # infer spatial dims once
+            sample = next(iter(ds.data_vars.values()))
+            x_dim = _infer_x_dim(sample)
+            y_dim = _infer_y_dim(sample)
+            ds = ds.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim, inplace=False)
+
+            # optional pre-coarsening (fast downsample)
+            if self.coarsen_factor and self.coarsen_factor > 1:
+                ds = _coarsen_dataset(
+                    ds,
+                    x_dim=x_dim,
+                    y_dim=y_dim,
+                    factor=self.coarsen_factor,
+                    agg=self.coarsen_agg,
                 )
-    
-                # enforce canonical order
-                expected = tuple(d for d in ("time", da.rio.y_dim, da.rio.x_dim) if d in da.dims)
-                da = da.transpose(*expected)
-    
-                da_reproj = da.rio.reproject(
-                    target_crs,
-                    transform=target_transform,
-                    shape=target_shape,
-                    resampling=method,
-                )
-    
-                # rename spatial dims AFTER reprojection
-                da_reproj = da_reproj.rename({
-                    da_reproj.rio.x_dim: "longitude",
-                    da_reproj.rio.y_dim: "latitude",
-                })
-    
-                reproj_vars[var] = da_reproj
-    
-            # rebuild dataset cleanly
-            ds_aligned = xr.Dataset(reproj_vars)
-    
-            # propagate CRS metadata once
-            ds_aligned = ds_aligned.rio.write_crs(target_crs)
-    
-            aligned_datasets.append(ds_aligned)
-    
-        # --------------------------------------------------
-        # Merge strictly (no silent broadcasting)
-        # --------------------------------------------------
-        try:
-            return xr.merge(aligned_datasets, join="exact")
-        except Exception as exc:
-            raise RuntimeError(
-                "Failed to merge aligned datasets.\n"
-                "Likely causes:\n"
-                "- incompatible time coordinates\n"
-                "- inconsistent variable naming\n"
-                "- failed reprojection on one dataset"
-            ) from exc
-    
+
+            # resampling: dataset default + per-variable overrides
+            ds_default_resampling, per_var = self._get_dataset_resampling(key)
+
+            # 1) reproject dataset with default resampling
+            ds_reproj = ds.rio.reproject(
+                grid.crs,
+                transform=grid.transform,
+                shape=grid.shape,
+                resampling=ds_default_resampling,
+            )
+
+            # 2) optionally override some variables with different resampling
+            # (reproject only those variables and then replace)
+            if per_var:
+                for var_name, var_resampling in per_var.items():
+                    if var_name not in ds.data_vars:
+                        continue
+                    da = ds[var_name]
+                    da_reproj = da.rio.reproject(
+                        grid.crs,
+                        transform=grid.transform,
+                        shape=grid.shape,
+                        resampling=var_resampling,
+                    )
+                    ds_reproj[var_name] = da_reproj
+
+            # canonical naming
+            ds_reproj = ds_reproj.rename({
+                ds_reproj.rio.x_dim: grid.x_dim,
+                ds_reproj.rio.y_dim: grid.y_dim,
+            })
+
+            ds_reproj = ds_reproj.rio.write_crs(grid.crs)
+            aligned.append(ds_reproj)
+
+        return xr.merge(aligned, join="exact")
