@@ -5,7 +5,7 @@
 </a>
 </p>
 
-# EOForestSTAC: A Python toolbox for accessing forest Earth Observation datasets through SpatioTemporal Asset Catalogs (STAC).
+# A Python toolbox for accessing forest Earth Observation datasets through SpatioTemporal Asset Catalogs (STAC).
 
 **EOForestSTAC** provides a streamlined interface to discover and load cloud-hosted, analysis-ready forest EO datasets stored as Zarr archives on Ceph object storage.
 
