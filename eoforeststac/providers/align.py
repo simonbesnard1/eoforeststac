@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
+from typing import Dict, Mapping, Optional, Tuple, Union
 
 import numpy as np
 import xarray as xr
@@ -478,7 +478,7 @@ class DatasetAligner:
             raise ValueError("No datasets provided for alignment.")
 
         grid = self._resolve_target_grid(datasets)
-
+    
         aligned: list[xr.Dataset] = []
 
         for key, ds in datasets.items():
@@ -496,6 +496,11 @@ class DatasetAligner:
             x_dim = _infer_x_dim(sample)
             y_dim = _infer_y_dim(sample)
             ds = ds.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim, inplace=False)
+            
+            # Ensure CRS is written on every spatial variable
+            for name, da in ds.data_vars.items():
+                if da.rio.crs is None:
+                    ds[name] = da.rio.write_crs(ds.rio.crs, inplace=False)
 
             # optional pre-coarsening (fast downsample)
             if self.coarsen_factor and self.coarsen_factor > 1:
@@ -542,4 +547,4 @@ class DatasetAligner:
             ds_reproj = ds_reproj.rio.write_crs(grid.crs)
             aligned.append(ds_reproj)
 
-        return xr.merge(aligned, join="exact")
+        return xr.merge(aligned, compat="no_conflicts")
