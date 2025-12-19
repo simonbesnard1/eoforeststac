@@ -1,263 +1,152 @@
-<p align="center">
-<a href="https://github.com/simonbesnard1/eoforeststac">
-        <img src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/eoforestact_logo.png"
-         alt="eoforeststac Logo" height="200px" hspace="0px" vspace="30px" align="left">
-</a>
-</p>
+# EOForestSTAC
 
-# EOForestSTAC: A toolbox for accessing the EO forest data catalog.
+A Python toolbox for accessing forest Earth Observation datasets through SpatioTemporal Asset Catalogs (STAC).
 
-**EOForestSTAC** is a lightweight Python package for discovering and accessing
-forest Earth Observation (EO) datasets through **SpatioTemporal Asset Catalogs (STAC)**.
+**EOForestSTAC** provides a streamlined interface to discover and load cloud-hosted, analysis-ready forest EO datasets stored as Zarr archives on Ceph object storage.
 
-It provides a STAC-first interface to cloud-hosted, analysis-ready datasets
-(Zarr) stored on Ceph object storage.
+## Features
 
----
+- **STAC-native discovery** — Browse collections and versions programmatically
+- **Direct Zarr access** — Load datasets from Ceph without downloads
+- **Spatial subsetting** — Extract regions of interest with automatic CRS handling
+- **Temporal filtering** — Query data by time range
+- **Dataset alignment** — Merge multi-source datasets onto a common grid
+- **Lazy loading** — Efficient on-demand data access via xarray
 
-## 🌲 Features
-
-- 📚 Discover EO products and available versions from a STAC catalog
-- 📦 Load Zarr datasets directly from Ceph
-- 🔍 Programmatic catalog exploration (collections, versions)
-- ⚡ Lazy, on-demand loading with `xarray`
-- 🌐 Supports public (anonymous) and authenticated Ceph access
-
----
-
-## 📦 Installation
+## Installation
 
 ```bash
 pip install git+https://github.com/simonbesnard1/eoforeststac.git
-
 ```
 
-## 🔍 Explore the Catalog
+## Quick Start
+
+### Discover Available Data
 
 ```python
 from eoforeststac.providers.discovery import DiscoveryProvider
 
+# Connect to the catalog
 disc = DiscoveryProvider(
     catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
     endpoint_url="https://s3.gfz-potsdam.de",
     anon=True,
 )
 
-```
-
-### List versions for a collection
-
-```python
+# List all collections
 disc.list_collections()
 
-```
-
-### List available collections
-
-```python
+# List versions for a specific collection
 disc.list_versions("GAMI")
 
-```
-
-### Generate a product overview table
-
-```python
+# Generate an overview table
 df = disc.collections_table()
-df
-
 ```
-<table>
-  <tr>
-    <td style="vertical-align: middle; padding-right: 2px;">
-      For a complete and exhaustive overview of all available products, see  
-      ➡️ <strong><a href="CATALOG.md">CATALOG.md</a></strong>
-    </td>
-    <td>
-      <a href="CATALOG.md">
-      <img
-        src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/images/data_catalog.png"
-        alt="Data catalog"
-        height="200"
-      >
-    </a>
-    </td>
-  </tr>
-</table>
 
+For a complete catalog of available products, see **[CATALOG.md](CATALOG.md)**.
 
-## 📥 Read Data
-
-### Spatial and temporal subsetting
-
-All datasets can be lazily subset in space and time using the built-in subsetting utilities.
-Geometries are always provided in EPSG:4326 and are automatically reprojected to the dataset CRS if needed.
+### Load and Subset Data
 
 ```python
 import geopandas as gpd
 from eoforeststac.providers.zarr import ZarrProvider
 from eoforeststac.providers.subset import subset
 
-```
-
-```python
+# Initialize data provider
 provider = ZarrProvider(
     catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
     endpoint_url="https://s3.gfz-potsdam.de",
     anon=True,
 )
 
-ds = provider.open_dataset(
-    collection_id="CCI_BIOMASS",
-    version="6.0",
-)
-```
-Load a region of interest (any vector format supported by GeoPandas):
-
-```python
-roi = gpd.read_file("DE-Hai.geojson")
-geometry = roi.to_crs("EPSG:4326").geometry.union_all()
-```
-Subset the dataset in space and time:
-
-```python
-ds_sel = subset(
-    ds,
-    geometry=geometry,                 # geometry in EPSG:4326
-    time=("2007-01-01", "2020-12-31"),  # optional
-)
-```
-**Notes**
-
-- If a dataset has **no time dimension**, the time filter is silently ignored.
-- Exact geometry masking (`mask=True`) is optional; by default a fast **bounding-box subset** is applied.
-
-### Spatial alignment across datasets
-
-When working with multiple EO datasets, spatial alignment is explicit and reproducible.  
-All datasets are reprojected, resampled, and merged onto a **common target grid** using the
-`DatasetAligner`.
-
-The aligner enforces a clear spatial contract:
-
-- a single **reference grid** (CRS, resolution, extent, shape),
-- explicit **resampling rules** per dataset and per variable,
-- optional **pre-coarsening** for fast downsampling,
-- strict merge semantics to avoid silent conflicts.
-
-This avoids common pitfalls where datasets appear aligned visually but differ subtly in
-resolution, grid origin, or reprojection.
-
----
-
-#### Example: aligning biomass and disturbance data
-
-```python
-import geopandas as gpd
-
-from eoforeststac.providers.zarr import ZarrProvider
-from eoforeststac.providers.subset import subset
-from eoforeststac.providers.align import DatasetAligner
-
-Open the data catalog and define a region of interest
-(geometries are always provided in EPSG:4326):
-
-provider = ZarrProvider(
-    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
-    endpoint_url="https://s3.gfz-potsdam.de",
-    anon=True,
-)
-
-roi = gpd.read_file("DE-Hai.geojson")
-geometry = roi.to_crs("EPSG:4326").geometry.union_all()
-
-Load and subset the reference dataset
-(used to define the target grid):
-
+# Open a dataset
 ds = provider.open_dataset(
     collection_id="CCI_BIOMASS",
     version="6.0",
 )
 
-ds_biomass = subset(
+# Load region of interest (EPSG:4326)
+roi = gpd.read_file("DE-Hai.geojson")
+geometry = roi.to_crs("EPSG:4326").geometry.union_all()
+
+# Subset spatially and temporally
+ds_subset = subset(
     ds,
     geometry=geometry,
     time=("2007-01-01", "2020-12-31"),
 )
+```
 
-Load and subset a second dataset on a different native grid:
+**Note:** Geometries must be provided in EPSG:4326 and are automatically reprojected to match the dataset CRS.
 
-ds = provider.open_dataset(
-    collection_id="SAATCHI_BIOMASS",
-    version="2.0",
-)
+### Align Multiple Datasets
 
-ds_efda = subset(
-    ds,
-    geometry=geometry,
-    time=("2020-01-01", "2020-12-31"),
-)
+When working with multiple EO products, the `DatasetAligner` ensures all datasets share a common grid.
 
-Define the aligner and specify resampling behaviour:
+```python
+from eoforeststac.providers.align import DatasetAligner
 
+# Load first dataset (reference grid)
+ds_biomass = provider.open_dataset("CCI_BIOMASS", "6.0")
+ds_biomass = subset(ds_biomass, geometry=geometry, time=("2020-01-01", "2020-12-31"))
+
+# Load second dataset
+ds_saatchi = provider.open_dataset("SAATCHI_BIOMASS", "2.0")
+ds_saatchi = subset(ds_saatchi, geometry=geometry, time=("2020-01-01", "2020-12-31"))
+
+# Configure alignment
 aligner = DatasetAligner(
     target="CCI_BIOMASS",
     resampling={
         "CCI_BIOMASS": {"default": "average"},
-        "EFDA": {"default": "average"},
+        "SAATCHI_BIOMASS": {"default": "average"},
     },
 )
 
+# Align datasets to common grid
 aligned = aligner.align({
     "CCI_BIOMASS": ds_biomass.sel(time="2020-01-01"),
-    "EFDA": ds_efda,
+    "SAATCHI_BIOMASS": ds_saatchi.sel(time="2020-01-01"),
 })
 ```
-The resulting dataset is guaranteed to:
 
-- share a common CRS, resolution, extent, and grid origin,
+The aligned dataset is guaranteed to have:
+- Identical CRS, resolution, and grid origin
+- Consistent spatial dimension names
+- Variable-specific resampling applied correctly
 
-- have consistent spatial dimension names,
+## Data Access
 
-- preserve variable-specific resampling choices,
-
-**Notes**
-
-- The target grid is derived from the reference dataset (target="CCI_BIOMASS"), unless explicitly overridden.
-
-- All spatial variables are required to carry a CRS; missing CRS metadata is enforced internally.
-
-- Merging is performed with strict conflict checks to avoid silent overwrites.
-
-- Temporal alignment is handled explicitly by the user (e.g. via sel(time=...)).
-
-## 🔐 Data Access Modes
-
-By default, the data catalog uses anonymous public access to the S3 catalog hosted at:
+The catalog uses anonymous public access by default via the S3 endpoint:
 
 ```
 s3://dog.atlaseo-glm.eo-gridded-data/
 ```
----
 
-## About the author
+Authenticated access is also supported for restricted collections.
 
-Simon Besnard, a senior researcher in the Global Land Monitoring Group at GFZ Helmholtz Centre Potsdam, studies terrestrial ecosystems' dynamics and their feedback on environmental conditions. He specializes in developing methods to analyze large EO and climate datasets to understand ecosystem functioning in a changing climate. His current research focuses on forest structure changes over the past decade and their links to the carbon cycle. 
+## About
 
+**EOForestSTAC** is developed by Simon Besnard, senior researcher in the Global Land Monitoring Group at GFZ Helmholtz Centre Potsdam. The project focuses on analyzing terrestrial ecosystem dynamics using large-scale Earth Observation datasets, with particular emphasis on forest structure changes and carbon cycle feedbacks.
 
 ## Contact
 
-For any questions or inquiries, please contact:
-- Simon Besnard (simon.besnard@gfz.de)
+For questions or support:
+- **Simon Besnard** — [simon.besnard@gfz.de](mailto:simon.besnard@gfz.de)
 
-## 🤝 Acknowledgements
+## Acknowledgements
 
-We acknowledge funding support by the European Union through the [FORWARDS](https://forwards-project.eu/) project. 
+This work is supported by the European Union through the [FORWARDS](https://forwards-project.eu/) project.
 
+## License
 
-## 📄 License
+Licensed under the European Union Public Licence v1.2. See [LICENSE](LICENSE) for details.
 
-This project is licensed under the EUROPEAN UNION PUBLIC LICENCE v.1.2 License - see the LICENSE file for details.
+## Citation
 
-## 🌍 Citation
+If you use EOForestSTAC in your research, please cite this repository:
 
-If you use this package in your research, please cite the github repository. 
+```
+Besnard, S. (2025). EOForestSTAC: A toolbox for accessing the EO forest data catalog.
+GitHub repository: https://github.com/simonbesnard1/eoforeststac
+```
