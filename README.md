@@ -73,13 +73,13 @@ df
       ➡️ <strong><a href="CATALOG.md">CATALOG.md</a></strong>
     </td>
     <td>
-      <a href="https://github.com/simonbesnard1/eoforeststac">
-        <img
-          src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/images/data_catalog.png"
-          alt="Data catalog"
-          height="200"
-        >
-      </a>
+      <a href="CATALOG.md">
+      <img
+        src="https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/images/data_catalog.png"
+        alt="Data catalog"
+        height="200"
+      >
+    </a>
     </td>
   </tr>
 </table>
@@ -131,6 +131,104 @@ ds_sel = subset(
 - If a dataset has **no time dimension**, the time filter is silently ignored.
 - Exact geometry masking (`mask=True`) is optional; by default a fast **bounding-box subset** is applied.
 
+### Spatial alignment across datasets
+
+When working with multiple EO datasets, spatial alignment is explicit and reproducible.  
+All datasets are reprojected, resampled, and merged onto a **common target grid** using the
+`DatasetAligner`.
+
+The aligner enforces a clear spatial contract:
+
+- a single **reference grid** (CRS, resolution, extent, shape),
+- explicit **resampling rules** per dataset and per variable,
+- optional **pre-coarsening** for fast downsampling,
+- strict merge semantics to avoid silent conflicts.
+
+This avoids common pitfalls where datasets appear aligned visually but differ subtly in
+resolution, grid origin, or reprojection.
+
+---
+
+#### Example: aligning biomass and disturbance data
+
+```python
+import geopandas as gpd
+
+from eoforeststac.providers.zarr import ZarrProvider
+from eoforeststac.providers.subset import subset
+from eoforeststac.providers.align import DatasetAligner
+
+Open the data catalog and define a region of interest
+(geometries are always provided in EPSG:4326):
+
+provider = ZarrProvider(
+    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+    endpoint_url="https://s3.gfz-potsdam.de",
+    anon=True,
+)
+
+roi = gpd.read_file("DE-Hai.geojson")
+geometry = roi.to_crs("EPSG:4326").geometry.union_all()
+
+Load and subset the reference dataset
+(used to define the target grid):
+
+ds = provider.open_dataset(
+    collection_id="CCI_BIOMASS",
+    version="6.0",
+)
+
+ds_biomass = subset(
+    ds,
+    geometry=geometry,
+    time=("2007-01-01", "2020-12-31"),
+)
+
+Load and subset a second dataset on a different native grid:
+
+ds = provider.open_dataset(
+    collection_id="SAATCHI_BIOMASS",
+    version="2.0",
+)
+
+ds_efda = subset(
+    ds,
+    geometry=geometry,
+    time=("2020-01-01", "2020-12-31"),
+)
+
+Define the aligner and specify resampling behaviour:
+
+aligner = DatasetAligner(
+    target="CCI_BIOMASS",
+    resampling={
+        "CCI_BIOMASS": {"default": "average"},
+        "EFDA": {"default": "average"},
+    },
+)
+
+aligned = aligner.align({
+    "CCI_BIOMASS": ds_biomass.sel(time="2020-01-01"),
+    "EFDA": ds_efda,
+})
+```
+The resulting dataset is guaranteed to:
+
+- share a common CRS, resolution, extent, and grid origin,
+
+- have consistent spatial dimension names,
+
+- preserve variable-specific resampling choices,
+
+**Notes**
+
+- The target grid is derived from the reference dataset (target="CCI_BIOMASS"), unless explicitly overridden.
+
+- All spatial variables are required to carry a CRS; missing CRS metadata is enforced internally.
+
+- Merging is performed with strict conflict checks to avoid silent overwrites.
+
+- Temporal alignment is handled explicitly by the user (e.g. via sel(time=...)).
 
 ## 🔐 Data Access Modes
 
