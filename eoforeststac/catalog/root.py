@@ -16,9 +16,9 @@ from eoforeststac.catalog.saatchi_biomass import (
     create_saatchi_biomass_collection,
     create_saatchi_biomass_item,
 )
-from eoforeststac.catalog.tmf import (
-    create_tmf_collection,
-    create_tmf_item,
+from eoforeststac.catalog.jrc_tmf import (
+    create_jrc_tmf_collection,
+    create_jrc_tmf_item,
 )
 from eoforeststac.catalog.efda import (
     create_efda_collection,
@@ -58,7 +58,7 @@ from eoforeststac.catalog.hansen_gfc import (
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "CCI_BIOMASS": ["6.0"],
     "SAATCHI_BIOMASS": ["2.0"],
-    "TMF": ["2024"],
+    "JRC_TMF": ["2024"],
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", '3.0', '3.1'],
@@ -118,10 +118,10 @@ def build_root_catalog(
     catalog.add_child(saatchi_col)
     collections["SAATCHI_BIOMASS"] = (saatchi_col, create_saatchi_biomass_item)
 
-    # TMF
-    tmf_col = create_tmf_collection()
-    catalog.add_child(tmf_col)
-    collections["TMF"] = (tmf_col, create_tmf_item)
+    # JRC_TMF
+    jrc_tmf_col = create_jrc_tmf_collection()
+    catalog.add_child(jrc_tmf_col)
+    collections["JRC_TMF"] = (jrc_tmf_col, create_jrc_tmf_item)
 
     # EFDA
     efda_col = create_efda_collection()

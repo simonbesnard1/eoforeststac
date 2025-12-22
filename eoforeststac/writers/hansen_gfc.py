@@ -1,8 +1,7 @@
-# eoforeststac/writers/hansen_gfc.py
-
 import xarray as xr
 import rioxarray
 from datetime import datetime
+from pathlib import Path
 from typing import Dict, Optional
 
 from eoforeststac.writers.base import BaseZarrWriter
@@ -14,48 +13,88 @@ class HansenGFCWriter(BaseZarrWriter):
     Writer for Hansen Global Forest Change (GFC) v1.12.
 
     Native input:
-      - One VRT per variable (each VRT mosaics global tiles)
+      - One VRT per variable (global mosaics)
 
-    Variables written:
-      - data_mask   (uint8)
-      - gain        (uint8, boolean)
-      - loss        (uint8, boolean)
-      - tree_cover  (uint8, percent 0–100)
+    Output:
+      - Single Zarr store with harmonized Hansen variables
 
-    CRS:
-      - EPSG:4326
-    Resolution:
-      - 30 m
+    Notes
+    -----
+    - Hansen `loss` encoding (1–24) is converted to calendar year (2001–2024)
+      and stored as `loss_year` (int16).
+    - This avoids implicit conventions and aligns with TMF-style year products.
     """
+
+    # ------------------------------------------------------------------
+    # Dataset definition
+    # ------------------------------------------------------------------
+    VARIABLES = {
+        "tree_cover": {
+            "dtype": "uint8",
+            "long_name": "Tree canopy cover in year 2000",
+            "description": (
+                "Percent tree canopy cover for vegetation taller than 5 m "
+                "in the year 2000."
+            ),
+            "units": "percent",
+            "valid_min": 0,
+            "valid_max": 100,
+        },
+        "gain": {
+            "dtype": "uint8",
+            "long_name": "Forest cover gain",
+            "description": (
+                "Forest gain indicator for the period 2000–2012. "
+                "Value 1 indicates gain; 0 indicates no gain."
+            ),
+            "valid_min": 0,
+            "valid_max": 1,
+        },
+        "data_mask": {
+            "dtype": "uint8",
+            "long_name": "Data availability mask",
+            "description": (
+                "Mask distinguishing land, water, and areas without "
+                "valid observations."
+            ),
+        },
+        # NOTE: loss is handled specially and converted to loss_year
+        "loss": {
+            "dtype": "uint8",
+        },
+    }
 
     # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
-    def load_dataset(
-        self,
-        vrt_paths: Dict[str, str],
-    ) -> xr.Dataset:
+    def load_variable(self, vrt_path: Path, var_name: str) -> xr.DataArray:
         """
-        Load multiple Hansen GFC VRTs lazily and combine into a Dataset.
+        Load a single Hansen VRT lazily.
+        """
+        da = (
+            rioxarray.open_rasterio(
+                vrt_path,
+                masked=True,
+                chunks="auto",
+            )
+            .squeeze(drop=True)
+            .rename(var_name)
+        )
+        return da
 
-        Parameters
-        ----------
-        vrt_paths : dict
-            Mapping {variable_name: vrt_path}
+    def load_dataset(self, vrt_dir: str) -> xr.Dataset:
+        """
+        Load all Hansen VRT layers into a single Dataset.
         """
         data_vars = {}
+        vrt_dir = Path(vrt_dir)
 
-        for var, vrt_path in vrt_paths.items():
-            da = (
-                rioxarray.open_rasterio(
-                    vrt_path,
-                    masked=True,
-                    chunks="auto",   # rasterio + dask decide optimal tiling
-                )
-                .squeeze(drop=True)
-                .rename(var)
-            )
-            data_vars[var] = da
+        for var_name in self.VARIABLES:
+            vrt_path = vrt_dir / f"{var_name}.vrt"
+            if not vrt_path.exists():
+                raise FileNotFoundError(f"Missing Hansen VRT: {vrt_path}")
+
+            data_vars[var_name] = self.load_variable(vrt_path, var_name)
 
         return xr.Dataset(data_vars)
 
@@ -71,7 +110,7 @@ class HansenGFCWriter(BaseZarrWriter):
         chunks: Optional[Dict[str, int]] = None,
     ) -> xr.Dataset:
         """
-        Harmonize CRS, dimensions, chunking, dtypes and metadata.
+        Harmonize CRS, dimensions, chunking, semantics and metadata.
         """
 
         # --------------------------------------------------
@@ -95,99 +134,86 @@ class HansenGFCWriter(BaseZarrWriter):
                     ds = ds.rename({old: new})
 
         # --------------------------------------------------
-        # Chunking (after renaming)
+        # Chunking
         # --------------------------------------------------
         if chunks is not None:
             ds = ds.chunk(chunks)
 
         # --------------------------------------------------
-        # Dtypes & semantics (Hansen conventions)
+        # Convert LOSS → LOSS_YEAR (core semantic fix)
         # --------------------------------------------------
-        if "tree_cover" in ds:
-            ds["tree_cover"] = ds["tree_cover"].astype("uint8")
-
-        for var in ("loss", "gain", "data_mask"):
-            if var in ds:
-                ds[var] = ds[var].astype("uint8")
-
-        # --------------------------------------------------
-        # Variable metadata
-        # --------------------------------------------------
-        if "tree_cover" in ds:
-            ds["tree_cover"].attrs.update({
-                "long_name": "Tree canopy cover in year 2000",
-                "description": (
-                    "Percent tree canopy cover for vegetation taller than 5 m "
-                    "in the year 2000."
-                ),
-                "units": "percent",
-                "valid_min": 0,
-                "valid_max": 100,
-                "grid_mapping": "crs",
-                "_FillValue": fill_value
-            })
-
         if "loss" in ds:
-            ds["loss"].attrs.update({
-                "long_name": "Forest cover loss",
+            loss = ds["loss"]
+
+            loss_year = xr.where(
+                loss > 0,
+                loss + 2000,
+                fill_value,
+            ).astype("int16")
+
+            loss_year.attrs.update({
+                "long_name": "Year of forest cover loss",
                 "description": (
-                    "Forest loss indicator for the period 2001–2024. "
-                    "Value 1 indicates loss; 0 indicates no loss."
+                    "Calendar year in which forest loss occurred. "
+                    "Derived from Hansen GFC loss encoding "
+                    "(1–24 → 2001–2024)."
                 ),
-                "valid_min": 0,
-                "valid_max": 1,
+                "units": "year",
                 "grid_mapping": "crs",
-                "_FillValue": fill_value
+                "_FillValue": fill_value,
             })
 
-        if "gain" in ds:
-            ds["gain"].attrs.update({
-                "long_name": "Forest cover gain",
-                "description": (
-                    "Forest gain indicator for the period 2000–2012. "
-                    "Value 1 indicates gain; 0 indicates no gain."
-                ),
-                "valid_min": 0,
-                "valid_max": 1,
+            ds = ds.drop_vars("loss")
+            ds["loss_year"] = loss_year
+
+        # --------------------------------------------------
+        # Handle remaining variables
+        # --------------------------------------------------
+        for name, meta in self.VARIABLES.items():
+            if name == "loss":
+                continue
+            if name not in ds:
+                continue
+
+            ds[name] = ds[name].astype(meta["dtype"])
+            ds[name].attrs.update({
+                "long_name": meta["long_name"],
+                "description": meta["description"],
                 "grid_mapping": "crs",
-                "_FillValue": fill_value
+                "_FillValue": fill_value,
             })
 
-        if "data_mask" in ds:
-            ds["data_mask"].attrs.update({
-                "long_name": "Data mask",
-                "description": (
-                    "Data availability mask distinguishing land, water, "
-                    "and areas without valid observations."
-                ),
-                "grid_mapping": "crs",
-                "_FillValue": fill_value
-            })
+            if "units" in meta:
+                ds[name].attrs["units"] = meta["units"]
+            if "valid_min" in meta:
+                ds[name].attrs["valid_min"] = meta["valid_min"]
+            if "valid_max" in meta:
+                ds[name].attrs["valid_max"] = meta["valid_max"]
 
         # --------------------------------------------------
         # Global metadata
         # --------------------------------------------------
-        meta = {
+        self.set_global_metadata(ds, {
             "title": "Global Forest Change (Hansen et al.)",
             "description": (
                 "Global Forest Change dataset derived from Landsat imagery, "
-                "quantifying forest extent, loss, and gain from 2000 to 2024. "
-                "Produced by the University of Maryland and partners."
+                "quantifying tree cover, forest loss, and forest gain from "
+                "2000 to 2024. Loss years are stored as calendar years "
+                "(2001–2024)."
             ),
-            "version": version,
-            "institution": "University of Maryland, Department of Geographical Sciences",
+            "product_version": version,
+            "institution": (
+                "University of Maryland, Department of Geographical Sciences"
+            ),
             "created_by": "Hansen et al.",
+            "spatial_resolution": "30 m",
+            "crs": crs,
+            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "references": (
                 "https://storage.googleapis.com/earthenginepartners-hansen/"
                 "GFC-2024-v1.12/download.html"
             ),
-            "spatial_resolution": "30 m",
-            "crs": crs,
-            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "_FillValue": fill_value
-        }
-
-        self.set_global_metadata(ds, meta)
+        })
 
         return ds
 
@@ -196,45 +222,39 @@ class HansenGFCWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     def write(
         self,
-        vrt_paths: Dict[str, str],
+        vrt_dir: str,
         output_zarr: str,
         fill_value: int = 0,
         version: str = "1.12",
-        crs: str = "EPSG:4326",
         chunks: Optional[Dict[str, int]] = None,
+        crs: str = "EPSG:4326",
     ) -> str:
         """
-        End-to-end:
-            VRTs → harmonized Dataset → Zarr-on-Ceph/S3
+        End-to-end Hansen GFC write:
+            VRTs → Dataset → harmonized Zarr
         """
 
         if chunks is None:
-            chunks = {
-                "latitude": 2048,
-                "longitude": 2048,
-            }
+            chunks = {"latitude": 2048, "longitude": 2048}
 
         print("Loading Hansen GFC VRTs…")
-        ds = self.load_dataset(vrt_paths)
+        ds = self.load_dataset(vrt_dir)
 
-        print("Processing dataset…")
+        print("Processing Hansen GFC dataset…")
         ds = self.process_dataset(
             ds,
-            fill_value=fill_value,
             crs=crs,
+            fill_value=fill_value,
             version=version,
             chunks=chunks,
         )
 
         encoding = {
-            var: {
-                "chunks": (
-                    chunks["latitude"],
-                    chunks["longitude"],
-                ),
+            v: {
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
-            for var in ds.data_vars
+            for v in ds.data_vars
         }
 
         print("Writing Zarr to Ceph/S3…")

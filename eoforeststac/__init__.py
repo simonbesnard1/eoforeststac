@@ -34,7 +34,7 @@ from eoforeststac.writers.CCI_biomass import CCI_BiomassWriter
 from eoforeststac.writers.gami import GAMIWriter
 from eoforeststac.writers.saatchi_biomass import SaatchiBiomassWriter
 from eoforeststac.writers.efda import EFDAWriter
-from eoforeststac.writers.tmf import TMFWriter
+from eoforeststac.writers.jrc_tmf import JRCTMFWriter
 from eoforeststac.writers.potapov_height import PotapovHeightWriter
 
 # -----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ __all__ = [
     "GAMIWriter",
     "SaatchiBiomassWriter",
     "EFDAWriter",
-    "TMFWriter",
+    "JRCTMFWriter",
     "PotapovHeightWriter",
 
     # catalog builders
