@@ -93,8 +93,8 @@ class TMFWriter(BaseZarrWriter):
         ds: xr.Dataset,
         crs: str = "EPSG:4326",
         fill_value: int = 0,
-        chunks: Optional[Dict[str, int]] = None,
-        reference_year: int = 2024,
+        version: str = "2024",
+        chunks: Optional[Dict[str, int]] = None
     ) -> xr.Dataset:
         """
         Harmonize CRS, dimensions, chunking and metadata.
@@ -144,8 +144,7 @@ class TMFWriter(BaseZarrWriter):
                 "from the 1990s to 2024."
             ),
             "institution": "Joint Research Centre (JRC)",
-            "product_version": "v1-2024",
-            "reference_year": reference_year,
+            "product_version": version,
             "spatial_resolution": "30 m",
             "crs": crs,
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -223,6 +222,8 @@ class TMFWriter(BaseZarrWriter):
         self,
         vrt_dir: str,
         output_zarr: str,
+        fill_value: int = 0,
+        version: str = "2024",
         chunks: Optional[Dict[str, int]] = None,
         crs: str = "EPSG:4326",
     ) -> str:
@@ -238,7 +239,7 @@ class TMFWriter(BaseZarrWriter):
         ds = self.load_dataset(vrt_dir)
 
         print("Processing TMF dataset…")
-        ds = self.process_dataset(ds, crs=crs, chunks=chunks)
+        ds = self.process_dataset(ds, crs=crs, chunks=chunks, version=version)
 
         encoding = {
             v: {
@@ -247,6 +248,6 @@ class TMFWriter(BaseZarrWriter):
             }
             for v in ds.data_vars
         }
-
+        
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
