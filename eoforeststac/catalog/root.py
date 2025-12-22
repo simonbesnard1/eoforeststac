@@ -48,18 +48,24 @@ from eoforeststac.catalog.forestpaths_genus import (
     create_forestpaths_genus_item,
 )
 
+from eoforeststac.catalog.hansen_gfc import (
+    create_hansen_gfc_collection,
+    create_hansen_gfc_item,
+)
+
+
 # Optional: declare which versions you want to register as items
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "CCI_BIOMASS": ["6.0"],
     "SAATCHI_BIOMASS": ["2.0"],
-    "TMF": ["3.0"],
+    "TMF": ["2024"],
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", '3.0', '3.1'],
     "JRC_GFC2020": ["1.0", "2.0", "3.0"],
     "ROBINSON_CR": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
-    
+    "HANSEN_GFC": ["1.12"],
 }
 
 def build_root_catalog(
@@ -146,6 +152,11 @@ def build_root_catalog(
     forestpaths_genus_col = create_forestpaths_genus_collection()
     catalog.add_child(forestpaths_genus_col)
     collections["FORESTPATHS_GENUS"] = (forestpaths_genus_col, create_forestpaths_genus_item)
+
+    # HANSEN_GFC
+    hansen_gfc_col = create_hansen_gfc_collection()
+    catalog.add_child(hansen_gfc_col)
+    collections["HANSEN_GFC"] = (hansen_gfc_col, create_hansen_gfc_item)
 
     # ------------------------------------------------------------------
     # 3. Create items for each version (if specified)
