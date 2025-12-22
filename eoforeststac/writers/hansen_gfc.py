@@ -66,6 +66,7 @@ class HansenGFCWriter(BaseZarrWriter):
         self,
         ds: xr.Dataset,
         crs: str = "EPSG:4326",
+        fill_value: int = 0,
         version: str = "1.12",
         chunks: Optional[Dict[str, int]] = None,
     ) -> xr.Dataset:
@@ -123,6 +124,7 @@ class HansenGFCWriter(BaseZarrWriter):
                 "valid_min": 0,
                 "valid_max": 100,
                 "grid_mapping": "crs",
+                "_FillValue": fill_value
             })
 
         if "loss" in ds:
@@ -135,6 +137,7 @@ class HansenGFCWriter(BaseZarrWriter):
                 "valid_min": 0,
                 "valid_max": 1,
                 "grid_mapping": "crs",
+                "_FillValue": fill_value
             })
 
         if "gain" in ds:
@@ -147,6 +150,7 @@ class HansenGFCWriter(BaseZarrWriter):
                 "valid_min": 0,
                 "valid_max": 1,
                 "grid_mapping": "crs",
+                "_FillValue": fill_value
             })
 
         if "data_mask" in ds:
@@ -157,6 +161,7 @@ class HansenGFCWriter(BaseZarrWriter):
                     "and areas without valid observations."
                 ),
                 "grid_mapping": "crs",
+                "_FillValue": fill_value
             })
 
         # --------------------------------------------------
@@ -179,6 +184,7 @@ class HansenGFCWriter(BaseZarrWriter):
             "spatial_resolution": "30 m",
             "crs": crs,
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "_FillValue": fill_value
         }
 
         self.set_global_metadata(ds, meta)
@@ -192,6 +198,7 @@ class HansenGFCWriter(BaseZarrWriter):
         self,
         vrt_paths: Dict[str, str],
         output_zarr: str,
+        fill_value: int = 0,
         version: str = "1.12",
         crs: str = "EPSG:4326",
         chunks: Optional[Dict[str, int]] = None,
@@ -213,6 +220,7 @@ class HansenGFCWriter(BaseZarrWriter):
         print("Processing dataset…")
         ds = self.process_dataset(
             ds,
+            fill_value=fill_value,
             crs=crs,
             version=version,
             chunks=chunks,
