@@ -8,7 +8,7 @@ from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 
-class TMFWriter(BaseZarrWriter):
+class JRCTMFWriter(BaseZarrWriter):
     """
     Writer for Tropical Moist Forest (TMF) products (v1-2024).
 
