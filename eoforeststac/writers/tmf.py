@@ -1,177 +1,252 @@
 import xarray as xr
-import numpy as np
+import rioxarray
 from datetime import datetime
 from pathlib import Path
-from typing import Sequence, Optional, Dict
+from typing import Dict, Optional
 
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
+
 class TMFWriter(BaseZarrWriter):
     """
-    Writer for the Tropical Moist Forest (TMF) disturbance product.
+    Writer for Tropical Moist Forest (TMF) products (v1-2024).
 
-    Assumes yearly GeoTIFF files, e.g.
-      <input_dir>/<year>_tmf_disturb.tif
+    Native input:
+      - One VRT per TMF layer (categorical / year-encoded rasters)
+
+    Output:
+      - Single Zarr store with multiple TMF variables
     """
 
     # ------------------------------------------------------------------
-    # IO
+    # Dataset definition
     # ------------------------------------------------------------------
-    def _open_year(
-        self,
-        input_dir: str,
-        year: int,
-        pattern: str,
-    ) -> xr.DataArray:
-        tif_path = Path(input_dir) / pattern.format(year=year)
+    VARIABLES = {
+        "DeforestationYear": {
+            "dtype": "int16",
+            "long_name": "Year of deforestation",
+            "description": "Year when deforestation started.",
+            "units": "year",
+        },
+        "DegradationYear": {
+            "dtype": "int16",
+            "long_name": "Year of degradation",
+            "description": "Year when forest degradation started.",
+            "units": "year",
+        },
+        "TransitionMap_MainClasses": {
+            "dtype": "uint8",
+            "long_name": "TMF transition map – main classes",
+            "description": "Main land-cover transition classes for Tropical Moist Forests.",
+        },
+        "TransitionMap_Subtypes": {
+            "dtype": "uint8",
+            "long_name": "TMF transition map – subtypes",
+            "description": "Detailed land-cover transition subtypes for Tropical Moist Forests.",
+        },
+        "UndisturbedDegradedForest": {
+            "dtype": "uint8",
+            "long_name": "Undisturbed or degraded forest mask",
+            "description": "Binary mask distinguishing undisturbed and degraded TMF.",
+        },
+    }
 
-        da = xr.open_dataarray(tif_path, engine="rasterio")  # (band?, y, x)
-        if "band" in da.dims:
-            da = da.isel(band=0, drop=True)
-
-        da = da.rename("tmf_disturbance")
-        da = da.assign_coords(time=np.datetime64(f"{year}-01-01"))
-        da = da.expand_dims("time")
-
+    # ------------------------------------------------------------------
+    # Load
+    # ------------------------------------------------------------------
+    def load_variable(self, vrt_path: Path, var_name: str) -> xr.DataArray:
+        """
+        Load a single TMF VRT lazily.
+        """
+        da = (
+            rioxarray.open_rasterio(
+                vrt_path,
+                masked=True,
+                chunks="auto",
+            )
+            .squeeze(drop=True)
+            .rename(var_name)
+        )
         return da
 
-    def build_dataset(
-        self,
-        input_dir: str,
-        years: Sequence[int],
-        pattern: str = "{year}_tmf_disturb.tif",
-    ) -> xr.Dataset:
-        das = [
-            self._open_year(input_dir, int(year), pattern)
-            for year in years
-        ]
+    def load_dataset(self, vrt_dir: str) -> xr.Dataset:
+        """
+        Load all TMF VRT layers into a single Dataset.
+        """
+        data_vars = {}
 
-        da = xr.concat(das, dim="time")
-        ds = da.to_dataset(name="tmf_disturbance")
-        return ds
+        for var_name in self.VARIABLES:
+            vrt_path = Path(vrt_dir) / f"{var_name}.vrt"
+            if not vrt_path.exists():
+                raise FileNotFoundError(f"Missing TMF VRT: {vrt_path}")
+
+            data_vars[var_name] = self.load_variable(vrt_path, var_name)
+
+        return xr.Dataset(data_vars)
 
     # ------------------------------------------------------------------
-    # Processing
+    # Process
     # ------------------------------------------------------------------
     def process_dataset(
         self,
         ds: xr.Dataset,
-        fill_value: int = -9999,
         crs: str = "EPSG:4326",
+        fill_value: int = 0,
         chunks: Optional[Dict[str, int]] = None,
+        reference_year: int = 2024,
     ) -> xr.Dataset:
         """
-        Apply fill values, CRS, coordinate harmonization,
-        chunking, and metadata.
+        Harmonize CRS, dimensions, chunking and metadata.
         """
-
-        # --- Fill values + dtype ---
-        ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int16")
 
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
 
-        # ------------------------------------------------------------------
-        # Rename y/x → latitude/longitude
-        # ------------------------------------------------------------------
+        # --- Rename raster dims ---
         rename_dims = {}
-        if "y" in ds.dims:
-            rename_dims["y"] = "latitude"
         if "x" in ds.dims:
             rename_dims["x"] = "longitude"
+        if "y" in ds.dims:
+            rename_dims["y"] = "latitude"
 
         if rename_dims:
             ds = ds.rename(rename_dims)
-            for old, new in rename_dims.items():
-                if old in ds.coords:
-                    ds = ds.rename({old: new})
-
-        # --- Coordinate metadata ---
-        if "latitude" in ds.coords:
-            ds["latitude"].attrs.update({
-                "long_name": "Latitude",
-                "standard_name": "latitude",
-                "units": "degrees_north",
-                "axis": "Y",
-            })
-
-        if "longitude" in ds.coords:
-            ds["longitude"].attrs.update({
-                "long_name": "Longitude",
-                "standard_name": "longitude",
-                "units": "degrees_east",
-                "axis": "X",
-            })
+            for o, n in rename_dims.items():
+                if o in ds.coords:
+                    ds = ds.rename({o: n})
 
         # --- Chunking ---
         if chunks is not None:
             ds = ds.chunk(chunks)
 
-        # --- Variable metadata ---
-        ds["tmf_disturbance"].attrs.update({
-            "long_name": "Tropical Moist Forest disturbance",
-            "description": (
-                "Annual disturbance class or mask from the "
-                "Tropical Moist Forest (TMF) product."
-            ),
-            "grid_mapping": "crs",
-            "_FillValue": fill_value,
-        })
+        # --- Variable handling ---
+        for name, meta in self.VARIABLES.items():
+            ds[name] = ds[name].astype(meta["dtype"])
+            ds[name].attrs.update({
+                "long_name": meta["long_name"],
+                "description": meta["description"],
+                "grid_mapping": "crs",
+                "_FillValue": fill_value,
+            })
+            if "units" in meta:
+                ds[name].attrs["units"] = meta["units"]
+
+        # --- Attach legends (CF-safe) ---
+        self._add_legends(ds)
 
         # --- Global metadata ---
-        meta = {
-            "title": "Tropical Moist Forest (TMF) Disturbance",
-            "product_name": "TMF Disturbance",
+        self.set_global_metadata(ds, {
+            "title": "Tropical Moist Forest (TMF) Transition Maps v1-2024",
+            "description": (
+                "Global Tropical Moist Forest transition datasets describing "
+                "deforestation, degradation, regrowth, and land-cover conversion "
+                "from the 1990s to 2024."
+            ),
             "institution": "Joint Research Centre (JRC)",
-            "created_by": "TMF consortium",
-            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "spatial_resolution": "30 m / 90 m (native TMF)",
+            "product_version": "v1-2024",
+            "reference_year": reference_year,
+            "spatial_resolution": "30 m",
             "crs": crs,
-            "_FillValue": fill_value,
-        }
-
-        self.set_global_metadata(ds, meta)
+            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "references": "https://forobs.jrc.ec.europa.eu/TMF",
+        })
 
         return ds
+
+    # ------------------------------------------------------------------
+    # Legends
+    # ------------------------------------------------------------------
+    def _add_legends(self, ds: xr.Dataset):
+        """
+        Attach categorical legends as JSON-style attributes.
+        """
+
+        ds["TransitionMap_MainClasses"].attrs["legend"] = {
+            10: "Undisturbed Tropical Moist Forest",
+            20: "Degraded TMF",
+            30: "TMF regrowth",
+            41: "Deforested → plantation",
+            42: "Deforested → water",
+            43: "Deforested → other land cover",
+            50: "Ongoing deforestation or degradation (2022–2024)",
+            60: "Permanent or seasonal water",
+            70: "Other land cover (including afforestation)",
+        }
+
+        ds["TransitionMap_Subtypes"].attrs["legend"] = {
+            10: "Undisturbed TMF",
+            11: "Bamboo-dominated forest",
+            12: "Undisturbed mangroves",
+            21: "Degraded forest (short disturbance, <2015)",
+            22: "Degraded forest (short disturbance, 2015–2023)",
+            23: "Degraded forest (long disturbance, <2015)",
+            24: "Degraded forest (long disturbance, 2015–2023)",
+            25: "Degraded forest (2/3 periods, <2015)",
+            26: "Degraded forest (2/3 periods, 2015–2023)",
+            31: "Old forest regrowth",
+            32: "Young forest regrowth",
+            33: "Very young forest regrowth",
+            41: "Deforestation (<2014)",
+            42: "Deforestation (2014–2021)",
+            51: "Deforestation (2022)",
+            52: "Deforestation (2023)",
+            53: "Deforestation (2024)",
+            54: "Degradation (2024)",
+            61: "Degraded mangroves (<2015)",
+            62: "Recently degraded mangroves",
+            63: "Mangrove regrowth (≥10 years)",
+            64: "Mangrove regrowth (≥3 years)",
+            65: "Mangrove deforested (<2014)",
+            66: "Mangrove deforested (2015–2022)",
+            67: "Mangrove disturbed (2023–2024)",
+            71: "Permanent water",
+            72: "Seasonal water",
+            73: "Deforestation → permanent water",
+            74: "Deforestation → seasonal water",
+            81: "Old plantation",
+            82: "Plantation regrowth (<2015)",
+            83: "Plantation regrowth (2015–2021)",
+            84: "Conversion to plantation (<2014)",
+            85: "Conversion to plantation (2015–2021)",
+            86: "Recent conversion to plantation (2022–2024)",
+            91: "Other land cover (no afforestation)",
+            92: "Young afforestation",
+            93: "Old afforestation",
+            94: "Water → forest regrowth",
+        }
 
     # ------------------------------------------------------------------
     # Write
     # ------------------------------------------------------------------
     def write(
         self,
-        input_dir: str,
-        years: Sequence[int],
+        vrt_dir: str,
         output_zarr: str,
-        pattern: str = "{year}_tmf_disturb.tif",
         chunks: Optional[Dict[str, int]] = None,
+        crs: str = "EPSG:4326",
     ) -> str:
+        """
+        End-to-end TMF write:
+            VRTs → Dataset → harmonized Zarr
+        """
 
         if chunks is None:
-            chunks = {
-                "time": -1,
-                "latitude": 1000,
-                "longitude": 1000,
-            }
+            chunks = {"latitude": 2048, "longitude": 2048}
 
-        ds = self.build_dataset(
-            input_dir=input_dir,
-            years=years,
-            pattern=pattern,
-        )
+        print("Loading TMF VRTs…")
+        ds = self.load_dataset(vrt_dir)
 
-        ds = self.process_dataset(
-            ds,
-            chunks=chunks,
-        )
+        print("Processing TMF dataset…")
+        ds = self.process_dataset(ds, crs=crs, chunks=chunks)
 
-        # Zarr encoding derived from actual Dask chunks
         encoding = {
-            var: {
-                "chunks": ds[var].chunksize,
+            v: {
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
-            for var in ds.data_vars
+            for v in ds.data_vars
         }
 
+        print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
