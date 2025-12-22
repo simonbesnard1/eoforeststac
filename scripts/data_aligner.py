@@ -43,7 +43,6 @@ aligner = DatasetAligner(
         }
 )
 
-
 aligned = aligner.align({
     "CCI_BIOMASS": ds_biomass.sel(time="2020-01-01"),
     "EFDA": ds_efda
