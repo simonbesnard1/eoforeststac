@@ -1,0 +1,16 @@
+# Include critical files
+include README.md
+include LICENSE
+
+# Include the CITATION.cff file
+include CITATION.cff
+
+# Exclude test
+exclude eoforeststac/tests/*
+exclude eoforeststac/tests/**/*.*
+
+# Exclude scripts
+exclude scripts
+
+
+
