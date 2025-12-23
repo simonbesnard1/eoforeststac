@@ -62,7 +62,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", '3.0', '3.1'],
-    "JRC_GFC2020": ["1.0", "2.0", "3.0"],
+    "JRC_GFC2020": ["3.0"],
     "ROBINSON_CR": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
     "HANSEN_GFC": ["1.12"],
