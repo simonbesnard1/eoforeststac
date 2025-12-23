@@ -241,21 +241,35 @@ class JRCTMFWriter(BaseZarrWriter):
             )
 
         # --------------------------------------------------
-        # 2. Stream AnnualChange year by year
+        # 2. Stream AnnualChange year by year (SAFE)
         # --------------------------------------------------
         if annual_dir is not None:
             annual_dir = Path(annual_dir)
-
+        
             for i, year in enumerate(self.ANNUAL_CHANGE["years"]):
                 print(f"Writing AnnualChange {year}")
-
+        
                 da = self.load_annual_change_year(annual_dir, year)
-
+        
+                # --- CRS & dims ---
                 da = da.rio.write_crs(crs, inplace=False)
                 da = da.rename({"x": "longitude", "y": "latitude"})
-                da = da.astype(self.ANNUAL_CHANGE["dtype"])
-                da = da.chunk({"time": 1, "latitude": 2048, "longitude": 2048})
-
+        
+                # --- Fill + dtype (IMPORTANT) ---
+                da = da.where(da.notnull(), fill_value).astype(
+                    self.ANNUAL_CHANGE["dtype"]
+                )
+        
+                # --- Chunk explicitly (time = 1 for streaming) ---
+                da = da.chunk({
+                    "time": 1,
+                    "latitude": chunks["latitude"],
+                    "longitude": chunks["longitude"],
+                })
+        
+                # --------------------------------------------------
+                # First year → CREATE variable + time dimension
+                # --------------------------------------------------
                 if i == 0:
                     da.attrs.update({
                         "long_name": self.ANNUAL_CHANGE["long_name"],
@@ -264,21 +278,37 @@ class JRCTMFWriter(BaseZarrWriter):
                         "_FillValue": fill_value,
                         "legend": self.ANNUAL_CHANGE["legend"],
                     })
-                
-                da.to_zarr(
+        
+                    da.to_zarr(
+                        store=store,
+                        mode="a",   # store already exists from static write
+                        encoding={
+                            "AnnualChange": {
+                                "chunks": (
+                                    1,
+                                    chunks["latitude"],
+                                    chunks["longitude"],
+                                ),
+                                "compressor": DEFAULT_COMPRESSOR,
+                            }
+                        },
+                        consolidated=False,
+                    )
+        
+                # --------------------------------------------------
+                # Subsequent years → APPEND along time
+                # --------------------------------------------------
+                else:
+                    da.to_zarr(
                         store=store,
                         mode="a",
                         append_dim="time",
-                        encoding={
-                            "AnnualChange": {
-                                "chunks": (1, chunks["latitude"], chunks["longitude"]),
-                                "compressor": DEFAULT_COMPRESSOR,
-                            }
-                        } if i == 0 else None,
                         consolidated=False,
                     )
-
+        
+                # Explicit cleanup (important on HPC)
                 del da
+
 
         print("TMF Zarr write complete.")
         return output_zarr
