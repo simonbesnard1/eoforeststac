@@ -136,7 +136,7 @@ class LiuBiomassWriter(BaseZarrWriter):
         # --------------------------------------------------
         if "time" not in ds.coords:
             ds = ds.assign_coords(
-                time=np.datetime64("2020-01-01")
+                time=np.datetime64("2019-01-01")
             )
             
         # --------------------------------------------------
@@ -242,6 +242,6 @@ class LiuBiomassWriter(BaseZarrWriter):
             }
             for var in ds.data_vars
         }
-
+        
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
