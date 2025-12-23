@@ -206,6 +206,8 @@ class JRCTMFWriter(BaseZarrWriter):
     
         if chunks is None:
             chunks = {"latitude": 2048, "longitude": 2048}
+        
+        store = self.make_store(output_zarr)
 
         # --------------------------------------------------
         # 1. Write static layers
@@ -232,11 +234,11 @@ class JRCTMFWriter(BaseZarrWriter):
         
         print("Writing static TMF layers…")
         ds_static.to_zarr(
-            output_zarr,
-            mode="w",
-            encoding=encoding_static,
-            consolidated=False,
-        )
+                store=store,
+                mode="w",
+                encoding=encoding_static,
+                consolidated=False,
+            )
 
         # --------------------------------------------------
         # 2. Stream AnnualChange year by year
@@ -264,7 +266,7 @@ class JRCTMFWriter(BaseZarrWriter):
                     })
                 
                 da.to_zarr(
-                        output_zarr,
+                        store=store,
                         mode="a",
                         append_dim="time",
                         encoding={
