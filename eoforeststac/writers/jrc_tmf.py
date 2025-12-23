@@ -265,7 +265,7 @@ class JRCTMFWriter(BaseZarrWriter):
     ) -> str:
 
         if chunks is None:
-            chunks = {"latitude": 2048, "longitude": 2048}
+            chunks = {'time':-1, "latitude": 2048, "longitude": 2048}
 
         print("Loading TMF VRTs…")
         ds = self.load_dataset(vrt_dir, annual_dir=annual_dir)
@@ -282,7 +282,7 @@ class JRCTMFWriter(BaseZarrWriter):
         encoding = {
             v: {
                 "chunks": (
-                    (1, chunks["latitude"], chunks["longitude"])
+                    (chunks["time"], chunks["latitude"], chunks["longitude"])
                     if "time" in ds[v].dims
                     else (chunks["latitude"], chunks["longitude"])
                 ),
@@ -290,6 +290,6 @@ class JRCTMFWriter(BaseZarrWriter):
             }
             for v in ds.data_vars
         }
-
+        
         print("Writing TMF Zarr…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
