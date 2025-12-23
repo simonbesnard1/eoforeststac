@@ -32,27 +32,26 @@ from eoforeststac.catalog.gami import (
     create_gami_collection,
     create_gami_item,
 )
-
 from eoforeststac.catalog.jrc_gfc import (
     create_jrc_gfc_collection,
     create_jrc_gfc_item,
 )
-
 from eoforeststac.catalog.robinson_cr import (
     create_robinson_cr_collection,
     create_robinson_cr_item,
 )
-
 from eoforeststac.catalog.forestpaths_genus import (
     create_forestpaths_genus_collection,
     create_forestpaths_genus_item,
 )
-
 from eoforeststac.catalog.hansen_gfc import (
     create_hansen_gfc_collection,
     create_hansen_gfc_item,
 )
-
+from eoforeststac.catalog.liu_biomass import (
+    create_liu_biomass_collection,
+    create_liu_biomass_item,
+)
 
 # Optional: declare which versions you want to register as items
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
@@ -66,6 +65,8 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "ROBINSON_CR": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
     "HANSEN_GFC": ["1.12"],
+    "LIU_BIOMASS": ["0.1"],
+    
 }
 
 def build_root_catalog(
@@ -157,6 +158,11 @@ def build_root_catalog(
     hansen_gfc_col = create_hansen_gfc_collection()
     catalog.add_child(hansen_gfc_col)
     collections["HANSEN_GFC"] = (hansen_gfc_col, create_hansen_gfc_item)
+    
+    # LIU_BIOMASS
+    liu_col = create_liu_biomass_collection()
+    catalog.add_child(liu_col)
+    collections["LIU_BIOMASS"] = (liu_col, create_liu_biomass_item)
 
     # ------------------------------------------------------------------
     # 3. Create items for each version (if specified)
