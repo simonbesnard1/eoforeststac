@@ -8,24 +8,19 @@ from typing import Dict, Optional
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
-
 class JRCTMFWriter(BaseZarrWriter):
     """
     Writer for Tropical Moist Forest (TMF) products (v1-2024).
 
     Native input:
       - Static TMF layers as VRTs
-      - AnnualChange as yearly VRTs (1990–2024)
+      - AnnualChange as per-year VRTs (1990–2024)
 
-    Output:
-      - One Zarr store with:
-          * static TMF layers (no time dim)
-          * AnnualChange(time, latitude, longitude)
+    Output Zarr:
+      - Static layers: (latitude, longitude)
+      - AnnualChange: (time, latitude, longitude)
     """
 
-    # ------------------------------------------------------------------
-    # Static variables
-    # ------------------------------------------------------------------
     STATIC_VARIABLES = {
         "DeforestationYear": {
             "dtype": "int16",
@@ -55,26 +50,40 @@ class JRCTMFWriter(BaseZarrWriter):
             "description": "Binary mask distinguishing undisturbed and degraded TMF.",
         },
     }
-
-    # ------------------------------------------------------------------
-    # Annual change variable
-    # ------------------------------------------------------------------
+    
     ANNUAL_CHANGE = {
         "name": "AnnualChange",
         "dtype": "uint8",
         "years": list(range(1990, 2025)),
         "long_name": "Annual Tropical Moist Forest change",
         "description": (
-            "Annual land-cover state for Tropical Moist Forests, "
+            "Annual land-cover state for Tropical Moist Forests "
             "derived from Landsat time series."
         ),
+        "legend": {
+            1: "Undisturbed Tropical Moist Forest",
+            2: "Degraded TMF",
+            3: "Deforested land",
+            4: "Forest regrowth",
+            5: "Permanent or seasonal water",
+            6: "Other land cover",
+        },
     }
+    
+    def load_static_dataset(self, vrt_dir: str) -> xr.Dataset:
+        vrt_dir = Path(vrt_dir)
+        data_vars = {}
+    
+        for name in self.STATIC_VARIABLES:
+            path = vrt_dir / f"{name}.vrt"
+            if not path.exists():
+                raise FileNotFoundError(f"Missing TMF VRT: {path}")
+            data_vars[name] = self._load_vrt(path, name)
+    
+        return xr.Dataset(data_vars)
 
-    # ------------------------------------------------------------------
-    # Load helpers
-    # ------------------------------------------------------------------
     def _load_vrt(self, vrt_path: Path, name: str) -> xr.DataArray:
-        da = (
+        return (
             rioxarray.open_rasterio(
                 vrt_path,
                 masked=True,
@@ -83,87 +92,46 @@ class JRCTMFWriter(BaseZarrWriter):
             .squeeze(drop=True)
             .rename(name)
         )
-        return da
-
-    # ------------------------------------------------------------------
-    # Load dataset
-    # ------------------------------------------------------------------
-    def load_dataset(
+    
+    def load_annual_change_year(
         self,
-        vrt_dir: str,
-        annual_dir: Optional[str] = None,
-    ) -> xr.Dataset:
-        """
-        Load static TMF layers and optional annual change layers.
-        """
-        data_vars = {}
-        vrt_dir = Path(vrt_dir)
-
-        # --- static layers ---
-        for name in self.STATIC_VARIABLES:
-            path = vrt_dir / f"{name}.vrt"
-            if not path.exists():
-                raise FileNotFoundError(f"Missing TMF VRT: {path}")
-            data_vars[name] = self._load_vrt(path, name)
-
-        ds = xr.Dataset(data_vars)
-
-        # --- annual change ---
-        if annual_dir is not None:
-            annual_dir = Path(annual_dir)
-            annual_layers = []
-
-            for year in self.ANNUAL_CHANGE["years"]:
-                path = annual_dir / f"AnnualChange_{year}.vrt"
-                if not path.exists():
-                    raise FileNotFoundError(f"Missing AnnualChange VRT: {path}")
-
-                da = self._load_vrt(path, "AnnualChange")
-                da = da.expand_dims(
-                    time=[np.datetime64(f"{year}-01-01")]
-                )
-                annual_layers.append(da)
-
-            ds["AnnualChange"] = xr.concat(
-                annual_layers,
-                dim="time"
-            )
-
-        return ds
-
-    # ------------------------------------------------------------------
-    # Process
-    # ------------------------------------------------------------------
-    def process_dataset(
+        annual_dir: Path,
+        year: int,
+    ) -> xr.DataArray:
+        path = annual_dir / f"AnnualChange_{year}.vrt"
+        if not path.exists():
+            raise FileNotFoundError(f"Missing AnnualChange VRT: {path}")
+    
+        da = self._load_vrt(path, "AnnualChange")
+    
+        da = da.expand_dims(
+            time=[np.datetime64(f"{year}-01-01")]
+        )
+    
+        return da
+    
+    def process_static_dataset(
         self,
         ds: xr.Dataset,
-        crs: str = "EPSG:4326",
-        fill_value: int = 0,
-        version: str = "2024",
-        chunks: Optional[Dict[str, int]] = None,
+        *,
+        crs: str,
+        fill_value: int,
+        chunks: Dict[str, int],
+        version: str,
     ) -> xr.Dataset:
-
-        # --- CRS ---
+    
         ds = self.set_crs(ds, crs=crs)
-
-        # --- Rename dims ---
-        rename_dims = {}
+    
+        rename = {}
         if "x" in ds.dims:
-            rename_dims["x"] = "longitude"
+            rename["x"] = "longitude"
         if "y" in ds.dims:
-            rename_dims["y"] = "latitude"
-
-        if rename_dims:
-            ds = ds.rename(rename_dims)
-            for o, n in rename_dims.items():
-                if o in ds.coords:
-                    ds = ds.rename({o: n})
-
-        # --- Chunking ---
-        if chunks is not None:
-            ds = ds.chunk(chunks)
-
-        # --- static variables ---
+            rename["y"] = "latitude"
+        if rename:
+            ds = ds.rename(rename)
+    
+        ds = ds.chunk(chunks)
+    
         for name, meta in self.STATIC_VARIABLES.items():
             ds[name] = ds[name].astype(meta["dtype"])
             ds[name].attrs.update({
@@ -174,37 +142,14 @@ class JRCTMFWriter(BaseZarrWriter):
             })
             if "units" in meta:
                 ds[name].attrs["units"] = meta["units"]
-
-        # --- annual change ---
-        if "AnnualChange" in ds:
-            ds["AnnualChange"] = ds["AnnualChange"].astype(
-                self.ANNUAL_CHANGE["dtype"]
-            )
-            ds["AnnualChange"].attrs.update({
-                "long_name": self.ANNUAL_CHANGE["long_name"],
-                "description": self.ANNUAL_CHANGE["description"],
-                "grid_mapping": "crs",
-                "_FillValue": fill_value,
-            })
-            ds["AnnualChange"].attrs["legend"] = {
-                1: "Undisturbed Tropical Moist Forest",
-                2: "Degraded TMF",
-                3: "Deforested land",
-                4: "Forest regrowth",
-                5: "Permanent or seasonal water",
-                6: "Other land cover",
-            }
-
-        # --- legends for static maps ---
+    
         self._add_legends(ds)
-
-        # --- global metadata ---
+    
         self.set_global_metadata(ds, {
             "title": "Tropical Moist Forest (TMF) products v1-2024",
             "description": (
-                "Global Tropical Moist Forest datasets describing "
-                "deforestation, degradation, regrowth and annual land-cover "
-                "dynamics from 1990 to 2024."
+                "Global Tropical Moist Forest datasets describing deforestation, "
+                "degradation, regrowth, and annual land-cover dynamics from 1990 to 2024."
             ),
             "institution": "Joint Research Centre (JRC)",
             "product_version": version,
@@ -213,12 +158,9 @@ class JRCTMFWriter(BaseZarrWriter):
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "references": "https://forobs.jrc.ec.europa.eu/TMF",
         })
-
+    
         return ds
-
-    # ------------------------------------------------------------------
-    # Legends (static)
-    # ------------------------------------------------------------------
+    
     def _add_legends(self, ds: xr.Dataset):
         ds["TransitionMap_MainClasses"].attrs["legend"] = {
             10: "Undisturbed Tropical Moist Forest",
@@ -231,7 +173,7 @@ class JRCTMFWriter(BaseZarrWriter):
             60: "Permanent or seasonal water",
             70: "Other land cover (including afforestation)",
         }
-
+    
         ds["TransitionMap_Subtypes"].attrs["legend"] = {
             10: "Undisturbed TMF",
             11: "Bamboo-dominated forest",
@@ -249,47 +191,98 @@ class JRCTMFWriter(BaseZarrWriter):
             52: "Deforestation (2023)",
             53: "Deforestation (2024)",
         }
-
-    # ------------------------------------------------------------------
-    # Write
-    # ------------------------------------------------------------------
+        
     def write(
         self,
         vrt_dir: str,
         output_zarr: str,
+        *,
         annual_dir: Optional[str] = None,
         fill_value: int = 0,
         version: str = "2024",
-        chunks: Optional[Dict[str, int]] = None,
         crs: str = "EPSG:4326",
+        chunks: Optional[Dict[str, int]] = None,
     ) -> str:
-
+    
         if chunks is None:
-            chunks = {'time':-1, "latitude": 2048, "longitude": 2048}
+            chunks = {"latitude": 2048, "longitude": 2048}
 
-        print("Loading TMF VRTs…")
-        ds = self.load_dataset(vrt_dir, annual_dir=annual_dir)
+        # --------------------------------------------------
+        # 1. Write static layers
+        # --------------------------------------------------
+        print("Loading static TMF layers…")
+        ds_static = self.load_static_dataset(vrt_dir)
 
-        print("Processing TMF dataset…")
-        ds = self.process_dataset(
-            ds,
+        print("Processing static TMF dataset…")
+        ds_static = self.process_static_dataset(
+            ds_static,
             crs=crs,
+            fill_value=fill_value,
             chunks=chunks,
             version=version,
-            fill_value=fill_value,
         )
 
-        encoding = {
+        encoding_static = {
             v: {
-                "chunks": (
-                    (chunks["time"], chunks["latitude"], chunks["longitude"])
-                    if "time" in ds[v].dims
-                    else (chunks["latitude"], chunks["longitude"])
-                ),
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
-            for v in ds.data_vars
+            for v in ds_static.data_vars
         }
         
-        print("Writing TMF Zarr…")
-        return self.write_to_zarr(ds, output_zarr, encoding=encoding)
+        print("Writing static TMF layers…")
+        ds_static.to_zarr(
+            output_zarr,
+            mode="w",
+            encoding=encoding_static,
+            consolidated=False,
+        )
+
+        # --------------------------------------------------
+        # 2. Stream AnnualChange year by year
+        # --------------------------------------------------
+        if annual_dir is not None:
+            annual_dir = Path(annual_dir)
+
+            for i, year in enumerate(self.ANNUAL_CHANGE["years"]):
+                print(f"Writing AnnualChange {year}")
+
+                da = self.load_annual_change_year(annual_dir, year)
+
+                da = da.rio.write_crs(crs, inplace=False)
+                da = da.rename({"x": "longitude", "y": "latitude"})
+                da = da.astype(self.ANNUAL_CHANGE["dtype"])
+                da = da.chunk({"time": 1, "latitude": 2048, "longitude": 2048})
+
+                if i == 0:
+                    da.attrs.update({
+                        "long_name": self.ANNUAL_CHANGE["long_name"],
+                        "description": self.ANNUAL_CHANGE["description"],
+                        "grid_mapping": "crs",
+                        "_FillValue": fill_value,
+                        "legend": self.ANNUAL_CHANGE["legend"],
+                    })
+                
+                da.to_zarr(
+                        output_zarr,
+                        mode="a",
+                        append_dim="time",
+                        encoding={
+                            "AnnualChange": {
+                                "chunks": (1, chunks["latitude"], chunks["longitude"]),
+                                "compressor": DEFAULT_COMPRESSOR,
+                            }
+                        } if i == 0 else None,
+                        consolidated=False,
+                    )
+
+                del da
+
+        print("TMF Zarr write complete.")
+        return output_zarr
+
+        
+
+
+
+
