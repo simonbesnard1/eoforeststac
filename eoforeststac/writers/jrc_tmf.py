@@ -70,6 +70,33 @@ class JRCTMFWriter(BaseZarrWriter):
         },
     }
     
+    _CF_SERIALIZATION_ATTRS = {
+        "_FillValue",
+        "missing_value",
+        "scale_factor",
+        "add_offset",
+        "valid_range",
+        }
+
+    def _strip_cf_serialization_attrs(
+        self,
+        obj: xr.Dataset | xr.DataArray,
+    ) -> xr.Dataset | xr.DataArray:
+        """
+        Remove CF/Zarr serialization-related attributes that must NOT
+        be present when appending to an existing Zarr store.
+        """
+        if isinstance(obj, xr.DataArray):
+            for k in self._CF_SERIALIZATION_ATTRS:
+                obj.attrs.pop(k, None)
+            return obj
+    
+        for v in obj.data_vars:
+            for k in self._CF_SERIALIZATION_ATTRS:
+                obj[v].attrs.pop(k, None)
+        return obj
+
+    
     def load_static_dataset(self, vrt_dir: str) -> xr.Dataset:
         vrt_dir = Path(vrt_dir)
         data_vars = {}
@@ -87,6 +114,7 @@ class JRCTMFWriter(BaseZarrWriter):
             rioxarray.open_rasterio(
                 vrt_path,
                 masked=True,
+                mask_and_scale=False,
                 chunks="auto",
             )
             .squeeze(drop=True)
@@ -241,7 +269,7 @@ class JRCTMFWriter(BaseZarrWriter):
             )
 
         # --------------------------------------------------
-        # 2. Stream AnnualChange year by year (SAFE)
+        # 2. Stream AnnualChange year by year (CF-safe)
         # --------------------------------------------------
         if annual_dir is not None:
             annual_dir = Path(annual_dir)
@@ -251,16 +279,16 @@ class JRCTMFWriter(BaseZarrWriter):
         
                 da = self.load_annual_change_year(annual_dir, year)
         
-                # --- CRS & dims ---
+                # CRS + dim names
                 da = da.rio.write_crs(crs, inplace=False)
                 da = da.rename({"x": "longitude", "y": "latitude"})
         
-                # --- Fill + dtype (IMPORTANT) ---
+                # Fill + dtype (avoid NaN→uint warning)
                 da = da.where(da.notnull(), fill_value).astype(
                     self.ANNUAL_CHANGE["dtype"]
                 )
         
-                # --- Chunk explicitly (time = 1 for streaming) ---
+                # Chunk explicitly (time=1)
                 da = da.chunk({
                     "time": 1,
                     "latitude": chunks["latitude"],
@@ -268,7 +296,7 @@ class JRCTMFWriter(BaseZarrWriter):
                 })
         
                 # --------------------------------------------------
-                # First year → CREATE variable + time dimension
+                # First year → create variable
                 # --------------------------------------------------
                 if i == 0:
                     da.attrs.update({
@@ -281,14 +309,10 @@ class JRCTMFWriter(BaseZarrWriter):
         
                     da.to_zarr(
                         store=store,
-                        mode="a",   # store already exists from static write
+                        mode="a",
                         encoding={
                             "AnnualChange": {
-                                "chunks": (
-                                    1,
-                                    chunks["latitude"],
-                                    chunks["longitude"],
-                                ),
+                                "chunks": (1, chunks["latitude"], chunks["longitude"]),
                                 "compressor": DEFAULT_COMPRESSOR,
                             }
                         },
@@ -296,9 +320,11 @@ class JRCTMFWriter(BaseZarrWriter):
                     )
         
                 # --------------------------------------------------
-                # Subsequent years → APPEND along time
+                # Subsequent years → append
                 # --------------------------------------------------
                 else:
+                    da = self._strip_cf_serialization_attrs(da)
+        
                     da.to_zarr(
                         store=store,
                         mode="a",
@@ -306,9 +332,7 @@ class JRCTMFWriter(BaseZarrWriter):
                         consolidated=False,
                     )
         
-                # Explicit cleanup (important on HPC)
                 del da
-
 
         print("TMF Zarr write complete.")
         return output_zarr
