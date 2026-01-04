@@ -1,5 +1,6 @@
 import xarray as xr
 import rioxarray
+import zarr
 import numpy as np
 from datetime import datetime
 from pathlib import Path
@@ -230,6 +231,7 @@ class JRCTMFWriter(BaseZarrWriter):
         version: str = "2024",
         crs: str = "EPSG:4326",
         chunks: Optional[Dict[str, int]] = None,
+        consolidate_at_end: bool = True,
     ) -> str:
     
         if chunks is None:
@@ -333,6 +335,9 @@ class JRCTMFWriter(BaseZarrWriter):
                     )
         
                 del da
+        
+        if consolidate_at_end:
+            zarr.consolidate_metadata(store)
 
         print("TMF Zarr write complete.")
         return output_zarr
