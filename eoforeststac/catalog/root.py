@@ -1,9 +1,13 @@
 # eoforeststac/catalog/root.py
 
-import pystac
-from typing import Dict, List
+from __future__ import annotations
 
-from eoforeststac.core.config import BASE_S3_URL
+from dataclasses import dataclass
+from typing import Callable, Dict, List, Mapping, Optional, Tuple
+
+import pystac
+
+from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_BASE
 from eoforeststac.core.io import write_json
 from eoforeststac.catalog.writer import write_collection, write_item
 
@@ -53,138 +57,237 @@ from eoforeststac.catalog.liu_biomass import (
     create_liu_biomass_item,
 )
 
-# Optional: declare which versions you want to register as items
+# ---------------------------------------------------------------------
+# Defaults
+# ---------------------------------------------------------------------
+
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "CCI_BIOMASS": ["6.0"],
     "SAATCHI_BIOMASS": ["2.0"],
     "JRC_TMF": ["2024"],
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
-    "GAMI": ["2.0", "2.1", '3.0', '3.1'],
+    "GAMI": ["2.0", "2.1", "3.0", "3.1"],
     "JRC_GFC2020": ["3.0"],
     "ROBINSON_CR": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
     "HANSEN_GFC": ["1.12"],
     "LIU_BIOMASS": ["0.1"],
-    
 }
 
-def build_root_catalog(
-    versions: Dict[str, List[str]] | None = None,
-    write: bool = True,
+ItemFactory = Callable[[str], pystac.Item]
+CollectionFactory = Callable[[], pystac.Collection]
+
+
+@dataclass(frozen=True)
+class ProductSpec:
+    product_id: str
+    collection_factory: CollectionFactory
+    item_factory: ItemFactory
+
+
+def _product_specs() -> Tuple[ProductSpec, ...]:
+    """Single registry of products and their builders."""
+    return (
+        ProductSpec("CCI_BIOMASS", create_cci_biomass_collection, create_cci_biomass_item),
+        ProductSpec("SAATCHI_BIOMASS", create_saatchi_biomass_collection, create_saatchi_biomass_item),
+        ProductSpec("JRC_TMF", create_jrc_tmf_collection, create_jrc_tmf_item),
+        ProductSpec("EFDA", create_efda_collection, create_efda_item),
+        ProductSpec("POTAPOV_HEIGHT", create_potapov_height_collection, create_potapov_height_item),
+        ProductSpec("GAMI", create_gami_collection, create_gami_item),
+        ProductSpec("JRC_GFC2020", create_jrc_gfc_collection, create_jrc_gfc_item),
+        ProductSpec("ROBINSON_CR", create_robinson_cr_collection, create_robinson_cr_item),
+        ProductSpec("FORESTPATHS_GENUS", create_forestpaths_genus_collection, create_forestpaths_genus_item),
+        ProductSpec("HANSEN_GFC", create_hansen_gfc_collection, create_hansen_gfc_item),
+        ProductSpec("LIU_BIOMASS", create_liu_biomass_collection, create_liu_biomass_item),
+    )
+
+
+def _build_base_tree(
+    versions: Mapping[str, List[str]],
+    *,
+    catalog_id: str,
+    description: str,
+) -> Tuple[pystac.Catalog, Dict[str, Tuple[pystac.Collection, ItemFactory]]]:
+    """
+    Build the in-memory tree once (no href normalization yet).
+    Returns root catalog and a mapping {product_id: (collection, item_factory)}.
+    """
+    catalog = pystac.Catalog(id=catalog_id, description=description)
+    catalog.catalog_type = pystac.CatalogType.RELATIVE_PUBLISHED
+
+    # Optional: harmless hint for stac-browser
+    catalog.extra_fields.setdefault("stac_browser", {"showThumbnailsAsAssets": True})
+
+    collections: Dict[str, Tuple[pystac.Collection, ItemFactory]] = {}
+
+    for spec in _product_specs():
+        col = spec.collection_factory()
+        catalog.add_child(col)
+        collections[spec.product_id] = (col, spec.item_factory)
+
+    # Create versioned items
+    for prod_id, (col, item_factory) in collections.items():
+        for v in versions.get(prod_id, []):
+            col.add_item(item_factory(v))
+
+    return catalog, collections
+
+
+def _write_internal_with_package_writers(root: pystac.Catalog) -> None:
+    """
+    Write using existing package writers (write_collection/write_item),
+    which expect to write to self_href (typically s3://... or local).
+    """
+    if root.self_href is None:
+        raise ValueError("Catalog has no self_href; call normalize_hrefs() before writing.")
+
+    write_json(root.self_href, root.to_dict())
+
+    # Children are collections
+    for col in root.get_children():  # type: ignore[assignment]
+        assert isinstance(col, pystac.Collection)
+        write_collection(col)
+        for item in col.get_items():
+            write_item(item)
+
+
+def _write_browser_variant(
+    base_versions: Mapping[str, List[str]],
+    *,
+    publish_base: str,
+    write_base: str,
+    catalog_id: str,
+    description: str,
 ) -> pystac.Catalog:
     """
-    Build the root EOForest STAC Catalog, attach all known collections,
-    optionally create versioned items, and (optionally) write everything
-    to the Ceph/S3 bucket.
+    Write a browser-facing variant:
+      - JSON contains https://... links (publish_base)
+      - Files are written to a writable base (write_base, e.g. s3://.../public)
 
-    Parameters
-    ----------
-    versions : dict or None
-        Mapping from product ID to list of versions, e.g.:
-        {"CCI_BIOMASS": ["6.0", "5.1"]}.
-        If None, uses DEFAULT_VERSIONS.
-    write : bool
-        If True, writes catalog + collections + items to storage.
+    We do this by building two parallel trees:
+      pub_tree  normalized to publish_base  -> provides the JSON dicts
+      dst_tree  normalized to write_base    -> provides the write destinations (self_href)
+    Then we write pub_tree.to_dict() to dst_tree.self_href for each entity.
+    """
+    pub_root, _ = _build_base_tree(base_versions, catalog_id=catalog_id, description=description)
+    dst_root, _ = _build_base_tree(base_versions, catalog_id=catalog_id, description=description)
+
+    pub_root.normalize_hrefs(publish_base)
+    dst_root.normalize_hrefs(write_base)
+
+    if pub_root.self_href is None:
+        pub_root.set_self_href(f"{publish_base.rstrip('/')}/catalog.json")
+    if dst_root.self_href is None:
+        dst_root.set_self_href(f"{write_base.rstrip('/')}/catalog.json")
+
+    # Root
+    write_json(dst_root.self_href, pub_root.to_dict())
+
+    # Collections (match by id)
+    pub_cols = {c.id: c for c in pub_root.get_children() if isinstance(c, pystac.Collection)}
+    dst_cols = {c.id: c for c in dst_root.get_children() if isinstance(c, pystac.Collection)}
+
+    for col_id, dst_col in dst_cols.items():
+        pub_col = pub_cols.get(col_id)
+        if pub_col is None:
+            continue
+
+        write_json(dst_col.self_href, pub_col.to_dict())
+
+        # Items (match by id)
+        pub_items = {it.id: it for it in pub_col.get_items()}
+        for dst_item in dst_col.get_items():
+            pub_item = pub_items.get(dst_item.id)
+            if pub_item is None:
+                continue
+            write_json(dst_item.self_href, pub_item.to_dict())
+
+    return pub_root
+
+
+def build_root_catalog(
+    versions: Optional[Mapping[str, List[str]]] = None,
+    *,
+    write: bool = True,
+    # Internal catalog settings
+    internal_href_base: str = BASE_S3_URL,
+    # Also build/write a browser mirror?
+    build_browser: bool = False,
+    browser_publish_base: str = S3_HTTP_BASE,
+    browser_write_base: Optional[str] = None,
+    # Root metadata
+    catalog_id: str = "EOFOREST",
+    description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
+) -> pystac.Catalog:
+    """
+    Build the internal EOFOREST root catalog and optionally also write a browser-friendly mirror.
 
     Returns
     -------
     pystac.Catalog
-        The in-memory root Catalog object.
+        The internal (s3://) catalog object.
+
+    Notes
+    -----
+    - Internal: links & write destinations are internal_href_base (typically s3://...)
+    - Browser mirror: JSON links use browser_publish_base (https://...), but files are written
+      to browser_write_base (typically s3://.../public) to avoid https write errors.
     """
-    if versions is None:
-        versions = DEFAULT_VERSIONS
+    versions = DEFAULT_VERSIONS if versions is None else dict(versions)
 
-    # ------------------------------------------------------------------
-    # 1. Create root catalog
-    # ------------------------------------------------------------------
-    catalog = pystac.Catalog(
-        id="EOFOREST",
-        description="Earth Observation Forest STAC catalog (eoforeststac).",
-        href=f"{BASE_S3_URL}/catalog.json",
-    )
+    # -----------------------
+    # Build internal catalog
+    # -----------------------
+    internal_root, _ = _build_base_tree(versions, catalog_id=catalog_id, description=description)
 
-    # ------------------------------------------------------------------
-    # 2. Create collections
-    # ------------------------------------------------------------------
-    collections = {}
-
-    # CCI Biomass
-    cci_col = create_cci_biomass_collection()
-    catalog.add_child(cci_col)
-    collections["CCI_BIOMASS"] = (cci_col, create_cci_biomass_item)
-
-    # Saatchi Biomass
-    saatchi_col = create_saatchi_biomass_collection()
-    catalog.add_child(saatchi_col)
-    collections["SAATCHI_BIOMASS"] = (saatchi_col, create_saatchi_biomass_item)
-
-    # JRC_TMF
-    jrc_tmf_col = create_jrc_tmf_collection()
-    catalog.add_child(jrc_tmf_col)
-    collections["JRC_TMF"] = (jrc_tmf_col, create_jrc_tmf_item)
-
-    # EFDA
-    efda_col = create_efda_collection()
-    catalog.add_child(efda_col)
-    collections["EFDA"] = (efda_col, create_efda_item)
-
-    # Potapov Height
-    potapov_col = create_potapov_height_collection()
-    catalog.add_child(potapov_col)
-    collections["POTAPOV_HEIGHT"] = (potapov_col, create_potapov_height_item)
-
-    # GAMI
-    gami_col = create_gami_collection()
-    catalog.add_child(gami_col)
-    collections["GAMI"] = (gami_col, create_gami_item)
-    
-    # JRC_GFC
-    jrc_gfc_col = create_jrc_gfc_collection()
-    catalog.add_child(jrc_gfc_col)
-    collections["JRC_GFC2020"] = (jrc_gfc_col, create_jrc_gfc_item)
-    
-    # ROBINSON_CR
-    robinson_cr_col = create_robinson_cr_collection()
-    catalog.add_child(robinson_cr_col)
-    collections["ROBINSON_CR"] = (robinson_cr_col, create_robinson_cr_item)
-    
-    # FORESTPATHS_GENUS
-    forestpaths_genus_col = create_forestpaths_genus_collection()
-    catalog.add_child(forestpaths_genus_col)
-    collections["FORESTPATHS_GENUS"] = (forestpaths_genus_col, create_forestpaths_genus_item)
-
-    # HANSEN_GFC
-    hansen_gfc_col = create_hansen_gfc_collection()
-    catalog.add_child(hansen_gfc_col)
-    collections["HANSEN_GFC"] = (hansen_gfc_col, create_hansen_gfc_item)
-    
-    # LIU_BIOMASS
-    liu_col = create_liu_biomass_collection()
-    catalog.add_child(liu_col)
-    collections["LIU_BIOMASS"] = (liu_col, create_liu_biomass_item)
-
-    # ------------------------------------------------------------------
-    # 3. Create items for each version (if specified)
-    # ------------------------------------------------------------------
-    for prod_id, (col, item_factory) in collections.items():
-        for v in versions.get(prod_id, []):
-            item = item_factory(v)
-            col.add_item(item)
-
-    # ------------------------------------------------------------------
-    # 4. Normalize HREFs and optionally write everything out
-    # ------------------------------------------------------------------
-    catalog.normalize_hrefs(BASE_S3_URL)
+    # Normalize to *writable* base (s3://...) and write with your existing writers
+    internal_root.normalize_hrefs(internal_href_base)
+    if internal_root.self_href is None:
+        internal_root.set_self_href(f"{internal_href_base.rstrip('/')}/catalog.json")
 
     if write:
-        # Write root catalog
-        write_json(catalog.self_href, catalog.to_dict())
+        _write_internal_with_package_writers(internal_root)
 
-        # Write each collection and its items
-        for col, _item_factory in collections.values():
-            write_collection(col)
-            for item in col.get_items():
-                write_item(item)
+    # -----------------------
+    # Optional: browser mirror
+    # -----------------------
+    if build_browser:
+        if browser_write_base is None:
+            # Default: sibling prefix so you don't overwrite internal JSON
+            browser_write_base = internal_href_base.rstrip("/") + "/public"
 
-    return catalog
+        _write_browser_variant(
+            versions,
+            publish_base=browser_publish_base,
+            write_base=browser_write_base,
+            catalog_id=catalog_id,
+            description=description,
+        )
+
+    return internal_root
+
+
+def build_browser_catalog(
+    versions: Optional[Mapping[str, List[str]]] = None,
+    *,
+    publish_base: str = S3_HTTP_BASE,
+    write_base: Optional[str] = None,
+    internal_base_for_default: str = BASE_S3_URL,
+    catalog_id: str = "EOFOREST",
+    description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
+) -> pystac.Catalog:
+    """
+    Convenience wrapper: write only the browser-facing variant and return it.
+    """
+    versions = DEFAULT_VERSIONS if versions is None else dict(versions)
+    if write_base is None:
+        write_base = internal_base_for_default.rstrip("/") + "/public"
+
+    return _write_browser_variant(
+        versions,
+        publish_base=publish_base,
+        write_base=write_base,
+        catalog_id=catalog_id,
+        description=description,
+    )
