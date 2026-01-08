@@ -43,7 +43,7 @@ jobs:
         working-directory: stac-browser
         env:
           CATALOG_URL: "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
-          PATH_PREFIX: "eoforeststac"
+          PATH_PREFIX: "/eoforeststac/"
         run: |
           npm run build -- \
             --catalogUrl="$CATALOG_URL" \
