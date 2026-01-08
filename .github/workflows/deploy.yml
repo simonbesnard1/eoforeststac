@@ -39,7 +39,7 @@ jobs:
         working-directory: stac-browser
         run: npm ci
 
-      - name: Build
+      - name: Build STAC Browser
         working-directory: stac-browser
         env:
           CATALOG_URL: "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
