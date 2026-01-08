@@ -176,7 +176,7 @@ def _apply_root_metadata(
         catalog.extra_fields["keywords"] = keywords
 
     if about_url:
-        catalog.add_link(pystac.Link(rel="about", target=about_url, title="Project / source"))
+        catalog.add_link(pystac.Link(rel="about", target=about_url, title="Source code"))
 
     if documentation_url:
         catalog.add_link(
@@ -331,9 +331,9 @@ def build_root_catalog(
     browser_publish_base: str = S3_HTTP_BASE,
     browser_write_base: Optional[str] = None,
     # Root metadata
-    catalog_id: str = "EOFOREST",
-    description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
-    title: str = "EOFOREST – Forest EO STAC Catalog",
+    catalog_id: str = "EOForestSTAC",
+    description="Global and regional forest Earth observation datasets.",
+    title: str = "EOForestSTAC – Forest EO STAC Catalog",
     providers: Optional[list[dict]] = None,
     license_: str = "various",
     keywords: Optional[list[str]] = None,
@@ -395,7 +395,7 @@ def build_root_catalog(
     # Helpful links for humans
     if about_url:
         internal_root.add_link(
-            pystac.Link(rel="about", target=about_url, title="Source code / project")
+            pystac.Link(rel="about", target=about_url, title="Source code")
         )
     if documentation_url:
         internal_root.add_link(
@@ -451,9 +451,9 @@ def build_browser_catalog(
     publish_base: str = S3_HTTP_BASE,
     write_base: Optional[str] = None,
     internal_base_for_default: str = BASE_S3_URL,
-    catalog_id: str = "EOFOREST",
+    catalog_id: str = "EOForestSTAC",
     description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
-    title: str = "EOFOREST – Forest EO STAC Catalog",
+    title: str = "EOForestSTAC – Forest EO STAC Catalog",
     providers: Optional[list[dict]] = None,
     license_: str = "various",
     keywords: Optional[list[str]] = None,

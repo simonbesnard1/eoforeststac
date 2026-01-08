@@ -6,24 +6,21 @@ from eoforeststac.core.assets import create_zarr_asset
 
 LIU_BIOMASS_CFG = {
     "id": "LIU_BIOMASS",
-    "title": "Canopy Height, Cover and Aboveground Biomass across Europe (Liu et al.)",
+    "title": "Europe – Canopy Cover, Canopy Height, and Aboveground Biomass (Liu et al., 2019 reference imagery)",
     "description": (
-        "European canopy cover, canopy height, and aboveground biomass maps "
-        "derived from 3 m PlanetScope imagery and aerial LiDAR canopy height models "
-        "using deep learning. Biomass is estimated at 30 m resolution from canopy "
-        "cover and height via allometric equations. "
-        "The dataset accompanies the study "
-        "'The overlooked contribution of trees outside forests to tree cover and "
-        "woody biomass across Europe'.\n\n"
-        "IMPORTANT: This dataset is restricted to research and scientific use only "
-        "and must not be used for commercial purposes, in accordance with the "
-        "Planet Labs Education and Research license."
+        "European maps of canopy cover, canopy height, and aboveground biomass derived from "
+        "high-resolution PlanetScope imagery and airborne LiDAR canopy height models using deep learning. "
+        "The Zenodo release includes aggregated canopy cover/height products and a biomass map at 30 m "
+        "resolution computed from canopy cover and height using allometric equations.\n\n"
+        "IMPORTANT – Usage restrictions: This dataset is provided for non-commercial scientific, "
+        "education, and research purposes only, reflecting restrictions associated with PlanetScope "
+        "imagery access under research licensing. Users must not use the dataset for commercial purposes "
+        "and should follow the dataset’s stated data agreement and citation requirements."
     ),
 
     # ------------------------------------------------------------------
-    # Spatial / temporal extent
+    # Spatial / temporal extent (Europe; nominal 2019 reference mosaics)
     # ------------------------------------------------------------------
-    # Europe-wide product in ETRS89 / LAEA Europe
     "bbox": [-25.0, 34.0, 45.0, 72.0],
     "geometry": {
         "type": "Polygon",
@@ -35,14 +32,8 @@ LIU_BIOMASS_CFG = {
             [-25.0, 34.0],
         ]]
     },
-
-    # Reference year of PlanetScope imagery
-    "start_datetime": datetime.datetime(
-        2019, 1, 1, tzinfo=datetime.timezone.utc
-    ),
-    "end_datetime": datetime.datetime(
-        2019, 12, 31, tzinfo=datetime.timezone.utc
-    ),
+    "start_datetime": datetime.datetime(2019, 1, 1, tzinfo=datetime.timezone.utc),
+    "end_datetime": datetime.datetime(2019, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
     # STAC paths
@@ -51,42 +42,119 @@ LIU_BIOMASS_CFG = {
     "base_path": f"{BASE_S3_URL}/LIU_BIOMASS",
 
     # ------------------------------------------------------------------
-    # Provenance
+    # Governance / provenance
     # ------------------------------------------------------------------
+    # Zenodo is the canonical landing; paper is the canonical scientific citation.
     "providers": [
         {
-            "name": "University of Copenhagen",
+            "name": "University of Copenhagen (dataset authors: Liu et al.)",
             "roles": ["producer"],
             "url": "https://zenodo.org/records/8154445",
         },
         {
-            "name": "Planet Labs Inc.",
-            "roles": ["host"],
+            "name": "Planet Labs PBC",
+            "roles": ["licensor"],
             "url": "https://www.planet.com/",
+        },
+        {
+            "name": "GFZ Helmholtz Centre Potsdam",
+            "roles": ["processor", "host"],
+            "url": "https://www.gfz.de",
         },
     ],
 
     # ------------------------------------------------------------------
-    # Licensing / usage constraints (VERY IMPORTANT HERE)
+    # Licensing / usage constraints (core of this product)
     # ------------------------------------------------------------------
+    # STAC 'license' wants a short token; "proprietary" is OK, but add explicit notes.
     "license": "proprietary",
+    "license_notes": (
+        "Non-commercial scientific/education/research use only. "
+        "Derived from PlanetScope imagery accessed under a research license; "
+        "see Zenodo record and Planet Education & Research terms for details."
+    ),
+
+    # ------------------------------------------------------------------
+    # Discovery helpers
+    # ------------------------------------------------------------------
     "keywords": [
         "aboveground biomass",
+        "biomass",
         "canopy height",
         "canopy cover",
         "trees outside forests",
         "PlanetScope",
+        "LiDAR",
+        "deep learning",
         "Europe",
+        "non-commercial",
     ],
 
     # ------------------------------------------------------------------
-    # Assets
+    # Canonical links
+    # ------------------------------------------------------------------
+    "links": [
+        {
+            "rel": "about",
+            "href": "https://zenodo.org/records/8154445",
+            "type": "text/html",
+            "title": "Zenodo dataset landing page (includes data agreement notes)",
+        },
+        {
+            "rel": "cite-as",
+            "href": "https://doi.org/10.5281/zenodo.8154445",
+            "type": "text/html",
+            "title": "Dataset DOI (Zenodo)",
+        },
+        {
+            "rel": "related",
+            "href": "https://doi.org/10.1126/sciadv.adh4097",
+            "type": "text/html",
+            "title": "Paper: Trees outside forests across Europe (Science Advances, 2023)",
+        },
+        {
+            "rel": "related",
+            "href": "https://assets.planet.com/docs/ToS_EducationAndResearch.pdf",
+            "type": "application/pdf",
+            "title": "Planet Education & Research Program terms (non-commercial license)",
+        },
+    ],
+
+    # ------------------------------------------------------------------
+    # Extensions (optional)
+    # ------------------------------------------------------------------
+    "stac_extensions": [
+        "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
+        # "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    ],
+
+    # ------------------------------------------------------------------
+    # Structured summaries (only what we can support from sources)
+    # ------------------------------------------------------------------
+    "summaries": {
+        "temporal_resolution": ["static"],
+        "variables": ["canopy_cover", "canopy_height", "aboveground_biomass"],
+        # Zenodo: biomass at 30 m; cover/height aggregated version also provided. :contentReference[oaicite:1]{index=1}
+        "biomass_resolution_note": ["Biomass map provided at 30 m resolution (computed from cover & height)."],
+        "usage_constraints": ["non-commercial scientific/education/research only"],
+    },
+
+    # ------------------------------------------------------------------
+    # Assets (roles + description)
     # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
         "factory": lambda cfg, v: create_zarr_asset(
             href=f"{cfg['base_path']}/LIU_BIOMASS_v{v}.zarr",
-            title=f"European Aboveground Biomass and Canopy Structure v{v}"
+            title=f"Liu et al. Europe canopy structure & biomass v{v} (Zarr)",
+            roles=["data"],
+            description=(
+                "Zarr packaging of European canopy cover, canopy height, and aboveground biomass layers. "
+                "Includes aggregated canopy structure products and biomass at 30 m resolution. "
+                "Usage restricted to non-commercial research/education/scientific purposes."
+            ),
         )
     },
 }
+
