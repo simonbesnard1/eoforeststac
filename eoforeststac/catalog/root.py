@@ -151,6 +151,53 @@ def _write_internal_with_package_writers(root: pystac.Catalog) -> None:
         for item in col.get_items():
             write_item(item)
 
+def _apply_root_metadata(
+    catalog: pystac.Catalog,
+    *,
+    title: Optional[str] = None,
+    license_: Optional[str] = None,
+    providers: Optional[list[dict]] = None,
+    keywords: Optional[list[str]] = None,
+    about_url: Optional[str] = None,
+    documentation_url: Optional[str] = None,
+    stac_browser: Optional[dict] = None,
+) -> None:
+    """Apply human-facing metadata fields to the root catalog."""
+    if title is not None:
+        catalog.title = title
+
+    if license_ is not None:
+        catalog.extra_fields["license"] = license_
+
+    if providers is not None:
+        catalog.extra_fields["providers"] = providers
+
+    if keywords is not None:
+        catalog.extra_fields["keywords"] = keywords
+
+    if about_url:
+        catalog.add_link(pystac.Link(rel="about", target=about_url, title="Project / source"))
+
+    if documentation_url:
+        catalog.add_link(
+            pystac.Link(rel="documentation", target=documentation_url, title="Documentation")
+        )
+
+    if stac_browser is not None:
+        catalog.extra_fields.setdefault("stac_browser", {})
+        catalog.extra_fields["stac_browser"].update(stac_browser)
+
+
+def _ensure_absolute_root_self_links(pub_dict: dict, self_href: str) -> dict:
+    """
+    Optional: force root+self links to be absolute in the serialized JSON.
+    Child links may remain relative (that's fine for STAC Browser).
+    """
+    for link in pub_dict.get("links", []):
+        if link.get("rel") in {"self", "root"}:
+            link["href"] = self_href
+    return pub_dict
+
 
 def _write_browser_variant(
     base_versions: Mapping[str, List[str]],
@@ -159,32 +206,83 @@ def _write_browser_variant(
     write_base: str,
     catalog_id: str,
     description: str,
+    # ---- new: richer root metadata ----
+    title: Optional[str] = None,
+    license_: Optional[str] = None,
+    providers: Optional[list[dict]] = None,
+    keywords: Optional[list[str]] = None,
+    about_url: Optional[str] = None,
+    documentation_url: Optional[str] = None,
+    stac_browser: Optional[dict] = None,
+    # ---- new: behavior knobs ----
+    force_absolute_root_links: bool = True,
 ) -> pystac.Catalog:
     """
     Write a browser-facing variant:
       - JSON contains https://... links (publish_base)
       - Files are written to a writable base (write_base, e.g. s3://.../public)
 
-    We do this by building two parallel trees:
-      pub_tree  normalized to publish_base  -> provides the JSON dicts
-      dst_tree  normalized to write_base    -> provides the write destinations (self_href)
-    Then we write pub_tree.to_dict() to dst_tree.self_href for each entity.
+    Implementation:
+      - Build two parallel trees:
+          pub_tree  normalized to publish_base  -> provides the JSON dicts (https)
+          dst_tree  normalized to write_base    -> provides the write destinations (s3)
+      - Write pub_tree JSON to dst_tree self_hrefs.
+
+    Returns
+    -------
+    pystac.Catalog
+        The published (https-normalized) root Catalog object.
     """
     pub_root, _ = _build_base_tree(base_versions, catalog_id=catalog_id, description=description)
     dst_root, _ = _build_base_tree(base_versions, catalog_id=catalog_id, description=description)
 
+    # Apply the same human metadata to both trees BEFORE normalization/serialization
+    _apply_root_metadata(
+        pub_root,
+        title=title,
+        license_=license_,
+        providers=providers,
+        keywords=keywords,
+        about_url=about_url,
+        documentation_url=documentation_url,
+        stac_browser=stac_browser,
+    )
+    _apply_root_metadata(
+        dst_root,
+        title=title,
+        license_=license_,
+        providers=providers,
+        keywords=keywords,
+        about_url=about_url,
+        documentation_url=documentation_url,
+        stac_browser=stac_browser,
+    )
+
+    # Normalize hrefs for traversal / destinations
     pub_root.normalize_hrefs(publish_base)
     dst_root.normalize_hrefs(write_base)
 
+    # Ensure self_hrefs exist
+    pub_self = f"{publish_base.rstrip('/')}/catalog.json"
+    dst_self = f"{write_base.rstrip('/')}/catalog.json"
     if pub_root.self_href is None:
-        pub_root.set_self_href(f"{publish_base.rstrip('/')}/catalog.json")
+        pub_root.set_self_href(pub_self)
+    else:
+        pub_self = pub_root.self_href  # preserve pystac's computed one
     if dst_root.self_href is None:
-        dst_root.set_self_href(f"{write_base.rstrip('/')}/catalog.json")
+        dst_root.set_self_href(dst_self)
 
+    # -----------------------
     # Root
-    write_json(dst_root.self_href, pub_root.to_dict())
+    # -----------------------
+    root_dict = pub_root.to_dict()
+    if force_absolute_root_links:
+        root_dict = _ensure_absolute_root_self_links(root_dict, pub_self)
+    write_json(dst_root.self_href, root_dict)
 
+    # -----------------------
     # Collections (match by id)
+    # -----------------------
     pub_cols = {c.id: c for c in pub_root.get_children() if isinstance(c, pystac.Collection)}
     dst_cols = {c.id: c for c in dst_root.get_children() if isinstance(c, pystac.Collection)}
 
@@ -193,15 +291,31 @@ def _write_browser_variant(
         if pub_col is None:
             continue
 
-        write_json(dst_col.self_href, pub_col.to_dict())
+        col_dict = pub_col.to_dict()
+        # Optionally make collection self links absolute too (usually nice)
+        if force_absolute_root_links and pub_col.self_href:
+            for link in col_dict.get("links", []):
+                if link.get("rel") == "self":
+                    link["href"] = pub_col.self_href
 
+        write_json(dst_col.self_href, col_dict)
+
+        # -----------------------
         # Items (match by id)
+        # -----------------------
         pub_items = {it.id: it for it in pub_col.get_items()}
         for dst_item in dst_col.get_items():
             pub_item = pub_items.get(dst_item.id)
             if pub_item is None:
                 continue
-            write_json(dst_item.self_href, pub_item.to_dict())
+
+            item_dict = pub_item.to_dict()
+            if force_absolute_root_links and pub_item.self_href:
+                for link in item_dict.get("links", []):
+                    if link.get("rel") == "self":
+                        link["href"] = pub_item.self_href
+
+            write_json(dst_item.self_href, item_dict)
 
     return pub_root
 
@@ -210,36 +324,91 @@ def build_root_catalog(
     versions: Optional[Mapping[str, List[str]]] = None,
     *,
     write: bool = True,
-    # Internal catalog settings
+    # Internal (s3-native) catalog
     internal_href_base: str = BASE_S3_URL,
-    # Also build/write a browser mirror?
+    # Browser mirror (https links, written to s3)
     build_browser: bool = False,
     browser_publish_base: str = S3_HTTP_BASE,
     browser_write_base: Optional[str] = None,
     # Root metadata
     catalog_id: str = "EOFOREST",
     description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
+    title: str = "EOFOREST – Forest EO STAC Catalog",
+    providers: Optional[list[dict]] = None,
+    license_: str = "various",
+    keywords: Optional[list[str]] = None,
+    about_url: Optional[str] = "https://github.com/simonbesnard1/eoforeststac",
+    documentation_url: Optional[str] = None,
 ) -> pystac.Catalog:
     """
     Build the internal EOFOREST root catalog and optionally also write a browser-friendly mirror.
+
+    Internal catalog:
+      - links & write destinations are internal_href_base (typically s3://...)
+
+    Browser mirror:
+      - JSON links use browser_publish_base (https://...), but files are written to
+        browser_write_base (typically s3://.../public) to avoid https write errors.
 
     Returns
     -------
     pystac.Catalog
         The internal (s3://) catalog object.
-
-    Notes
-    -----
-    - Internal: links & write destinations are internal_href_base (typically s3://...)
-    - Browser mirror: JSON links use browser_publish_base (https://...), but files are written
-      to browser_write_base (typically s3://.../public) to avoid https write errors.
     """
     versions = DEFAULT_VERSIONS if versions is None else dict(versions)
 
     # -----------------------
     # Build internal catalog
     # -----------------------
-    internal_root, _ = _build_base_tree(versions, catalog_id=catalog_id, description=description)
+    internal_root, _ = _build_base_tree(
+        versions,
+        catalog_id=catalog_id,
+        description=description,
+    )
+
+    # Root catalog "human" metadata (STAC Browser will surface this)
+    internal_root.title = title
+    internal_root.extra_fields["license"] = license_
+
+    if providers is None:
+        providers = [
+            {
+                "name": "GFZ Helmholtz Centre Potsdam",
+                "roles": ["producer", "processor", "host"],
+                "url": "https://www.gfz.de",
+            }
+        ]
+    internal_root.extra_fields["providers"] = providers
+
+    if keywords is None:
+        keywords = [
+            "forest",
+            "earth observation",
+            "biomass",
+            "disturbance",
+            "canopy height",
+            "forest age",
+            "STAC",
+        ]
+    internal_root.extra_fields["keywords"] = keywords
+
+    # Helpful links for humans
+    if about_url:
+        internal_root.add_link(
+            pystac.Link(rel="about", target=about_url, title="Source code / project")
+        )
+    if documentation_url:
+        internal_root.add_link(
+            pystac.Link(rel="documentation", target=documentation_url, title="Documentation")
+        )
+
+    # stac-browser optional hints
+    internal_root.extra_fields.setdefault(
+        "stac_browser",
+        {
+            "showThumbnailsAsAssets": True,
+        },
+    )
 
     # Normalize to *writable* base (s3://...) and write with your existing writers
     internal_root.normalize_hrefs(internal_href_base)
@@ -263,6 +432,14 @@ def build_root_catalog(
             write_base=browser_write_base,
             catalog_id=catalog_id,
             description=description,
+            # (Optional) forward the same “human” fields if your _write_browser_variant
+            # rebuilds a fresh tree. If it doesn’t accept these yet, ignore this.
+            title=title,              # type: ignore[arg-type]
+            providers=providers,      # type: ignore[arg-type]
+            license_=license_,        # type: ignore[arg-type]
+            keywords=keywords,        # type: ignore[arg-type]
+            about_url=about_url,      # type: ignore[arg-type]
+            documentation_url=documentation_url,  # type: ignore[arg-type]
         )
 
     return internal_root
@@ -276,13 +453,39 @@ def build_browser_catalog(
     internal_base_for_default: str = BASE_S3_URL,
     catalog_id: str = "EOFOREST",
     description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
+    title: str = "EOFOREST – Forest EO STAC Catalog",
+    providers: Optional[list[dict]] = None,
+    license_: str = "various",
+    keywords: Optional[list[str]] = None,
+    about_url: Optional[str] = "https://github.com/simonbesnard1/eoforeststac",
+    documentation_url: Optional[str] = None,
 ) -> pystac.Catalog:
     """
     Convenience wrapper: write only the browser-facing variant and return it.
     """
     versions = DEFAULT_VERSIONS if versions is None else dict(versions)
+
     if write_base is None:
         write_base = internal_base_for_default.rstrip("/") + "/public"
+
+    if providers is None:
+        providers = [
+            {
+                "name": "GFZ Helmholtz Centre Potsdam",
+                "roles": ["producer", "processor", "host"],
+                "url": "https://www.gfz.de",
+            }
+        ]
+    if keywords is None:
+        keywords = [
+            "forest",
+            "earth observation",
+            "biomass",
+            "disturbance",
+            "canopy height",
+            "forest age",
+            "STAC",
+        ]
 
     return _write_browser_variant(
         versions,
@@ -290,4 +493,10 @@ def build_browser_catalog(
         write_base=write_base,
         catalog_id=catalog_id,
         description=description,
+        title=title,                    # type: ignore[arg-type]
+        providers=providers,            # type: ignore[arg-type]
+        license_=license_,              # type: ignore[arg-type]
+        keywords=keywords,              # type: ignore[arg-type]
+        about_url=about_url,            # type: ignore[arg-type]
+        documentation_url=documentation_url,  # type: ignore[arg-type]
     )
