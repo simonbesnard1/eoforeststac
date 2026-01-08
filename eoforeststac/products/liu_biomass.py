@@ -6,7 +6,7 @@ from eoforeststac.core.assets import create_zarr_asset
 
 LIU_BIOMASS_CFG = {
     "id": "LIU_BIOMASS",
-    "title": "Europe – Canopy Cover, Canopy Height, and Aboveground Biomass (Liu et al., 2019 reference imagery)",
+    "title": "Canopy Cover, Canopy Height, and Aboveground Biomass (Liu et al.)",
     "description": (
         "European maps of canopy cover, canopy height, and aboveground biomass derived from "
         "high-resolution PlanetScope imagery and airborne LiDAR canopy height models using deep learning. "

@@ -5,7 +5,7 @@ from eoforeststac.core.assets import create_zarr_asset
 EFDA_CFG = {
     # ---- Identity ----
     "id": "EFDA",
-    "title": "European Forest Disturbance Atlas (EFDA) – Annual disturbances for Europe (Landsat)",
+    "title": "European Forest Disturbance Atlas (EFDA)",
     "description": (
         "Annual forest disturbance maps for continental Europe derived from Landsat time series. "
         "Includes annual layers on disturbance occurrence, severity, and causal agent, as well as "

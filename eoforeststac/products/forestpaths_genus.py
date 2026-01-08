@@ -4,7 +4,7 @@ from eoforeststac.core.assets import create_zarr_asset
 
 FORESTPATHS_GENUS_CFG = {
     "id": "FORESTPATHS_GENUS",
-    "title": "ForestPaths – European Tree Genus Map 2020 (Early Access)",
+    "title": "ForestPaths – European Tree Genus Map 2020",
     "description": (
         "Early access European tree genus map at 10 m resolution for year 2020. "
         "Derived from Sentinel-1 and Sentinel-2 data using a CatBoost model trained on "

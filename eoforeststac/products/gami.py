@@ -6,7 +6,7 @@ from eoforeststac.core.assets import create_zarr_asset
 GAMI_CFG = {
     # ---- identity ----
     "id": "GAMI",
-    "title": "GAMI – Global Forest Age Maps",
+    "title": "Global Age Mapping Integration (GAMI)",
     "description": (
         "Global gridded forest age product derived by integrating machine-learning models "
         "with remote sensing and reference forest inventory information. "

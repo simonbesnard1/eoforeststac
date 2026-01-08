@@ -7,7 +7,7 @@ from eoforeststac.core.assets import create_zarr_asset
 
 ROBINSON_CR_CFG = {
     "id": "ROBINSON_CR",
-    "title": "Global Chapman–Richards growth-curve parameters for secondary-forest aboveground carbon dynamics (Robinson et al., 2025)",
+    "title": "Global Chapman–Richards growth-curve parameters for secondary-forest aboveground carbon dynamics (Robinson et al.)",
     "description": (
         "Global, pixel-level Chapman–Richards (CR) growth-curve parameters and derived outputs "
         "describing aboveground carbon (AGC) accumulation in young secondary forests. "
