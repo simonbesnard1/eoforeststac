@@ -9,8 +9,27 @@
 
 **EOForestSTAC** provides a streamlined interface to discover and load cloud-hosted, analysis-ready forest EO datasets stored as Zarr archives on Ceph object storage.
 
+## Explore the Catalog (Interactive STAC Browser)
+
+In addition to programmatic access, EOForestSTAC provides an interactive web-based
+**STAC Browser** for visually exploring all available datasets, versions, spatial
+coverage, and metadata.
+
+👉 **STAC Browser:**  
+**https://simonbesnard1.github.io/eoforeststac/**
+
+The browser allows you to:
+- Explore all collections and versions interactively
+- Inspect spatial footprints on a map
+- View dataset metadata, provenance, and licensing
+- Check asset details such as file size and data format
+- Quickly identify relevant datasets before loading them in Python
+
+This is the recommended starting point for new users.
+
 ## Features
 
+- **Interactive STAC Browser** — Explore datasets visually in the browser
 - **STAC-native discovery** — Browse collections and versions programmatically
 - **Direct Zarr access** — Load datasets from Ceph without downloads
 - **Spatial subsetting** — Extract regions of interest with automatic CRS handling
@@ -25,6 +44,13 @@ pip install git+https://github.com/simonbesnard1/eoforeststac.git
 ```
 
 ## Quick Start
+
+EOForestSTAC supports two complementary workflows:
+
+- **Interactive exploration** via the STAC Browser (recommended for discovery)
+- **Programmatic access** via Python for analysis and large-scale processing
+
+Below we demonstrate the Python-based workflow.
 
 ### Discover Available Data
 
@@ -48,7 +74,9 @@ disc.list_versions("GAMI")
 df = disc.collections_table()
 ```
 
-For a complete catalog of available products, see **[CATALOG.md](CATALOG.md)**.
+For a complete overview of available products:
+- 📄 **Static table:** [CATALOG.md](CATALOG.md)
+- 🌍 **Interactive browser:** https://simonbesnard1.github.io/eoforeststac/
 
 ### Load and Subset Data
 
@@ -119,16 +147,6 @@ The aligned dataset is guaranteed to have:
 - Identical CRS, resolution, and grid origin
 - Consistent spatial dimension names
 - Variable-specific resampling applied correctly
-
-## Data Access
-
-The catalog uses anonymous public access by default via the S3 endpoint:
-
-```
-s3://dog.atlaseo-glm.eo-gridded-data/
-```
-
-Authenticated access is also supported for restricted collections.
 
 ## About
 
