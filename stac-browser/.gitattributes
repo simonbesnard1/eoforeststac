@@ -1,2 +1,0 @@
-# *nix shell scripts always use LF (see .editorconfig)
-*.sh eol=lf
