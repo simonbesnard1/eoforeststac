@@ -9,7 +9,7 @@ HANSEN_GFC_CFG = {
     # Identification
     # ------------------------------------------------------------------
     "id": "HANSEN_GFC",
-    "title": "Hansen Global Forest Change v1.12 (2000–2024)",
+    "title": "Hansen Global Forest Change",
     "description": (
         "Global Forest Change (GFC) dataset derived from time-series analysis of Landsat imagery, "
         "characterizing global tree cover and tree cover loss from 2000 through 2024, and tree cover "

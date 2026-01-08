@@ -4,7 +4,7 @@ from eoforeststac.core.assets import create_zarr_asset
 
 POTAPOV_HEIGHT_CFG = {
     "id": "POTAPOV_HEIGHT",
-    "title": "Global Canopy Height (multi-epoch: 2005, 2010, 2015, 2020)",
+    "title": "Global Canopy Height (Potapov et al.)",
     "description": (
         "Global canopy height maps provided for multiple reference years (2005, 2010, 2015, 2020). "
         "The product integrates spaceborne LiDAR information with optical imagery "
