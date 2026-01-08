@@ -6,7 +6,7 @@ from eoforeststac.core.assets import create_zarr_asset
 
 SAATCHI_BIOMASS_CFG = {
     "id": "SAATCHI_BIOMASS",
-    "title": "Global live woody vegetation / aboveground biomass at 100 m (Saatchi & Yu, 2020 mosaic; Zenodo v2)",
+    "title": "Global live woody vegetation / aboveground biomass at 100 m (Saatchi & Yu)",
     "description": (
         "Global live woody vegetation biomass mapping product at 100 m spatial resolution, "
         "distributed as a global aboveground biomass mosaic for reference year 2020. "
