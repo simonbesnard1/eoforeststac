@@ -453,7 +453,7 @@ def build_browser_catalog(
     internal_base_for_default: str = BASE_S3_URL,
     catalog_id: str = "EOForestSTAC",
     description: str = "Earth Observation Forest STAC catalog (eoforeststac).",
-    title: str = "EOForestSTAC – Forest EO STAC Catalog",
+    title: str = "EOForestSTAC – EO Forest STAC Catalog",
     providers: Optional[list[dict]] = None,
     license_: str = "various",
     keywords: Optional[list[str]] = None,
