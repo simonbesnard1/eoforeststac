@@ -11,12 +11,12 @@ provider = ZarrProvider(
     anon=True,
 )
 
-roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/BR-Sa3.geojson")
+roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/DE-Hai.geojson")
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
-    collection_id="JRC_TMF",
-    version="2024",
+    collection_id="EFDA",
+    version="2.1.1",
 )
 
 ds_biomass = subset(
@@ -36,16 +36,16 @@ ds_efda = subset(
 
 
 aligner = DatasetAligner(
-    target="CCI_BIOMASS",
+    target="EFDA",
     resampling={
-        "CCI_BIOMASS": {"default": "average"},
-        "EFDA": {"default": "average"}
+        "EFDA": {"default": "average"},
+        "SAATCHI_BIOMASS": {"default": "average"}
         }
 )
 
 aligned = aligner.align({
-    "CCI_BIOMASS": ds_biomass,
-    "EFDA": ds_efda
+    "EFDA": ds_biomass,
+    "SAATCHI_BIOMASS": ds_efda
 })
 
 aligned

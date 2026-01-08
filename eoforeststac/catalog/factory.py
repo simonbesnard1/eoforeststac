@@ -25,7 +25,7 @@ def create_collection(cfg: dict) -> pystac.Collection:
         keywords=cfg.get("keywords", []),
         href=cfg["collection_href"],
     )
-
+    
     return collection
 
 
