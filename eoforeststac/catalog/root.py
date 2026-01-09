@@ -457,7 +457,7 @@ def build_root_catalog(
         "A thematic atlas of forest Earth observation datasets, bringing together "
         "global and regional products on biomass, carbon cycling, disturbance, "
         "canopy structure, and forest demography to support integrated ecosystem analysis.",
-    title: str = "EOForestSTAC – Forest EO STAC Catalog",
+    title: str = "EOForestSTAC – EO Forest STAC Catalog",
     providers: Optional[list[dict]] = None,
     license_: str = "various",
     keywords: Optional[list[str]] = None,
