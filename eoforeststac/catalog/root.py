@@ -551,7 +551,16 @@ def build_root_catalog(
             "STAC",
         ]
     internal_root.extra_fields["keywords"] = keywords
-
+    
+    _set_thumbnail(
+        internal_root,
+        "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/eoforestact_logo.png",
+        title="EOForestSTAC",
+    )
+    internal_root.add_link(
+        pystac.Link(rel="documentation", target="https://github.com/simonbesnard1/eoforeststac", title="Docs / README")
+    )
+    
     # Helpful links for humans
     if about_url:
         internal_root.add_link(
