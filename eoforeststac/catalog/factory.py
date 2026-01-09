@@ -50,21 +50,6 @@ def create_collection(cfg: dict) -> pystac.Collection:
     if "item_assets" in cfg:
         collection.extra_fields["item_assets"] = cfg["item_assets"]
     
-    # Add custom properties that enhance discovery
-    extra_props = {}
-    
-    if "themes" in cfg:
-        extra_props["themes"] = cfg["themes"]
-    
-    if "eo:gsd" in cfg:
-        extra_props["eo:gsd"] = cfg["eo:gsd"]
-    
-    if "proj:epsg" in cfg:
-        extra_props["proj:epsg"] = cfg["proj:epsg"]
-    
-    # Add any extra properties to collection
-    collection.extra_fields.update(extra_props)
-    
     return collection
 
 
