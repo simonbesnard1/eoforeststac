@@ -59,19 +59,20 @@ from eoforeststac.providers.discovery import DiscoveryProvider
 
 # Connect to the catalog
 disc = DiscoveryProvider(
-    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+    catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
     endpoint_url="https://s3.gfz-potsdam.de",
     anon=True,
 )
 
-# List all collections
-disc.list_collections()
+# List all themes
+disc.list_themes()
+# {'biomass-carbon': 'Biomass & Carbon', ...}
 
-# List versions for a specific collection
-disc.list_versions("GAMI")
+# List all collections from a theme
+disc.list_collections(theme="disturbance-change")
 
-# Generate an overview table
-df = disc.collections_table()
+# Generate an overview table for a theme
+df = disc.collections_table(theme = "biomass-carbon")
 ```
 
 For a complete overview of available products:
@@ -87,7 +88,7 @@ from eoforeststac.providers.subset import subset
 
 # Initialize data provider
 provider = ZarrProvider(
-    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+    catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
     endpoint_url="https://s3.gfz-potsdam.de",
     anon=True,
 )

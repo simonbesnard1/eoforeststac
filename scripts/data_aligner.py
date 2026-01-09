@@ -6,7 +6,7 @@ from eoforeststac.providers.align import DatasetAligner
 
 
 provider = ZarrProvider(
-    catalog_url="s3://dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+    catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
     endpoint_url="https://s3.gfz-potsdam.de",
     anon=True,
 )
