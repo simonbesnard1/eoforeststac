@@ -150,9 +150,6 @@ CCI_BIOMASS_CFG = {
         "product_family": ["ESA CCI Biomass"],
         "data_format": ["zarr"],
     },
-        
-    "eo:gsd": 100.0,
-    "proj:epsg": 4326,
     
     "item_assets": {
       "zarr": {
