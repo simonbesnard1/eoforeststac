@@ -189,10 +189,10 @@ def _build_base_tree(
         if isinstance(keywords, list) and keywords:
             theme_cat.extra_fields["keywords"] = keywords
     
-        # # Add a thumbnail asset to make theme cards visual on the landing page
-        # thumb = meta.get("thumbnail")
-        # if isinstance(thumb, str) and thumb:
-        #     _set_thumbnail(theme_cat, thumb, title=str(meta.get("title", theme_id)))
+        # Add a thumbnail asset to make theme cards visual on the landing page
+        thumb = meta.get("thumbnail")
+        if isinstance(thumb, str) and thumb:
+            _set_thumbnail(theme_cat, thumb, title=str(meta.get("title", theme_id)))
     
         # Nice: link back to the project
         theme_cat.add_link(
