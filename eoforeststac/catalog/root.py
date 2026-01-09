@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Tuple
+import os
 
 import pystac
 
@@ -106,18 +107,49 @@ THEMES: Dict[str, Dict[str, object]] = {
     },
 }
 
-def _set_thumbnail(catalog: pystac.Catalog, href: str, *, title: str | None = None) -> None:
+THEME_THUMBNAILS = {
+  "biomass-carbon": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
+  "disturbance-change": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
+  "structure-demography": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
+}
+
+
+def _guess_media_type(href: str) -> str | None:
+    ext = os.path.splitext(href.split("?")[0])[1].lower()
+    return {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".webp": "image/webp",
+        ".svg": "image/svg+xml",
+    }.get(ext)
+
+def _set_thumbnail(obj: pystac.STACObject, href: str, *, title: str | None = None) -> None:
     """
-    Attach a thumbnail asset to a Catalog/Collection in a STAC Browser-friendly way.
-    STAC spec doesn't define 'assets' for Catalog, but stac-browser supports it via extra_fields.
+    Attach a thumbnail in a STAC Browser-friendly way without violating core STAC.
+    - For Items/Collections, assets are standard.
+    - For Catalogs, assets are non-standard but stac-browser often reads them.
+    Also adds a link rel=icon as a fallback.
     """
-    catalog.extra_fields.setdefault("assets", {})
-    catalog.extra_fields["assets"]["thumbnail"] = {
+    media_type = _guess_media_type(href)
+
+    obj.extra_fields.setdefault("assets", {})
+    obj.extra_fields["assets"]["thumbnail"] = {
         "href": href,
-        "type": "image/png",
+        **({"type": media_type} if media_type else {}),
         "roles": ["thumbnail"],
         **({"title": title} if title else {}),
     }
+
+    # Fallback that many UIs understand
+    obj.add_link(
+        pystac.Link(
+            rel="icon",
+            target=href,
+            media_type=media_type,
+            title=title or "thumbnail",
+        )
+    )
 
 @dataclass(frozen=True)
 class ProductSpec:
@@ -190,10 +222,10 @@ def _build_base_tree(
             theme_cat.extra_fields["keywords"] = keywords
     
         # Add a thumbnail asset to make theme cards visual on the landing page
-        thumb = meta.get("thumbnail")
-        if isinstance(thumb, str) and thumb:
-            _set_thumbnail(theme_cat, thumb, title=str(meta.get("title", theme_id)))
-    
+        thumb = THEME_THUMBNAILS.get(theme_id)
+        if thumb:
+            _set_thumbnail(theme_cat, thumb, title=str(meta["title"]))
+
         # Nice: link back to the project
         theme_cat.add_link(
             pystac.Link(
