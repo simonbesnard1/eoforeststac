@@ -102,6 +102,26 @@ THEMES: Dict[str, Dict[str, object]] = {
     },
 }
 
+THEME_THUMBNAILS: dict[str, str] = {
+    "biomass-carbon": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
+    "disturbance-change": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
+    "structure-demography": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
+}
+
+def _set_thumbnail(obj: pystac.STACObject, href: str, *, title: str | None = None) -> None:
+    # 1) Non-standard but commonly supported by stac-browser
+    obj.extra_fields.setdefault("assets", {})
+    obj.extra_fields["assets"]["thumbnail"] = {
+        "href": href,
+        "type": "image/png",
+        "roles": ["thumbnail"],
+        **({"title": title} if title else {}),
+    }
+
+    # 2) Standard STAC links (more portable across viewers)
+    obj.add_link(pystac.Link(rel="preview", target=href, media_type="image/png", title=title))
+    obj.add_link(pystac.Link(rel="icon", target=href, media_type="image/png", title=title))
+
 
 @dataclass(frozen=True)
 class ProductSpec:
@@ -156,7 +176,7 @@ def _build_base_tree(
     collections: Dict[str, Tuple[pystac.Collection, ItemFactory]] = {}
 
     # 1) Create theme subcatalogs
-    theme_nodes: Dict[str, pystac.Catalog] = {}
+    theme_nodes: Dict[str, pystac.Catalog] = {}    
     for theme_id, meta in THEMES.items():
         theme_cat = pystac.Catalog(
             id=theme_id,
@@ -164,6 +184,12 @@ def _build_base_tree(
             title=str(meta["title"]),
         )
         theme_cat.catalog_type = pystac.CatalogType.RELATIVE_PUBLISHED
+
+        # ✅ add thumbnail to *this* catalog (the card you're seeing)
+        thumb = THEME_THUMBNAILS.get(theme_id)
+        if thumb:
+            _set_thumbnail(theme_cat, thumb, title=str(meta["title"]))
+
         root.add_child(theme_cat)
         theme_nodes[theme_id] = theme_cat
 
