@@ -453,7 +453,10 @@ def build_root_catalog(
     browser_write_base: Optional[str] = None,
     # Root metadata
     catalog_id: str = "EOForestSTAC",
-    description="Global and regional forest Earth observation datasets.",
+    description :str =
+        "A thematic atlas of forest Earth observation datasets, bringing together "
+        "global and regional products on biomass, carbon cycling, disturbance, "
+        "canopy structure, and forest demography to support integrated ecosystem analysis.",
     title: str = "EOForestSTAC – Forest EO STAC Catalog",
     providers: Optional[list[dict]] = None,
     license_: str = "various",
