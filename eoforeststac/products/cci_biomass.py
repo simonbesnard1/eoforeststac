@@ -141,7 +141,7 @@ CCI_BIOMASS_CFG = {
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["annual"],
-        "variables": ["agb"],
+        "variables": ["aboveground_biomass", "aboveground_biomass_std"],
         "units": ["Mg ha-1"],
 
         "eo:gsd": [100.0],
