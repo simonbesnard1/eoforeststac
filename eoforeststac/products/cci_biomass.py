@@ -130,8 +130,9 @@ CCI_BIOMASS_CFG = {
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
-        "https://stac-extensions.github.io/file/v2.1.0/schema.json",  # file:size, file:checksum
-        "https://stac-extensions.github.io/raster/v1.1.0/schema.json", # bands, nodata, etc.
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json", # bands, nodata, etc.
     ],
 
     # ------------------------------------------------------------------
@@ -149,7 +150,24 @@ CCI_BIOMASS_CFG = {
         "product_family": ["ESA CCI Biomass"],
         "data_format": ["zarr"],
     },
-
+        
+    "eo:gsd": 100.0,
+    "proj:epsg": 4326,
+    
+    "item_assets": {
+      "zarr": {
+        "title": "Zarr dataset",
+        "description": "Annual aboveground biomass (AGB) maps (Mg ha-1).",
+        "roles": ["data"],
+        "type": "application/octet-stream"
+      },
+      "thumbnail": {
+        "title": "Preview",
+        "roles": ["thumbnail"],
+        "type": "image/png"
+      }
+    },
+        
     # ------------------------------------------------------------------
     # Asset template (add roles + description as you requested)
     # ------------------------------------------------------------------
