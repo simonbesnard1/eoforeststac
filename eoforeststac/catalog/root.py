@@ -85,7 +85,7 @@ THEMES: Dict[str, Dict[str, object]] = {
     "biomass-carbon": {
         "title": "Biomass & Carbon",
         "description": "Biomass stocks, canopy carbon, and regrowth/carbon accumulation products.",
-        "keywords": ["biomass", "carbon", "agb", "regrowth", "carbon removal"],
+        "keywords": ["biomass", "carbon", "regrowth", "carbon removal"],
         "products": ["CCI_BIOMASS", "SAATCHI_BIOMASS", "LIU_BIOMASS", "ROBINSON_CR"],
     },
     "disturbance-change": {
