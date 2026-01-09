@@ -221,10 +221,10 @@ def _build_base_tree(
         if isinstance(keywords, list) and keywords:
             theme_cat.extra_fields["keywords"] = keywords
     
-        # Add a thumbnail asset to make theme cards visual on the landing page
-        thumb = THEME_THUMBNAILS.get(theme_id)
-        if thumb:
-            _set_thumbnail(theme_cat, thumb, title=str(meta["title"]))
+        # # Add a thumbnail asset to make theme cards visual on the landing page
+        # thumb = THEME_THUMBNAILS.get(theme_id)
+        # if thumb:
+        #     _set_thumbnail(theme_cat, thumb, title=str(meta["title"]))
 
         # Nice: link back to the project
         theme_cat.add_link(
@@ -584,11 +584,11 @@ def build_root_catalog(
         ]
     internal_root.extra_fields["keywords"] = keywords
     
-    _set_thumbnail(
-        internal_root,
-        "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/eoforestact_logo.png",
-        title="EOForestSTAC",
-    )
+    # _set_thumbnail(
+    #     internal_root,
+    #     "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/eoforestact_logo.png",
+    #     title="EOForestSTAC",
+    # )
     internal_root.add_link(
         pystac.Link(rel="documentation", target="https://github.com/simonbesnard1/eoforeststac", title="Docs / README")
     )
