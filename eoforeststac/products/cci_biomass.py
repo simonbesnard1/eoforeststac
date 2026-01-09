@@ -3,89 +3,166 @@ from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 CCI_BIOMASS_CFG = {
-    # ---- STAC IDs / text ----
+    # ------------------------------------------------------------------
+    # Identity / narrative (atlas-friendly)
+    # ------------------------------------------------------------------
     "id": "CCI_BIOMASS",
-    "title": "ESA CCI Biomass – Global Annual Aboveground Biomass",
+    "title": "ESA CCI Biomass – Global annual aboveground biomass (AGB)",
     "description": (
-        "Global annual maps of aboveground biomass (AGB) produced within the ESA Climate "
-        "Change Initiative (CCI) Biomass project."
+        "Annual global aboveground biomass (AGB) maps produced within the ESA Climate Change Initiative "
+        "(CCI) Biomass project. The product supports carbon-cycle analysis, model evaluation, and "
+        "large-scale assessments of biomass distribution and change.\n\n"
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
-    # ---- Spatial / temporal extent ----
-    # Keep bbox + geometry in config (builder converts to pystac.Extent)
-    "bbox": [-180, -90, 180, 90],
+    # ------------------------------------------------------------------
+    # Spatial / temporal extent
+    # ------------------------------------------------------------------
+    "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]],
+        "coordinates": [[
+            [-180.0, -90.0],
+            [-180.0,  90.0],
+            [ 180.0,  90.0],
+            [ 180.0, -90.0],
+            [-180.0, -90.0],
+        ]],
     },
     "start_datetime": datetime.datetime(2007, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
 
-    # ---- Publishing / href layout ----
+    # ------------------------------------------------------------------
+    # HREF layout
+    # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/CCI_BIOMASS/collection.json",
     "base_path": f"{BASE_S3_URL}/CCI_BIOMASS",
 
-    # ---- Data governance ----
-    # If you know the exact license, replace "various" with e.g. "CC-BY-4.0" etc.
-    "license": "various",
+    # ------------------------------------------------------------------
+    # Governance
+    # ------------------------------------------------------------------
+    "license": "Open-access",
 
-    # Providers: consider adding host/processor for your STAC packaging
     "providers": [
-        {"name": "ESA Climate Change Initiative (CCI)", "roles": ["producer"], "url": "https://climate.esa.int"},
-        {"name": "GFZ Helmholtz Centre Potsdam", "roles": ["processor", "host"], "url": "https://www.gfz.de"},
+        {
+            "name": "ESA Climate Change Initiative (CCI)",
+            "roles": ["producer"],
+            "url": "https://climate.esa.int",
+        },
+        {
+            "name": "GFZ Helmholtz Centre Potsdam",
+            "roles": ["processor", "host"],
+            "url": "https://www.gfz.de",
+        },
     ],
 
-    # ---- Discovery / search ----
+    # ------------------------------------------------------------------
+    # Discovery helpers
+    # ------------------------------------------------------------------
     "keywords": [
         "aboveground biomass",
+        "biomass",
+        "carbon",
         "forest",
         "global",
         "annual",
         "ESA CCI",
         "remote sensing",
+        "zarr",
+        "stac",
     ],
 
-    # ---- Helpful external links (render nicely in STAC Browser) ----
-    # Keep these as plain dicts; builder turns into pystac.Link
+    # Optional but often useful for “atlas” grouping (your own convention)
+    "themes": ["carbon", "biomass", "forest structure"],
+
+    # ------------------------------------------------------------------
+    # Links (what makes STAC Browser feel curated)
+    # ------------------------------------------------------------------
     "links": [
+        # Branding / visuals (host these in your GH pages or public bucket)
+        {
+            "rel": "icon",
+            "href": "https://simonbesnard1.github.io/eoforeststac/assets/icons/cci_biomass.svg",
+            "type": "image/svg+xml",
+            "title": "ESA CCI Biomass icon",
+        },
+        {
+            "rel": "preview",
+            "href": "https://simonbesnard1.github.io/eoforeststac/assets/thumbnails/cci_biomass.png",
+            "type": "image/png",
+            "title": "AGB quicklook",
+        },
+
+        # Official documentation
         {
             "rel": "about",
             "href": "https://climate.esa.int/en/projects/biomass/",
+            "type": "text/html",
             "title": "ESA CCI Biomass project page",
         },
-        # Add DOI landing page here if you have it; leave commented if unknown
-        # {"rel": "cite-as", "href": "https://doi.org/...", "title": "Dataset DOI"},
+
+        # If you have a canonical terms/licensing page, link it explicitly
+        {
+            "rel": "license",
+            "href": "https://artefacts.ceda.ac.uk/licences/specific_licences/esacci_biomass_terms_and_conditions.pdf",
+            "type": "text/html",
+            "title": "ESA CCI terms of use / licensing",
+        },
+
+        {
+             "rel": "cite-as",
+             "href": "https://doi.org/10.5285/AF60720C1E404A9E9D2C145D2B2EAD4E",
+             "type": "text/html",
+             "title": "Dataset DOI",
+         },
+        
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
+        },
     ],
 
-    # ---- Optional: declare STAC extensions you intend to use ----
-    # You don’t have to fully populate them on day 1, but it signals structure.
+    # ------------------------------------------------------------------
+    # Extensions (signal what fields might exist in items/assets)
+    # ------------------------------------------------------------------
     "stac_extensions": [
-        "https://stac-extensions.github.io/eo/v1.1.0/schema.json",    # eo:gsd, etc.
-        "https://stac-extensions.github.io/proj/v1.1.0/schema.json",  # proj:epsg, etc.
-        # "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",  # file:size, file:checksum
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json", # bands, nodata, etc.
     ],
 
-    # ---- Summaries: structured, client-friendly metadata ----
-    # Use only what you’re confident about. Add more over time.
+    # ------------------------------------------------------------------
+    # Summaries (client-friendly structured metadata)
+    # Keep conservative: only include what you’re sure of.
+    # ------------------------------------------------------------------
     "summaries": {
-        # Resolution / grid (if known; otherwise omit)
-        "eo:gsd": [100.0],
-
-        # Variables / units (custom namespace is fine; summaries are flexible)
-        "variables": ["agb"],
-        "units": ["Mg/ha"],  # change if your product uses different units
         "temporal_resolution": ["annual"],
-        "product_family": ["ESA-CCI Biomass"],
+        "variables": ["agb"],
+        "units": ["Mg ha-1"],
+
+        "eo:gsd": [100.0],
+        "proj:epsg": [4326],
+
+        "product_family": ["ESA CCI Biomass"],
+        "data_format": ["zarr"],
     },
 
-    # ---- Assets template ----
+    # ------------------------------------------------------------------
+    # Asset template (add roles + description as you requested)
+    # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
         "factory": lambda cfg, v: create_zarr_asset(
             href=f"{cfg['base_path']}/CCI_BIOMASS_v{v}.zarr",
-            title=f"CCI Biomass v{v} (Zarr)",
+            title=f"ESA CCI Biomass AGB v{v} (Zarr)",
             roles=["data"],
-            description="Zarr store of annual AGB maps.",
+            description=(
+                "Cloud-optimized Zarr store containing annual aboveground biomass (AGB) layers "
+                "for the ESA CCI Biomass product."
+            ),
         ),
     },
 }
