@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Mapping, Optional, Tuple
-import os
 
 import pystac
 
@@ -87,69 +86,38 @@ THEMES: Dict[str, Dict[str, object]] = {
     "biomass-carbon": {
         "title": "Biomass & Carbon",
         "description": "Biomass stocks, canopy carbon, and regrowth/carbon accumulation products.",
-        #"thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
+        "thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
         "keywords": ["biomass", "carbon", "agb", "regrowth", "carbon removal"],
         "products": ["CCI_BIOMASS", "SAATCHI_BIOMASS", "LIU_BIOMASS", "ROBINSON_CR"],
     },
     "disturbance-change": {
         "title": "Disturbance & Change",
         "description": "Forest disturbance, loss, and change layers from continental to global scales.",
-        #"thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
+        "thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
         "keywords": ["disturbance", "mortality", "forest loss", "change", "harvest", "fire"],
         "products": ["EFDA", "JRC_TMF", "HANSEN_GFC", "JRC_GFC2020"],
     },
     "structure-demography": {
         "title": "Structure & Demography",
         "description": "Forest age, canopy height, and composition layers to study structure and dynamics.",
-        #"thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
+        "thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
         "keywords": ["forest age", "canopy height", "genus", "composition", "demography"],
         "products": ["GAMI", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
     },
 }
 
-THEME_THUMBNAILS = {
-  "biomass-carbon": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
-  "disturbance-change": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
-  "structure-demography": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
-}
-
-
-def _guess_media_type(href: str) -> str | None:
-    ext = os.path.splitext(href.split("?")[0])[1].lower()
-    return {
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".webp": "image/webp",
-        ".svg": "image/svg+xml",
-    }.get(ext)
-
-def _set_thumbnail(obj: pystac.STACObject, href: str, *, title: str | None = None) -> None:
+def _set_thumbnail(catalog: pystac.Catalog, href: str, *, title: str | None = None) -> None:
     """
-    Attach a thumbnail in a STAC Browser-friendly way without violating core STAC.
-    - For Items/Collections, assets are standard.
-    - For Catalogs, assets are non-standard but stac-browser often reads them.
-    Also adds a link rel=icon as a fallback.
+    Attach a thumbnail asset to a Catalog/Collection in a STAC Browser-friendly way.
+    STAC spec doesn't define 'assets' for Catalog, but stac-browser supports it via extra_fields.
     """
-    media_type = _guess_media_type(href)
-
-    obj.extra_fields.setdefault("assets", {})
-    obj.extra_fields["assets"]["thumbnail"] = {
+    catalog.extra_fields.setdefault("assets", {})
+    catalog.extra_fields["assets"]["thumbnail"] = {
         "href": href,
-        **({"type": media_type} if media_type else {}),
+        "type": "image/png",
         "roles": ["thumbnail"],
         **({"title": title} if title else {}),
     }
-
-    # Fallback that many UIs understand
-    obj.add_link(
-        pystac.Link(
-            rel="icon",
-            target=href,
-            media_type=media_type,
-            title=title or "thumbnail",
-        )
-    )
 
 @dataclass(frozen=True)
 class ProductSpec:
@@ -221,11 +189,11 @@ def _build_base_tree(
         if isinstance(keywords, list) and keywords:
             theme_cat.extra_fields["keywords"] = keywords
     
-        # # Add a thumbnail asset to make theme cards visual on the landing page
-        # thumb = THEME_THUMBNAILS.get(theme_id)
-        # if thumb:
-        #     _set_thumbnail(theme_cat, thumb, title=str(meta["title"]))
-
+        # Add a thumbnail asset to make theme cards visual on the landing page
+        # thumb = meta.get("thumbnail")
+        # if isinstance(thumb, str) and thumb:
+        #     _set_thumbnail(theme_cat, thumb, title=str(meta.get("title", theme_id)))
+    
         # Nice: link back to the project
         theme_cat.add_link(
             pystac.Link(
@@ -237,6 +205,7 @@ def _build_base_tree(
     
         root.add_child(theme_cat)
         theme_nodes[theme_id] = theme_cat
+
 
     # 2) Attach collections under themes
     assigned: set[str] = set()
@@ -583,16 +552,7 @@ def build_root_catalog(
             "STAC",
         ]
     internal_root.extra_fields["keywords"] = keywords
-    
-    # _set_thumbnail(
-    #     internal_root,
-    #     "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/logos/eoforestact_logo.png",
-    #     title="EOForestSTAC",
-    # )
-    internal_root.add_link(
-        pystac.Link(rel="documentation", target="https://github.com/simonbesnard1/eoforeststac", title="Docs / README")
-    )
-    
+
     # Helpful links for humans
     if about_url:
         internal_root.add_link(
