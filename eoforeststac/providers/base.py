@@ -69,11 +69,18 @@ class BaseProvider:
     # Catalog helpers
     # -----------------------------
     def list_collections(self) -> List[pystac.Collection]:
-        # Return all collections in the catalog (recursive)
-        return list(self.catalog.get_collections())
+        """
+        Return all collections in the catalog, robust to themed/nested catalogs.
+        """
+        cols = {}
+        for root, children, _items in self.catalog.walk():
+            for child in children:
+                if isinstance(child, pystac.Collection):
+                    cols[child.id] = child
+        return list(cols.values())
 
     def list_collection_ids(self) -> List[str]:
-        return [c.id for c in self.list_collections()]
+        return sorted([c.id for c in self.list_collections()])
 
     def list_items(self, collection_id: str) -> List[pystac.Item]:
         collection = self.get_collection(collection_id)
