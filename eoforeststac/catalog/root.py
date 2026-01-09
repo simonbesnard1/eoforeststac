@@ -78,6 +78,28 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
 ItemFactory = Callable[[str], pystac.Item]
 CollectionFactory = Callable[[], pystac.Collection]
 
+# ---------------------------------------------------------------------
+# Themes (atlas-style structure)
+# ---------------------------------------------------------------------
+
+THEMES: Dict[str, Dict[str, object]] = {
+    "biomass-carbon": {
+        "title": "Biomass & Carbon",
+        "description": "Biomass maps and carbon accumulation products.",
+        "products": ["CCI_BIOMASS", "SAATCHI_BIOMASS", "LIU_BIOMASS", "ROBINSON_CR"],
+    },
+    "disturbance-change": {
+        "title": "Disturbance & Change",
+        "description": "Forest disturbance and change products.",
+        "products": ["EFDA", "JRC_TMF", "HANSEN_GFC", "JRC_GFC2020"],
+    },
+    "structure-demography": {
+        "title": "Structure & Demography",
+        "description": "Forest age, canopy height, and composition products.",
+        "products": ["GAMI", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
+    },
+}
+
 
 @dataclass(frozen=True)
 class ProductSpec:
@@ -110,46 +132,99 @@ def _build_base_tree(
     description: str,
 ) -> Tuple[pystac.Catalog, Dict[str, Tuple[pystac.Collection, ItemFactory]]]:
     """
-    Build the in-memory tree once (no href normalization yet).
+    Build an in-memory catalog tree (no href normalization yet).
+
+    Structure:
+      root catalog
+        ├─ theme subcatalogs (Catalog)
+        │    └─ collections
+        │         └─ items (versioned)
     Returns root catalog and a mapping {product_id: (collection, item_factory)}.
     """
-    catalog = pystac.Catalog(id=catalog_id, description=description)
-    catalog.catalog_type = pystac.CatalogType.RELATIVE_PUBLISHED
+    root = pystac.Catalog(id=catalog_id, description=description)
+    root.catalog_type = pystac.CatalogType.RELATIVE_PUBLISHED
 
-    # Optional: harmless hint for stac-browser
-    catalog.extra_fields.setdefault("stac_browser", {"showThumbnailsAsAssets": True})
+    # Optional: hint for stac-browser
+    root.extra_fields.setdefault("stac_browser", {"showThumbnailsAsAssets": True})
 
+    # Build a lookup of product builders
+    specs_by_id: Dict[str, ProductSpec] = {s.product_id: s for s in _product_specs()}
+
+    # Track collections we actually created (for items + writing)
     collections: Dict[str, Tuple[pystac.Collection, ItemFactory]] = {}
 
-    for spec in _product_specs():
-        col = spec.collection_factory()
-        catalog.add_child(col)
-        collections[spec.product_id] = (col, spec.item_factory)
+    # 1) Create theme subcatalogs
+    theme_nodes: Dict[str, pystac.Catalog] = {}
+    for theme_id, meta in THEMES.items():
+        theme_cat = pystac.Catalog(
+            id=theme_id,
+            description=str(meta["description"]),
+            title=str(meta["title"]),
+        )
+        theme_cat.catalog_type = pystac.CatalogType.RELATIVE_PUBLISHED
+        root.add_child(theme_cat)
+        theme_nodes[theme_id] = theme_cat
 
-    # Create versioned items
+    # 2) Attach collections under themes
+    assigned: set[str] = set()
+    for theme_id, meta in THEMES.items():
+        product_ids = list(meta["products"])  # type: ignore[assignment]
+        for prod_id in product_ids:
+            if prod_id not in specs_by_id:
+                raise KeyError(f"Theme '{theme_id}' references unknown product_id '{prod_id}'")
+
+            if prod_id in assigned:
+                raise ValueError(f"Product '{prod_id}' is listed in multiple themes; choose one parent only.")
+            assigned.add(prod_id)
+
+            spec = specs_by_id[prod_id]
+            col = spec.collection_factory()
+            theme_nodes[theme_id].add_child(col)
+            collections[prod_id] = (col, spec.item_factory)
+
+    # 3) Ensure no product is “orphaned” (unless you intentionally want that)
+    all_products = set(specs_by_id.keys())
+    missing = sorted(all_products - assigned)
+    if missing:
+        raise ValueError(
+            "Some products are not assigned to any theme: "
+            + ", ".join(missing)
+            + ". Add them to THEMES or decide an 'other' theme."
+        )
+
+    # 4) Create versioned items under each collection
     for prod_id, (col, item_factory) in collections.items():
         for v in versions.get(prod_id, []):
             col.add_item(item_factory(v))
 
-    return catalog, collections
+    return root, collections
+
+
+def _iter_collections(node: pystac.Catalog) -> List[pystac.Collection]:
+    cols: List[pystac.Collection] = []
+    for child in node.get_children():
+        if isinstance(child, pystac.Collection):
+            cols.append(child)
+        elif isinstance(child, pystac.Catalog):
+            cols.extend(_iter_collections(child))
+    return cols
 
 
 def _write_internal_with_package_writers(root: pystac.Catalog) -> None:
     """
-    Write using existing package writers (write_collection/write_item),
-    which expect to write to self_href (typically s3://... or local).
+    Write using existing package writers (write_collection/write_item).
+    Works for themed catalogs (nested Catalog -> Collection -> Item).
     """
     if root.self_href is None:
         raise ValueError("Catalog has no self_href; call normalize_hrefs() before writing.")
 
     write_json(root.self_href, root.to_dict())
 
-    # Children are collections
-    for col in root.get_children():  # type: ignore[assignment]
-        assert isinstance(col, pystac.Collection)
+    for col in _iter_collections(root):
         write_collection(col)
         for item in col.get_items():
             write_item(item)
+
 
 def _apply_root_metadata(
     catalog: pystac.Catalog,
@@ -198,7 +273,6 @@ def _ensure_absolute_root_self_links(pub_dict: dict, self_href: str) -> dict:
             link["href"] = self_href
     return pub_dict
 
-
 def _write_browser_variant(
     base_versions: Mapping[str, List[str]],
     *,
@@ -206,7 +280,7 @@ def _write_browser_variant(
     write_base: str,
     catalog_id: str,
     description: str,
-    # ---- new: richer root metadata ----
+    # ---- richer root metadata ----
     title: Optional[str] = None,
     license_: Optional[str] = None,
     providers: Optional[list[dict]] = None,
@@ -214,7 +288,7 @@ def _write_browser_variant(
     about_url: Optional[str] = None,
     documentation_url: Optional[str] = None,
     stac_browser: Optional[dict] = None,
-    # ---- new: behavior knobs ----
+    # ---- behavior knobs ----
     force_absolute_root_links: bool = True,
 ) -> pystac.Catalog:
     """
@@ -268,9 +342,21 @@ def _write_browser_variant(
     if pub_root.self_href is None:
         pub_root.set_self_href(pub_self)
     else:
-        pub_self = pub_root.self_href  # preserve pystac's computed one
+        pub_self = pub_root.self_href
     if dst_root.self_href is None:
         dst_root.set_self_href(dst_self)
+
+    # -----------------------
+    # Helper: iterate nested *Catalog* nodes (excluding Collections)
+    # -----------------------
+    def _iter_catalog_nodes(node: pystac.Catalog) -> list[pystac.Catalog]:
+        cats: list[pystac.Catalog] = []
+        for child in node.get_children():
+            # Collections are Catalog subclasses — exclude them here
+            if isinstance(child, pystac.Catalog) and not isinstance(child, pystac.Collection):
+                cats.append(child)
+                cats.extend(_iter_catalog_nodes(child))
+        return cats
 
     # -----------------------
     # Root
@@ -281,18 +367,45 @@ def _write_browser_variant(
     write_json(dst_root.self_href, root_dict)
 
     # -----------------------
+    # Theme subcatalogs (Catalog JSONs)
+    # -----------------------
+    pub_cats = {c.id: c for c in _iter_catalog_nodes(pub_root)}
+    dst_cats = {c.id: c for c in _iter_catalog_nodes(dst_root)}
+
+    # Safety: ensure both trees contain same catalog node ids
+    if set(pub_cats.keys()) != set(dst_cats.keys()):
+        raise RuntimeError(
+            "pub/dst theme catalog sets differ; refusing to write inconsistent browser variant."
+        )
+
+    for cat_id, dst_cat in dst_cats.items():
+        pub_cat = pub_cats[cat_id]
+
+        cat_dict = pub_cat.to_dict()
+        if force_absolute_root_links and pub_cat.self_href:
+            for link in cat_dict.get("links", []):
+                if link.get("rel") == "self":
+                    link["href"] = pub_cat.self_href
+
+        # Write theme catalog.json (https JSON -> s3 destination)
+        write_json(dst_cat.self_href, cat_dict)
+
+    # -----------------------
     # Collections (match by id)
     # -----------------------
-    pub_cols = {c.id: c for c in pub_root.get_children() if isinstance(c, pystac.Collection)}
-    dst_cols = {c.id: c for c in dst_root.get_children() if isinstance(c, pystac.Collection)}
+    pub_cols = {c.id: c for c in _iter_collections(pub_root)}
+    dst_cols = {c.id: c for c in _iter_collections(dst_root)}
+
+    # Safety: ensure both trees contain same collection ids
+    if set(pub_cols.keys()) != set(dst_cols.keys()):
+        raise RuntimeError(
+            "pub/dst collection sets differ; refusing to write inconsistent browser variant."
+        )
 
     for col_id, dst_col in dst_cols.items():
-        pub_col = pub_cols.get(col_id)
-        if pub_col is None:
-            continue
+        pub_col = pub_cols[col_id]
 
         col_dict = pub_col.to_dict()
-        # Optionally make collection self links absolute too (usually nice)
         if force_absolute_root_links and pub_col.self_href:
             for link in col_dict.get("links", []):
                 if link.get("rel") == "self":
@@ -304,10 +417,16 @@ def _write_browser_variant(
         # Items (match by id)
         # -----------------------
         pub_items = {it.id: it for it in pub_col.get_items()}
-        for dst_item in dst_col.get_items():
-            pub_item = pub_items.get(dst_item.id)
-            if pub_item is None:
-                continue
+        dst_items = list(dst_col.get_items())
+
+        # Optional safety: ensure same item ids
+        if set(pub_items.keys()) != {it.id for it in dst_items}:
+            raise RuntimeError(
+                f"pub/dst item sets differ for collection '{col_id}'; refusing to write inconsistent browser variant."
+            )
+
+        for dst_item in dst_items:
+            pub_item = pub_items[dst_item.id]
 
             item_dict = pub_item.to_dict()
             if force_absolute_root_links and pub_item.self_href:
