@@ -86,21 +86,21 @@ THEMES: Dict[str, Dict[str, object]] = {
     "biomass-carbon": {
         "title": "Biomass & Carbon",
         "description": "Biomass stocks, canopy carbon, and regrowth/carbon accumulation products.",
-        "thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
+        #"thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-biomass-carbon.png",
         "keywords": ["biomass", "carbon", "agb", "regrowth", "carbon removal"],
         "products": ["CCI_BIOMASS", "SAATCHI_BIOMASS", "LIU_BIOMASS", "ROBINSON_CR"],
     },
     "disturbance-change": {
         "title": "Disturbance & Change",
         "description": "Forest disturbance, loss, and change layers from continental to global scales.",
-        "thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
+        #"thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-disturbance-change.png",
         "keywords": ["disturbance", "mortality", "forest loss", "change", "harvest", "fire"],
         "products": ["EFDA", "JRC_TMF", "HANSEN_GFC", "JRC_GFC2020"],
     },
     "structure-demography": {
         "title": "Structure & Demography",
         "description": "Forest age, canopy height, and composition layers to study structure and dynamics.",
-        "thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
+        #"thumbnail": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/theme-structure-demography.png",
         "keywords": ["forest age", "canopy height", "genus", "composition", "demography"],
         "products": ["GAMI", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
     },
@@ -189,10 +189,10 @@ def _build_base_tree(
         if isinstance(keywords, list) and keywords:
             theme_cat.extra_fields["keywords"] = keywords
     
-        # Add a thumbnail asset to make theme cards visual on the landing page
-        thumb = meta.get("thumbnail")
-        if isinstance(thumb, str) and thumb:
-            _set_thumbnail(theme_cat, thumb, title=str(meta.get("title", theme_id)))
+        # # Add a thumbnail asset to make theme cards visual on the landing page
+        # thumb = meta.get("thumbnail")
+        # if isinstance(thumb, str) and thumb:
+        #     _set_thumbnail(theme_cat, thumb, title=str(meta.get("title", theme_id)))
     
         # Nice: link back to the project
         theme_cat.add_link(
