@@ -1,109 +1,174 @@
-# eoforeststac/products/gami.py
 import datetime
 from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 GAMI_CFG = {
-    # ---- identity ----
+    # ------------------------------------------------------------------
+    # Identity / narrative (atlas-friendly)
+    # ------------------------------------------------------------------
     "id": "GAMI",
-    "title": "Global Age Mapping Integration (GAMI)",
+    "title": "Global Age Mapping Integration (GAMI) – Global forest age (100 m)",
     "description": (
-        "Global gridded forest age product derived by integrating machine-learning models "
-        "with remote sensing and reference forest inventory information. "
-        "Provides spatially explicit forest age estimates and uncertainty."
+        "Global gridded forest age product derived by integrating machine-learning models with "
+        "remote sensing predictors and reference forest inventory information. "
+        "Provides spatially explicit forest age estimates and uncertainty.\n\n"
+        "Temporal semantics: GAMI is a static age map referenced to a specific year or reference period "
+        "(depending on version). The temporal extent below denotes the reference period/years used for "
+        "harmonization; each item/version can document its exact reference year(s).\n\n"
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
-    # ---- spatial extent ----
-    "bbox": [-180, -90, 180, 90],
+    # ------------------------------------------------------------------
+    # Spatial / temporal extent
+    # ------------------------------------------------------------------
+    "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]],
+        "coordinates": [[
+            [-180.0, -90.0],
+            [-180.0,  90.0],
+            [ 180.0,  90.0],
+            [ 180.0, -90.0],
+            [-180.0, -90.0],
+        ]],
     },
-
-    # ---- temporal semantics ----
-    # IMPORTANT: for age products the meaning of time can be subtle:
-    # - a "reference year" (age at year X)
-    # - a multi-year composite / harmonized time window
-    #
-    # Keep interval broad & honest unless you have per-version specifics.
     "start_datetime": datetime.datetime(2010, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
+
+    # Keep your note (useful for provenance; can be carried into extra_fields later)
     "temporal_notes": (
         "Temporal extent denotes the reference period/years used for harmonization. "
         "For each version, items describe the exact reference year(s) of age estimates."
     ),
 
-    # ---- STAC wiring ----
+    # ------------------------------------------------------------------
+    # HREF layout
+    # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/GAMI/collection.json",
     "base_path": f"{BASE_S3_URL}/GAMI",
 
-    # ---- governance ----
-    # Put the real license string if you have it (e.g. CC-BY-4.0). Otherwise keep 'various' for safety.
+    # ------------------------------------------------------------------
+    # Governance
+    # ------------------------------------------------------------------
+    # Replace "various" with the exact license when you want it strict (e.g., CC-BY-4.0).
     "license": "various",
-
     "providers": [
         {
             "name": "GFZ Helmholtz Centre Potsdam",
             "roles": ["producer", "processor", "host"],
             "url": "https://www.gfz.de",
         },
-        # Optional: if there is a consortium/institution list, add it here.
     ],
 
+    # ------------------------------------------------------------------
+    # Discovery helpers
+    # ------------------------------------------------------------------
     "keywords": [
+        "forest age",
         "stand age",
+        "demography",
         "machine learning",
         "remote sensing",
+        "forest inventory",
         "carbon cycle",
-        "forest demography",
         "global",
+        "zarr",
+        "stac",
+    ],
+    "themes": ["forest structure", "carbon", "demography"],
+
+    # ------------------------------------------------------------------
+    # Links (curated STAC Browser experience)
+    # ------------------------------------------------------------------
+    "links": [
+      
+        # Canonical citation + paper
+        {
+            "rel": "cite-as",
+            "href": "https://doi.org/10.5880/GFZ.1.4.2023.006",
+            "type": "text/html",
+            "title": "GAMI dataset DOI (GFZ Data Services)",
+        },
+        {
+            "rel": "related",
+            "href": "https://doi.org/10.5194/essd-13-4881-2021",
+            "type": "text/html",
+            "title": "Peer-reviewed paper (ESSD, 2021)",
+        },
+
+        # Your packaging project
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
+        },
     ],
 
-    # ---- links ----
-    "links": [
-    {
-        "rel": "cite-as",
-        "href": "https://doi.org/10.5880/GFZ.1.4.2023.006",
-        "type": "text/html",
-        "title": "GAMI dataset DOI (GFZ Data Services)",
-    },
-    {
-        "rel": "related",
-        "href": "https://doi.org/10.5194/essd-13-4881-2021",
-        "type": "text/html",
-        "title": "Peer-reviewed paper (ESSD, 2021)",
-    },
-],
-
-    # ---- extensions (optional but recommended) ----
+    # ------------------------------------------------------------------
+    # Extensions (signal what fields might exist in items/assets)
+    # ------------------------------------------------------------------
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
-        # "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
 
-    # ---- summaries: structured metadata clients can use ----
-    # Keep unknowns out; add once you confirm.
+    # ------------------------------------------------------------------
+    # Summaries (client-friendly structured metadata)
+    # ------------------------------------------------------------------
     "summaries": {
-        "temporal_resolution": ["static"],  # age map for a reference year/period (not a daily time series)
-        "variables": ["forest_age"],
+        "temporal_resolution": ["static"],
+        "variables": ["forest_age", "forest_age_uncertainty"],
         "units": ["years"],
-        "eo:gsd": [100],      # e.g., 100 m
-        "proj:epsg": [4326],  # or whatever you store
+
+        # Keep consistent with your other collections
+        "eo:gsd": [100.0],
+        "proj:epsg": [4326],
+
+        "product_family": ["GAMI"],
+        "data_format": ["zarr"],
     },
 
-    # ---- assets ----
+    # ------------------------------------------------------------------
+    # Item assets template (for Item Assets extension)
+    # ------------------------------------------------------------------
+    "item_assets": {
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": "Cloud-optimized Zarr store of global forest age estimates (and uncertainty).",
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        "thumbnail": {
+            "title": "Preview",
+            "roles": ["thumbnail"],
+            "type": "image/png",
+        },
+    },
+
+    # ------------------------------------------------------------------
+    # Asset template (roles + description)
+    # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
         "factory": lambda cfg, v: create_zarr_asset(
             href=f"{cfg['base_path']}/GAMI_v{v}.zarr",
             title=f"GAMI v{v} (Zarr)",
             roles=["data"],
-            description="Zarr store of global forest age estimates.",
+            description=(
+                "Cloud-optimized Zarr store containing global forest age estimates "
+                "and associated uncertainty layers."
+            ),
         ),
     },
 
-    # Optional: version-specific notes (super nice in STAC Browser)
+    # ------------------------------------------------------------------
+    # Version notes (UI / provenance helper)
+    # ------------------------------------------------------------------
     "version_notes": {
         "2.0": "Initial public release.",
         "2.1": "Incremental updates and/or bug fixes.",
@@ -111,4 +176,3 @@ GAMI_CFG = {
         "3.1": "Minor update (methods/data).",
     },
 }
-
