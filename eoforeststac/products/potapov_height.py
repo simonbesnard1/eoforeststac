@@ -3,73 +3,146 @@ from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 POTAPOV_HEIGHT_CFG = {
+    # ------------------------------------------------------------------
+    # Identity / narrative (atlas-friendly)
+    # ------------------------------------------------------------------
     "id": "POTAPOV_HEIGHT",
-    "title": "Global Canopy Height (Potapov et al.)",
+    "title": "Global Canopy Height (Potapov et al.) – Multi-epoch canopy height (2005–2020)",
     "description": (
         "Global canopy height maps provided for multiple reference years (2005, 2010, 2015, 2020). "
-        "The product integrates spaceborne LiDAR information with optical imagery "
-        "to produce gridded canopy height estimates. See the dataset documentation for full processing "
-        "details and citation guidance."
+        "The product integrates spaceborne LiDAR information with optical imagery to produce gridded "
+        "canopy height estimates. See the dataset documentation for full processing details and "
+        "citation guidance.\n\n"
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
     # ------------------------------------------------------------------
-    # Spatial extent
+    # Spatial / temporal extent
     # ------------------------------------------------------------------
-    "bbox": [-180, -90, 180, 90],
+    "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]],
+        "coordinates": [[
+            [-180.0, -90.0],
+            [-180.0,  90.0],
+            [ 180.0,  90.0],
+            [ 180.0, -90.0],
+            [-180.0, -90.0],
+        ]],
     },
-
-    # Temporal coverage: earliest to latest epoch in your product
     "start_datetime": datetime.datetime(2005, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
-    # STAC wiring
+    # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/POTAPOV_HEIGHT/collection.json",
     "base_path": f"{BASE_S3_URL}/POTAPOV_HEIGHT",
 
     # ------------------------------------------------------------------
-    # Governance / provenance
+    # Governance
     # ------------------------------------------------------------------
     "license": "various",
-
     "providers": [
-        {"name": "Dataset authors / original providers", "roles": ["producer"], "url": "https://glad.umd.edu/"},
-        {"name": "GFZ Helmholtz Centre Potsdam", "roles": ["processor", "host"], "url": "https://www.gfz.de"},
+        {
+            "name": "University of Maryland (GLAD), Department of Geographical Sciences",
+            "roles": ["producer"],
+            "url": "https://glad.umd.edu/",
+        },
+        {
+            "name": "GFZ Helmholtz Centre Potsdam",
+            "roles": ["processor", "host"],
+            "url": "https://www.gfz.de",
+        },
     ],
 
+    # ------------------------------------------------------------------
+    # Discovery helpers
+    # ------------------------------------------------------------------
     "keywords": [
         "canopy height",
         "vegetation height",
         "forest structure",
-        "global",
         "LiDAR",
         "multi-epoch",
+        "global",
+        "zarr",
+        "stac",
     ],
+    "themes": ["forest structure", "biomass", "carbon"],
 
-    # Add the correct DOI/landing page here when you have it.
+    # ------------------------------------------------------------------
+    # Links (curated STAC Browser experience)
+    # ------------------------------------------------------------------
     "links": [
-        {"rel": "cite-as", "href": "https://doi.org/10.1016/j.rse.2020.112165", "type": "text/html", "title": "Dataset DOI"}
+        
+        # Canonical citation / landing (replace/add as needed)
+        {
+            "rel": "cite-as",
+            "href": "https://doi.org/10.1016/j.rse.2020.112165",
+            "type": "text/html",
+            "title": "Primary citation (Remote Sensing of Environment, 2020)",
+        },
+
+        # Your packaging project
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
+        },
     ],
 
+    # ------------------------------------------------------------------
+    # Extensions (signal what fields might exist in items/assets)
+    # ------------------------------------------------------------------
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
 
+    # ------------------------------------------------------------------
+    # Summaries (client-friendly structured metadata)
+    # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["multi-epoch"],
         "reference_years": [2005, 2010, 2015, 2020],
+
         "variables": ["canopy_height"],
         "units": ["m"],
-        "lidar_sources": ["ICESat-2", "GEDI"],
+
+        # Spatial metadata (fill in what you actually store)
+        # If you know your packaged grid spacing (e.g., 30 m, 1 km), set it here.
+        "eo:gsd": [30.0],
+        "proj:epsg": [4326],
+
+        "product_family": ["Potapov et al. canopy height"],
+        "data_format": ["zarr"],
     },
 
     # ------------------------------------------------------------------
-    # Assets (roles + description)
+    # Item assets template (for Item Assets extension)
+    # ------------------------------------------------------------------
+    "item_assets": {
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": "Cloud-optimized Zarr store of global canopy height for a given reference year/epoch.",
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        "thumbnail": {
+            "title": "Preview",
+            "roles": ["thumbnail"],
+            "type": "image/png",
+        },
+    },
+
+    # ------------------------------------------------------------------
+    # Asset template (roles + description)
     # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
@@ -78,14 +151,15 @@ POTAPOV_HEIGHT_CFG = {
             title=f"Global canopy height {v} (Zarr)",
             roles=["data"],
             description=(
-                "Zarr packaging of the global canopy height layer for the given reference year/epoch. "
-                "Part of a multi-epoch canopy height product (2005/2010/2015/2020) integrating LiDAR "
-                "information including ICESat-2."
+                "Cloud-optimized Zarr store containing global canopy height for the given reference year/epoch. "
+                "Part of a multi-epoch canopy height product (2005/2010/2015/2020)."
             ),
-        )
+        ),
     },
 
-    # Optional: give meaning to version strings if you use them as epochs
+    # ------------------------------------------------------------------
+    # Version notes (epochs)
+    # ------------------------------------------------------------------
     "version_notes": {
         "2005": "Canopy height for reference year 2005.",
         "2010": "Canopy height for reference year 2010.",
@@ -93,4 +167,3 @@ POTAPOV_HEIGHT_CFG = {
         "2020": "Canopy height for reference year 2020.",
     },
 }
-
