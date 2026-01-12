@@ -1,20 +1,18 @@
-# eoforeststac/products/hansen_gfc.py
-
 import datetime
 from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 HANSEN_GFC_CFG = {
     # ------------------------------------------------------------------
-    # Identification
+    # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "HANSEN_GFC",
-    "title": "Hansen Global Forest Change",
+    "title": "Hansen Global Forest Change (GFC) – Tree cover and annual loss (30 m)",
     "description": (
         "Global Forest Change (GFC) dataset derived from time-series analysis of Landsat imagery, "
-        "characterizing global tree cover and tree cover loss from 2000 through 2024, and tree cover "
-        "gain for 2000–2012. Includes percent tree cover for year 2000, annual loss year, gain, and a "
-        "data mask."
+        "characterizing percent tree cover for year 2000, annual tree cover loss (2001 onward), "
+        "tree cover gain (2000–2012), and a data mask.\n\n"
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
     # ------------------------------------------------------------------
@@ -29,23 +27,22 @@ HANSEN_GFC_CFG = {
             [ 180.0,  90.0],
             [ 180.0, -90.0],
             [-180.0, -90.0],
-        ]]
+        ]],
     },
     "start_datetime": datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
-    # STAC paths (your packaging)
+    # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/HANSEN_GFC/collection.json",
     "base_path": f"{BASE_S3_URL}/HANSEN_GFC",
 
     # ------------------------------------------------------------------
-    # Governance / provenance
+    # Governance
     # ------------------------------------------------------------------
     # License varies by distribution channel; set explicitly if you want strictness.
     "license": "various",
-
     "providers": [
         {
             "name": "University of Maryland (GLAD), Department of Geographical Sciences",
@@ -72,16 +69,22 @@ HANSEN_GFC_CFG = {
         "forest change",
         "tree cover loss",
         "tree cover gain",
-        "landsat",
+        "Landsat",
         "global",
         "deforestation",
-        "UMD GLAD",
+        "GLAD",
+        "UMD",
+        "zarr",
+        "stac",
     ],
+    "themes": ["disturbance", "forest structure", "land cover change"],
 
     # ------------------------------------------------------------------
-    # STAC links (preferred over ad-hoc references)
+    # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
+        
+        # Official documentation / access points
         {
             "rel": "about",
             "href": "https://developers.google.com/earth-engine/datasets/catalog/UMD_hansen_global_forest_change_2024_v1_12",
@@ -100,43 +103,82 @@ HANSEN_GFC_CFG = {
             "type": "text/html",
             "title": "Web visualization (Global Forest Change app)",
         },
+
+        # Canonical citation
         {
             "rel": "cite-as",
             "href": "https://doi.org/10.1126/science.1244693",
             "type": "text/html",
             "title": "Hansen et al., Science (2013) – primary citation",
         },
+
+        # Your packaging project
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
+        },
     ],
 
     # ------------------------------------------------------------------
-    # Extensions (optional but nice)
+    # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
 
     # ------------------------------------------------------------------
-    # Structured summaries (truthful + useful)
+    # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-        # Earth Engine page reports pixel size ~30.92 m and includes key bands. :contentReference[oaicite:3]{index=3}
-        "eo:gsd": [30.92],
         "temporal_resolution": ["annual"],
         "variables": [
             "treecover2000",
             "loss",
             "lossyear",
             "gain",
-            "datamask"
+            "datamask",
         ],
-        # Definition note (trees ≥ 5m) comes from the GLAD visualization / docs. :contentReference[oaicite:4]{index=4}
+        "units": ["percent", "binary", "year", "binary", "categorical"],
+
+        # Spatial metadata
+        "eo:gsd": [30.0],        # often reported ~30.92 m; keep 30 m as a clean atlas value
+        "proj:epsg": [4326],
+
+        "product_family": ["Hansen Global Forest Change (GFC)"],
+        "data_format": ["zarr"],
+
+        # Dataset-specific semantics
         "tree_definition": ["vegetation taller than 5 m"],
         "gain_period": ["2000–2012"],
+        "loss_period": ["2001–2024"],
     },
 
     # ------------------------------------------------------------------
-    # Assets (your packaged format)
+    # Item assets template (for Item Assets extension)
+    # ------------------------------------------------------------------
+    "item_assets": {
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": "Cloud-optimized Zarr store of Hansen Global Forest Change layers.",
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        "thumbnail": {
+            "title": "Preview",
+            "roles": ["thumbnail"],
+            "type": "image/png",
+        },
+    },
+
+    # ------------------------------------------------------------------
+    # Asset template (roles + description)
     # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
@@ -144,15 +186,17 @@ HANSEN_GFC_CFG = {
             href=f"{cfg['base_path']}/HANSEN_GFC_v{v}.zarr",
             title=f"Hansen GFC v{v} (Zarr)",
             roles=["data"],
-            description="Zarr store of Global Forest Change.",
-        )
+            description=(
+                "Cloud-optimized Zarr store containing Hansen Global Forest Change layers "
+                "(tree cover 2000, annual loss year, gain, and data mask)."
+            ),
+        ),
     },
 
     # ------------------------------------------------------------------
-    # Optional: version notes
+    # Version notes
     # ------------------------------------------------------------------
     "version_notes": {
-        "1.12": "Update covering loss through year 2024 (GFC-2024).",
+        "1.12": "Update covering tree cover loss through year 2024 (GFC-2024 v1.12).",
     },
 }
-
