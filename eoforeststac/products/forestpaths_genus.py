@@ -3,17 +3,21 @@ from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 FORESTPATHS_GENUS_CFG = {
+    # ------------------------------------------------------------------
+    # Identity / narrative (atlas-friendly)
+    # ------------------------------------------------------------------
     "id": "FORESTPATHS_GENUS",
-    "title": "ForestPaths – European Tree Genus Map 2020",
+    "title": "ForestPaths – European Tree Genus Map 2020 (10 m)",
     "description": (
-        "Early access European tree genus map at 10 m resolution for year 2020. "
-        "Derived from Sentinel-1 and Sentinel-2 data using a CatBoost model trained on "
-        "forest inventories, citizen science observations, orthophoto interpretation, and LUCAS. "
-        "Map distinguishes eight classes including Larix, Picea, Pinus, Fagus, and Quercus."
+        "European tree genus map at 10 m resolution for year 2020 (early access). "
+        "Derived from Sentinel-1 and Sentinel-2 time series using a CatBoost model trained on "
+        "forest inventories, citizen science observations, orthophoto interpretation, and LUCAS.\n\n"
+        "The map distinguishes eight classes including Larix, Picea, Pinus, Fagus, and Quercus. "
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
     # ------------------------------------------------------------------
-    # Spatial (Europe)
+    # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-35.0, 34.0, 45.0, 72.0],
     "geometry": {
@@ -26,40 +30,31 @@ FORESTPATHS_GENUS_CFG = {
             [-35.0, 34.0],
         ]],
     },
-
-    # ------------------------------------------------------------------
-    # Temporal (nominal year 2020; still represented as an interval)
-    # ------------------------------------------------------------------
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
-    # STAC wiring
+    # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/FORESTPATHS_GENUS/collection.json",
     "base_path": f"{BASE_S3_URL}/FORESTPATHS_GENUS",
 
     # ------------------------------------------------------------------
-    # Governance / provenance
+    # Governance
     # ------------------------------------------------------------------
-    # Zenodo record provides a "How to cite" with authors + year + title + DOI.
-    # If you know the license from Zenodo UI, set it explicitly; otherwise keep "various".
+    # Replace "various" with the exact license string from Zenodo once confirmed.
     "license": "various",
-
     "providers": [
-        # Producer(s)
         {
             "name": "ForestPaths Consortium",
             "roles": ["producer"],
             "url": "https://forestpaths.eu",
         },
-        # Key institutional contributors mentioned (VITO, TUM) — keep as providers for discoverability
         {
             "name": "VITO – Flemish Institute for Technological Research",
             "roles": ["producer"],
             "url": "https://vito.be",
         },
-        # Your packaging/hosting
         {
             "name": "GFZ Helmholtz Centre Potsdam",
             "roles": ["processor", "host"],
@@ -72,17 +67,25 @@ FORESTPATHS_GENUS_CFG = {
     # ------------------------------------------------------------------
     "keywords": [
         "tree genus",
+        "forest composition",
         "Europe",
         "Sentinel-1",
         "Sentinel-2",
+        "CatBoost",
         "machine learning",
-        "ForestPaths"
+        "classification",
+        "ForestPaths",
+        "zarr",
+        "stac",
     ],
+    "themes": ["forest structure", "species composition", "classification"],
 
     # ------------------------------------------------------------------
-    # Canonical citation and related resources
+    # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
+    
+        # Canonical citation / landing pages
         {
             "rel": "cite-as",
             "href": "https://doi.org/10.5281/zenodo.13341104",
@@ -99,29 +102,48 @@ FORESTPATHS_GENUS_CFG = {
             "rel": "related",
             "href": "https://forestpaths.eu/news/early-access-release-forestpaths-european-tree-genus-map",
             "type": "text/html",
-            "title": "ForestPaths news post (release announcement)",
+            "title": "Release announcement (ForestPaths)",
+        },
+
+        # Your packaging project
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
         },
     ],
 
     # ------------------------------------------------------------------
-    # STAC extensions (optional but very useful for this product)
+    # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
-        # "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
 
     # ------------------------------------------------------------------
-    # Structured summaries (client-friendly)
+    # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-        # grounded in Zenodo description
-        "eo:gsd": [10],              # 10 m resolution :contentReference[oaicite:1]{index=1}
-        "proj:epsg": [3035],         # EPSG:3035 :contentReference[oaicite:2]{index=2}
         "temporal_resolution": ["static"],
 
-        # classification legend (0..7) :contentReference[oaicite:3]{index=3}
+        # core data semantics
+        "variables": ["tree_genus_class"],
+        "units": ["categorical"],
+
+        # spatial metadata
+        "eo:gsd": [10.0],
+        "proj:epsg": [3035],
+
+        "product_family": ["ForestPaths"],
+        "data_format": ["zarr"],
+
+        # classification legend (0..7)
         "classes": [
             {"value": 0, "name": "Larix"},
             {"value": 1, "name": "Picea"},
@@ -133,22 +155,41 @@ FORESTPATHS_GENUS_CFG = {
             {"value": 7, "name": "No trees"},
         ],
 
-        # tiling & original distribution format (COG tiles 100 km grid) :contentReference[oaicite:4]{index=4}
-        "tiling": ["100km grid"],
+        # distribution hints
         "distribution_original": ["Cloud Optimized GeoTIFF (COG) tiles"],
+        "tiling": ["100km grid"],
     },
 
     # ------------------------------------------------------------------
-    # Assets (your packaged format)
+    # Item assets template (for Item Assets extension)
+    # ------------------------------------------------------------------
+    "item_assets": {
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": "Cloud-optimized Zarr store of the ForestPaths tree genus classification map (2020).",
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        "thumbnail": {
+            "title": "Preview",
+            "roles": ["thumbnail"],
+            "type": "image/png",
+        },
+    },
+
+    # ------------------------------------------------------------------
+    # Asset template (roles + description)
     # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
         "factory": lambda cfg, v: create_zarr_asset(
             href=f"{cfg['base_path']}/FORESTPATHS_GENUS_v{v}.zarr",
-            title=f"ForestPaths tree genus map 2020 (Zarr) – v{v}",
+            title=f"ForestPaths – Tree genus map 2020 (Zarr) v{v}",
             roles=["data"],
-            description="Zarr store packaging of the ForestPaths genus map.",
+            description=(
+                "Cloud-optimized Zarr store packaging of the ForestPaths European tree genus map for 2020 "
+                "(categorical classification with eight classes)."
+            ),
         ),
     },
 }
-
