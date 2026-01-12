@@ -3,7 +3,7 @@ import pystac
 def create_zarr_asset(href: str, title: str, roles:str, description:str) -> pystac.Asset:
     return pystac.Asset(
         href=href,
-        media_type="application/vnd+zarr",
+        media_type="application/vnd.zarr",
         roles=roles,
         title=title,
         description=description
