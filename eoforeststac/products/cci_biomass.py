@@ -156,7 +156,7 @@ CCI_BIOMASS_CFG = {
         "title": "Zarr dataset",
         "description": "Annual aboveground biomass (AGB) maps (Mg ha-1).",
         "roles": ["data"],
-        "type": "application/octet-stream"
+        "type": "application/vnd+zarr"
       },
       "thumbnail": {
         "title": "Preview",
