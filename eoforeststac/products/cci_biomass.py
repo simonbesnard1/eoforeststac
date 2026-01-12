@@ -82,13 +82,13 @@ CCI_BIOMASS_CFG = {
         # Branding / visuals (host these in your GH pages or public bucket)
         {
             "rel": "icon",
-            "href": "https://simonbesnard1.github.io/eoforeststac/assets/icons/cci_biomass.svg",
+            "href": "https://simonbesnard1.github.io/eoforeststac/doc/_static/thumbnails/cci_biomass.png",
             "type": "image/svg+xml",
             "title": "ESA CCI Biomass icon",
         },
         {
             "rel": "preview",
-            "href": "https://simonbesnard1.github.io/eoforeststac/assets/thumbnails/cci_biomass.png",
+            "href": "https://simonbesnard1.github.io/eoforeststac/doc/_static/thumbnails/cci_biomass.png",
             "type": "image/png",
             "title": "AGB quicklook",
         },

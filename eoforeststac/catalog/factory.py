@@ -103,21 +103,21 @@ def create_item(cfg: dict, version: str) -> pystac.Item:
         asset_key = cfg["asset_template"].get("key", "data")
         item.add_asset(asset_key, asset_factory(cfg, version))
     
-    # # Add thumbnail asset if preview link exists
-    # preview_link = next(
-    #     (link for link in cfg.get("links", []) if link["rel"] == "preview"),
-    #     None
-    # )
-    # if preview_link:
-    #     item.add_asset(
-    #         "thumbnail",
-    #         pystac.Asset(
-    #             href=preview_link["href"],
-    #             media_type=preview_link.get("type", "image/png"),
-    #             title=preview_link.get("title", "Preview"),
-    #             roles=["thumbnail"]
-    #         )
-    #     )
+    # Add thumbnail asset if preview link exists
+    preview_link = next(
+        (link for link in cfg.get("links", []) if link["rel"] == "preview"),
+        None
+    )
+    if preview_link:
+        item.add_asset(
+            "thumbnail",
+            pystac.Asset(
+                href=preview_link["href"],
+                media_type=preview_link.get("type", "image/png"),
+                title=preview_link.get("title", "Preview"),
+                roles=["thumbnail"]
+            )
+        )
     
     # Add links to item (e.g., documentation, DOI)
     if "links" in cfg:
