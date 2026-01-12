@@ -25,7 +25,7 @@ class ZarrProvider(BaseProvider):
         collection = self.get_collection(collection_id)
     
         if collection is None:
-            available = sorted(c.id for c in self.catalog.get_collections())
+            available = sorted(c.id for c in self.list_collections())
             raise ValueError(
                 f"Collection '{collection_id}' not found. "
                 f"Available collections: {', '.join(available)}"
