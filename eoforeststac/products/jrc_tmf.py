@@ -3,40 +3,47 @@ from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 JRC_TMF_CFG = {
+    # ------------------------------------------------------------------
+    # Identity / narrative (atlas-friendly)
+    # ------------------------------------------------------------------
     "id": "JRC_TMF",
-    "title": "JRC Tropical Moist Forests (TMF) – Forest cover change, degradation, deforestation, regrowth (1990–2024)",
+    "title": "JRC Tropical Moist Forests (TMF) - Forest change (degradation, deforestation, regrowth) (1990-2024)",
     "description": (
         "Pan-tropical dataset on forest cover change in tropical moist forests (TMF) derived from "
         "Landsat time series. Wall-to-wall maps depict TMF extent and disturbances (deforestation "
-        "and degradation) as well as post-deforestation recovery (forest regrowth). Distributed via "
-        "two complementary products: a transition map and an annual change collection."
+        "and degradation) as well as post-deforestation recovery (forest regrowth).\n\n"
+        "The product is distributed via two complementary components: a transition map and an annual "
+        "change collection.\n\n"
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
-    # Tropical moist forest belt is not exactly [-30, 30], but your bbox is a safe envelope.
-    "bbox": [-180, -30, 180, 30],
+    "bbox": [-180.0, -30.0, 180.0, 30.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[[-180, -30], [-180, 30], [180, 30], [180, -30], [-180, -30]]],
+        "coordinates": [[
+            [-180.0, -30.0],
+            [-180.0,  30.0],
+            [ 180.0,  30.0],
+            [ 180.0, -30.0],
+            [-180.0, -30.0],
+        ]],
     },
-
-    # JRC indicates annual collection from 1990 to 2024 (35 maps). :contentReference[oaicite:5]{index=5}
     "start_datetime": datetime.datetime(1990, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
-    # STAC wiring
+    # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/JRC_TMF/collection.json",
     "base_path": f"{BASE_S3_URL}/JRC_TMF",
 
     # ------------------------------------------------------------------
-    # Governance / provenance
+    # Governance
     # ------------------------------------------------------------------
     "license": "various",
-
     "providers": [
         {
             "name": "European Commission – Joint Research Centre (JRC)",
@@ -55,22 +62,31 @@ JRC_TMF_CFG = {
         },
     ],
 
+    # ------------------------------------------------------------------
+    # Discovery helpers
+    # ------------------------------------------------------------------
     "keywords": [
         "tropical moist forest",
         "TMF",
         "Landsat",
+        "forest change",
         "deforestation",
         "degradation",
         "regrowth",
         "annual change",
         "transition map",
         "pantropical",
+        "zarr",
+        "stac",
     ],
+    "themes": ["disturbance", "land cover change", "carbon"],
 
     # ------------------------------------------------------------------
-    # Canonical links
+    # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
+        
+        # Official resources
         {
             "rel": "about",
             "href": "https://forobs.jrc.ec.europa.eu/TMF",
@@ -95,38 +111,81 @@ JRC_TMF_CFG = {
             "type": "text/html",
             "title": "TMF Explorer (interactive viewer)",
         },
+
+        # Canonical citation
         {
-            "rel": "related",
+            "rel": "cite-as",
             "href": "https://doi.org/10.1126/sciadv.abe1603",
             "type": "text/html",
             "title": "Vancutsem et al., Science Advances (2021) – key paper",
         },
+
+        # Your packaging project
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
+        },
     ],
 
     # ------------------------------------------------------------------
-    # Extensions (optional)
+    # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+
     ],
 
     # ------------------------------------------------------------------
-    # Structured summaries
+    # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-        # JRC overview mentions 0.09 ha resolution (~30m Landsat). :contentReference[oaicite:6]{index=6}
-        "eo:gsd": [30],
         "temporal_resolution": ["annual"],
+
+        # keep these conservative unless you want to enumerate actual band names
         "products": ["transition_map", "annual_change_collection"],
-        # JRC describes deforestation, degradation and regrowth explicitly. :contentReference[oaicite:7]{index=7}
         "change_processes": ["degradation", "deforestation", "regrowth"],
-        # This list is intentionally generic; exact band names/classes are in the user guide. :contentReference[oaicite:8]{index=8}
-        "layers_note": ["TMF dataset contains multiple layers including annual change and transition products (see user guide)."],
+
+        # spatial metadata
+        "eo:gsd": [30.0],
+        "proj:epsg": [4326],  # swap if your Zarr is stored in another CRS
+
+        "product_family": ["JRC Tropical Moist Forests (TMF)"],
+        "data_format": ["zarr"],
+
+        "layers_note": [
+            "TMF dataset contains multiple layers including annual change and transition products (see user guide)."
+        ],
     },
 
     # ------------------------------------------------------------------
-    # Assets (roles + description)
+    # Item assets template (for Item Assets extension)
+    # ------------------------------------------------------------------
+    "item_assets": {
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": (
+                "Cloud-optimized Zarr store of JRC TMF layers (annual change + transition products) "
+                "covering 1990–2024."
+            ),
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        "thumbnail": {
+            "title": "Preview",
+            "roles": ["thumbnail"],
+            "type": "image/png",
+        },
+    },
+
+    # ------------------------------------------------------------------
+    # Asset template (roles + description)
     # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
@@ -135,16 +194,17 @@ JRC_TMF_CFG = {
             title=f"JRC TMF v{v} (Zarr)",
             roles=["data"],
             description=(
-                "Zarr packaging of the JRC Tropical Moist Forests dataset, including "
-                "TMF extent and change information (degradation, deforestation, regrowth) "
+                "Cloud-optimized Zarr store containing the JRC Tropical Moist Forests dataset, "
+                "including TMF extent and change information (degradation, deforestation, regrowth) "
                 "from 1990–2024 derived from Landsat time series."
             ),
-        )
+        ),
     },
 
-    # Optional, if you use version tags like '2024' or 'v2023' in your DEFAULT_VERSIONS:
+    # ------------------------------------------------------------------
+    # Version notes (optional)
+    # ------------------------------------------------------------------
     "version_notes": {
         "2024": "Includes annual change collection through year 2024 (per TMF user guide / portal).",
     },
 }
-
