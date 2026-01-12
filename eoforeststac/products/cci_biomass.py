@@ -81,10 +81,10 @@ CCI_BIOMASS_CFG = {
     "links": [
         # Branding / visuals (host these in your GH pages or public bucket)
         {
-            "rel": "preview",
+            "rel": "thumbnail",
             "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
             "type": "image/png",
-            "title": "AGB quicklook",
+            "title": "AGB thumbnail",
         },
 
         # Official documentation
