@@ -79,13 +79,13 @@ CCI_BIOMASS_CFG = {
     # Links (what makes STAC Browser feel curated)
     # ------------------------------------------------------------------
     "links": [
-        # Branding / visuals (host these in your GH pages or public bucket)
-        {
-            "rel": "thumbnail",
-            "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
-            "type": "image/png",
-            "title": "AGB thumbnail",
-        },
+        # # Branding / visuals (host these in your GH pages or public bucket)
+        # {
+        #     "rel": "thumbnail",
+        #     "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
+        #     "type": "image/png",
+        #     "title": "AGB thumbnail",
+        # },
 
         # Official documentation
         {
