@@ -153,7 +153,7 @@ CCI_BIOMASS_CFG = {
         "type": "application/vnd.zarr"
       },
       "thumbnail": {
-        "title": "Preview",
+        "title": "Thumbnail",
         "roles": ["thumbnail"],
         "type": "image/png"
       }

@@ -103,9 +103,9 @@ def create_item(cfg: dict, version: str) -> pystac.Item:
         asset_key = cfg["asset_template"].get("key", "data")
         item.add_asset(asset_key, asset_factory(cfg, version))
     
-    # Add thumbnail asset if thumbnail/preview link exists
+    # Add thumbnail asset if thumbnail link exists
     thumb_link = next(
-        (l for l in cfg.get("links", []) if l["rel"] in ("thumbnail", "preview")),
+        (l for l in cfg.get("links", []) if l["rel"] in ("thumbnail")),
         None
     )
     if thumb_link:
