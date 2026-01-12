@@ -1,16 +1,19 @@
-# eoforeststac/products/jrc_gfc.py
 import datetime
 from eoforeststac.core.config import BASE_S3_URL
 from eoforeststac.core.assets import create_zarr_asset
 
 JRC_GFC_CFG = {
+    # ------------------------------------------------------------------
+    # Identity / narrative (atlas-friendly)
+    # ------------------------------------------------------------------
     "id": "JRC_GFC2020",
-    "title": "JRC Global Forest Cover 2020 (GFC2020) – Forest presence/absence",
+    "title": "JRC Global Forest Cover 2020 (GFC2020) – Forest presence/absence (10 m)",
     "description": (
         "Global forest cover map for reference year 2020 produced by the European Commission’s "
         "Joint Research Centre (JRC). Provides a harmonized, globally consistent representation "
         "of forest presence/absence at 10 m resolution, developed to support the EU Regulation "
-        "on deforestation-free supply chains (EUDR) cutoff date context."
+        "on deforestation-free supply chains (EUDR) cutoff date context.\n\n"
+        "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
     # ------------------------------------------------------------------
@@ -25,22 +28,21 @@ JRC_GFC_CFG = {
             [ 180.0,  90.0],
             [ 180.0, -90.0],
             [-180.0, -90.0],
-        ]]
+        ]],
     },
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
-    # STAC paths
+    # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/JRC_GFC2020/collection.json",
     "base_path": f"{BASE_S3_URL}/JRC_GFC2020",
 
     # ------------------------------------------------------------------
-    # Governance / provenance
+    # Governance
     # ------------------------------------------------------------------
     "license": "various",
-
     "providers": [
         {
             "name": "European Commission – Joint Research Centre (JRC)",
@@ -59,23 +61,30 @@ JRC_GFC_CFG = {
         },
     ],
 
+    # ------------------------------------------------------------------
+    # Discovery helpers
+    # ------------------------------------------------------------------
     "keywords": [
         "forest cover",
         "forest presence",
+        "presence/absence",
         "EUDR",
         "deforestation-free supply chains",
         "JRC",
-        "Copernicus",
-        "Sentinel",
         "global",
-        "10m",
+        "10 m",
         "2020",
+        "zarr",
+        "stac",
     ],
+    "themes": ["land cover", "forest structure", "policy"],
 
     # ------------------------------------------------------------------
-    # Canonical links (STAC style)
+    # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
+       
+        # Canonical resources
         {
             "rel": "about",
             "href": "https://forobs.jrc.ec.europa.eu/GFC",
@@ -92,7 +101,7 @@ JRC_GFC_CFG = {
             "rel": "documentation",
             "href": "https://publications.jrc.ec.europa.eu/repository/handle/JRC136960",
             "type": "text/html",
-            "title": "JRC technical report (method overview, v1)",
+            "title": "JRC technical report (method overview)",
         },
         {
             "rel": "related",
@@ -100,32 +109,68 @@ JRC_GFC_CFG = {
             "type": "text/html",
             "title": "EU Open Data Portal entry (GFC2020 v3 metadata)",
         },
+
+        # Your packaging project
+        {
+            "rel": "about",
+            "href": "https://github.com/simonbesnard1/eoforeststac",
+            "type": "text/html",
+            "title": "STAC packaging project (EOForestSTAC)",
+        },
     ],
 
     # ------------------------------------------------------------------
-    # Extensions
+    # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/file/v2.1.0/schema.json",
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
+        "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
 
     # ------------------------------------------------------------------
-    # Structured summaries
+    # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-        "eo:gsd": [10],           # 10 m resolution :contentReference[oaicite:2]{index=2}
         "temporal_resolution": ["static"],
-        "variables": ["forest"],  # presence/absence
+        "variables": ["forest"],
+        "units": ["binary"],
+
+        "eo:gsd": [10.0],
+        "proj:epsg": [4326],  # consistent with bbox/geometry (swap if your Zarr is in another CRS)
+
+        "product_family": ["JRC Global Forest Cover 2020 (GFC2020)"],
+        "data_format": ["zarr"],
+
         "classes": [
             {"value": 0, "name": "non-forest"},
             {"value": 1, "name": "forest"},
         ],
-        "product_versions": ["3"],  # portal says “version 3” for GFC2020 :contentReference[oaicite:3]{index=3}
+        "product_versions": ["3"],
     },
 
     # ------------------------------------------------------------------
-    # Assets (note roles + description)
+    # Item assets template (for Item Assets extension)
+    # ------------------------------------------------------------------
+    "item_assets": {
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": "Cloud-optimized Zarr store of JRC GFC2020 (forest presence/absence for 2020).",
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        "thumbnail": {
+            "title": "Preview",
+            "roles": ["thumbnail"],
+            "type": "image/png",
+        },
+    },
+
+    # ------------------------------------------------------------------
+    # Asset template (roles + description)
     # ------------------------------------------------------------------
     "asset_template": {
         "key": "zarr",
@@ -134,15 +179,16 @@ JRC_GFC_CFG = {
             title=f"JRC GFC2020 v{v} (Zarr)",
             roles=["data"],
             description=(
-                "Zarr packaging of the JRC Global Forest Cover 2020 product "
+                "Cloud-optimized Zarr store containing the JRC Global Forest Cover 2020 product "
                 "(forest presence/absence at 10 m, reference year 2020)."
             ),
         ),
     },
 
-    # Optional: short per-version notes (useful if you expose multiple)
+    # ------------------------------------------------------------------
+    # Version notes (optional)
+    # ------------------------------------------------------------------
     "version_notes": {
         "3.0": "GFC2020 version 3 distribution/packaging.",
     },
 }
-
