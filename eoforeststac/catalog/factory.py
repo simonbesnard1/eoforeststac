@@ -105,7 +105,7 @@ def create_item(cfg: dict, version: str) -> pystac.Item:
     
     # Add thumbnail asset if preview link exists
     preview_link = next(
-        (link for link in cfg.get("links", []) if link["rel"] == "preview"),
+        (link for link in cfg.get("links", []) if link["rel"] == "thumbnail"),
         None
     )
     if preview_link:
