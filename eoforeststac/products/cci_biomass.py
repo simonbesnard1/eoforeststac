@@ -81,12 +81,6 @@ CCI_BIOMASS_CFG = {
     "links": [
         # Branding / visuals (host these in your GH pages or public bucket)
         {
-            "rel": "icon",
-            "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
-            "type": "image/svg+xml",
-            "title": "ESA CCI Biomass icon",
-        },
-        {
             "rel": "preview",
             "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
             "type": "image/png",
@@ -156,7 +150,7 @@ CCI_BIOMASS_CFG = {
         "title": "Zarr dataset",
         "description": "Annual aboveground biomass (AGB) maps (Mg ha-1).",
         "roles": ["data"],
-        "type": "application/vnd+zarr"
+        "type": "application/vnd.zarr"
       },
       "thumbnail": {
         "title": "Preview",
