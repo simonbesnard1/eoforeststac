@@ -29,18 +29,18 @@ This is the recommended starting point for new users.
 
 ## Features
 
-- **Interactive STAC Browser** — Explore datasets visually in the browser
-- **STAC-native discovery** — Browse collections and versions programmatically
-- **Direct Zarr access** — Load datasets from Ceph without downloads
-- **Spatial subsetting** — Extract regions of interest with automatic CRS handling
-- **Temporal filtering** — Query data by time range
-- **Dataset alignment** — Merge multi-source datasets onto a common grid
-- **Lazy loading** — Efficient on-demand data access via xarray
+- **Interactive STAC Browser**: Explore datasets visually in the browser
+- **STAC-native discovery**: Browse collections and versions programmatically
+- **Direct Zarr access**: Load datasets from Ceph without downloads
+- **Spatial subsetting**: Extract regions of interest with automatic CRS handling
+- **Temporal filtering**: Query data by time range
+- **Dataset alignment**: Merge multi-source datasets onto a common grid
+- **Lazy loading**: Efficient on-demand data access via xarray
 
 ## Installation
 
 ```bash
-pip install git+https://github.com/simonbesnard1/eoforeststac.git
+python -m pip install "git+https://github.com/simonbesnard1/eoforeststac.git"
 ```
 
 ## Quick Start
