@@ -204,9 +204,9 @@ class PotapovHeightWriter(BaseZarrWriter):
         encoding = {
                var: {
                    "chunks": (
+                       chunks["time"],
                        chunks["latitude"],
                        chunks["longitude"],
-                       chunks["time"],
                    ),
                    "compressor": DEFAULT_COMPRESSOR,
                }
