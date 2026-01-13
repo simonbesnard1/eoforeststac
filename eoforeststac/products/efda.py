@@ -10,8 +10,8 @@ EFDA_CFG = {
     "title": "European Forest Disturbance Atlas (EFDA) – Annual disturbance maps for Europe (30 m)",
     "description": (
         "Annual forest disturbance maps for continental Europe derived from Landsat time series. "
-        "The dataset includes annual layers describing disturbance occurrence, severity, and causal "
-        "agent, as well as summary layers (e.g., number of disturbances and latest/greatest disturbance year).\n\n"
+        "The dataset includes annual layers describing disturbance occurrence and causal "
+        "agent.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
@@ -117,13 +117,6 @@ EFDA_CFG = {
             "title": "Project repository / processing overview",
         },
 
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -142,28 +135,36 @@ EFDA_CFG = {
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-        "temporal_resolution": ["annual"],
-        "variables": [
-            "disturbance_occurrence",
-            "disturbance_severity",
-            "disturbance_agent",
-            "number_of_disturbances",
-            "latest_disturbance_year",
-            "greatest_disturbance_year",
-        ],
-        "units": ["1", "categorical", "year"],  # loose but helpful; refine if you standardize variable metadata
-        "platform": ["Landsat"],
-
-        # spatial metadata (keep consistent with CCI style)
-        "eo:gsd": [30.0],
-        "proj:epsg": [3035],
-
-        "product_family": ["European Forest Disturbance Atlas (EFDA)"],
-        "data_format": ["zarr"],
-
-        # Dataset-specific structured helpers
-        "disturbance_agents": ["wind_bark_beetle", "fire", "harvest", "mixed"],
-    },
+            "temporal_resolution": ["annual"],
+        
+            "variables": [
+                "disturbance_agent",
+                "disturbance_occurence",
+            ],
+        
+            "units_by_variable": {
+                "disturbance_agent": "categorical",
+                "disturbance_occurence": "binary",
+            },
+        
+            # spatial metadata
+            "eo:gsd": [30.0],
+            "proj:epsg": [3035],
+        
+            "data_format": ["zarr"],
+        
+            # Dataset-specific legend
+            "disturbance_agent_legend": [
+                {"value": 1, "label": "wind_bark_beetle", "description": "Wind and bark beetle disturbance complex"},
+                {"value": 2, "label": "fire", "description": "Wildfire-related disturbance"},
+                {"value": 3, "label": "harvest", "description": "Planned or salvage logging"},
+                {
+                    "value": 4,
+                    "label": "mixed",
+                    "description": "Mixed agents (more than one disturbance agent occurred)"
+                },
+            ],
+        },
 
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
@@ -171,7 +172,7 @@ EFDA_CFG = {
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",
-            "description": "Cloud-optimized Zarr store of EFDA layers (annual + summary).",
+            "description": "Cloud-optimized Zarr store of EFDA layers.",
             "roles": ["data"],
             "type": "application/vnd.zarr",
         },
@@ -193,7 +194,7 @@ EFDA_CFG = {
             roles=["data"],
             description=(
                 "Cloud-optimized Zarr store containing EFDA annual disturbance layers "
-                "(occurrence, severity, agent) and summary layers."
+                "(occurrence and agent)."
             ),
         ),
     },

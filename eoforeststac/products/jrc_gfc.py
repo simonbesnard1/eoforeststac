@@ -109,14 +109,6 @@ JRC_GFC_CFG = {
             "type": "text/html",
             "title": "EU Open Data Portal entry (GFC2020 v3 metadata)",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -142,14 +134,12 @@ JRC_GFC_CFG = {
         "eo:gsd": [10.0],
         "proj:epsg": [4326],  # consistent with bbox/geometry (swap if your Zarr is in another CRS)
 
-        "product_family": ["JRC Global Forest Cover 2020 (GFC2020)"],
         "data_format": ["zarr"],
 
         "classes": [
             {"value": 0, "name": "non-forest"},
             {"value": 1, "name": "forest"},
         ],
-        "product_versions": ["3"],
     },
 
     # ------------------------------------------------------------------

@@ -119,14 +119,6 @@ JRC_TMF_CFG = {
             "type": "text/html",
             "title": "Vancutsem et al., Science Advances (2021) – key paper",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -149,14 +141,20 @@ JRC_TMF_CFG = {
         "temporal_resolution": ["annual"],
 
         # keep these conservative unless you want to enumerate actual band names
-        "products": ["transition_map", "annual_change_collection"],
-        "change_processes": ["degradation", "deforestation", "regrowth"],
-
+        "variables": ["AnnualChange", "DeforestationYear", "DegradationYear", "TransitionMap_MainClasses", "TransitionMap_Subtypes", "UndisturbedDegradedForest"],
+        
+        "units_by_variable": {"AnnualChange": "categorical",
+                              "DeforestationYear": "year",
+                              "DegradationYear": "year",
+                              "TransitionMap_MainClasses": "categorical",
+                              "TransitionMap_Subtypes": "categorical",
+                              "UndisturbedDegradedForest": "binary",
+                              },
+        
         # spatial metadata
         "eo:gsd": [30.0],
         "proj:epsg": [4326],  # swap if your Zarr is stored in another CRS
 
-        "product_family": ["JRC Tropical Moist Forests (TMF)"],
         "data_format": ["zarr"],
 
         "layers_note": [
