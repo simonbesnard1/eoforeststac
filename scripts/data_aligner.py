@@ -15,8 +15,8 @@ roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
-    collection_id="FORESTPATHS_GENUS_v0",
-    version="0.0.1",
+    collection_id="EFDA",
+    version="2.1.1",
 )
 
 ds_biomass = subset(
