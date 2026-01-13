@@ -24,17 +24,17 @@ requires-python = ">=3.10"
 
 dependencies = [
     # --- Core numerical stack ---
-    "numpy<2.0",
+    "numpy==1.26.4",
     "xarray>=2024.1.0",
 
     # --- Zarr ---
-    "zarr>=2.18,<3.0",
+    "zarr==2.18",
 
     # --- Chunking ---
     "dask[array]>=2024.4.0",
 
     # --- S3 / Ceph ---
-    "boto3>=1.35,<1.36",
+    "boto3==1.35",
     "botocore>=1.35,<1.36",
     "s3fs>=2024.5,<2025.0",
     "fsspec>=2024.5,<2025.0",
@@ -45,7 +45,7 @@ dependencies = [
     "geopandas",
 
     # --- STAC ---
-    "pystac>=1.12,<2",
+    "pystac>=1.14.1",
     "stactools>=0.4.4",
 
     "pyproj>=3.6"
