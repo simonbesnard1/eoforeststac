@@ -111,14 +111,6 @@ HANSEN_GFC_CFG = {
             "type": "text/html",
             "title": "Hansen et al., Science (2013) – primary citation",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -145,17 +137,23 @@ HANSEN_GFC_CFG = {
             "gain",
             "datamask",
         ],
-        "units": ["percent", "binary", "year", "binary", "categorical"],
-
+        
+        # keep a simple global units list AND keep your detailed mapping
+        "units_by_variable": {
+            "treecover2000": "percent",
+            "loss": "binary",
+            "lossyear": "year",
+            "gain": "binary",
+            "datamask": "binary"
+        },
+        
         # Spatial metadata
         "eo:gsd": [30.0],        # often reported ~30.92 m; keep 30 m as a clean atlas value
         "proj:epsg": [4326],
 
-        "product_family": ["Hansen Global Forest Change (GFC)"],
         "data_format": ["zarr"],
 
         # Dataset-specific semantics
-        "tree_definition": ["vegetation taller than 5 m"],
         "gain_period": ["2000–2012"],
         "loss_period": ["2001–2024"],
     },

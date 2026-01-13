@@ -8,7 +8,7 @@ requires = [
 
 [project]
 name = "eoforeststac"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Python tools for generating STAC catalogs of forest EO data"
 authors = [{ name="Simon Besnard", email="simon.besnard@gfz.de" }]
 license = { file = "LICENSE" }

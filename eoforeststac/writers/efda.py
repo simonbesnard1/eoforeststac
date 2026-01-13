@@ -37,8 +37,8 @@ class EFDAWriter(BaseZarrWriter):
 
     Output:
       - single Zarr store with variables:
-          efda_disturbance(time, latitude, longitude)
-          efda_agent(time, latitude, longitude)
+          disturbance_occurence(time, latitude, longitude)
+          disturbance_agent(time, latitude, longitude)
 
     Strategy:
       - stream year-by-year and append along time (no concat, no huge lists)
@@ -133,10 +133,10 @@ class EFDAWriter(BaseZarrWriter):
         Build a 1-year Dataset(time=1, latitude, longitude) containing both vars.
         """
         da_mosaic = self._open_year_da(
-            mosaic_dir, year, mosaic_pattern, "efda_disturbance", chunks=chunks
+            mosaic_dir, year, mosaic_pattern, "disturbance_occurence", chunks=chunks
         )
         da_agent = self._open_year_da(
-            agent_dir, year, agent_pattern, "efda_agent", chunks=chunks
+            agent_dir, year, agent_pattern, "disturbance_agent", chunks=chunks
         )
 
         da_mosaic = self._standardize_xy_names(da_mosaic)
@@ -144,8 +144,8 @@ class EFDAWriter(BaseZarrWriter):
 
         ds = xr.Dataset(
             {
-                "efda_disturbance": da_mosaic,
-                "efda_agent": da_agent,
+                "disturbance_occurence": da_mosaic,
+                "disturbance_agent": da_agent,
             }
         )
 
@@ -181,24 +181,45 @@ class EFDAWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     def add_metadata(self, ds: xr.Dataset, _FillValue: int, crs: str, version: str = "1.0") -> xr.Dataset:
         """
-        Add variable + global metadata. (Does not compute/load data.)
+        Add variable + global metadata.
         """
-        if "efda_disturbance" in ds:
-            ds["efda_disturbance"].attrs.update({
-                "long_name": "EFDA disturbance mosaic",
-                "description": "Annual forest disturbance mosaic from EFDA.",
+    
+        if "disturbance_occurence" in ds:
+            ds["disturbance_occurence"].attrs.update({
+                "long_name": "EFDA forest disturbance occurrence",
+                "description": "Annual forest disturbance occurrence mosaic from the European Forest Disturbance Atlas (EFDA).",
+                "units": "binary",
+                "flag_values": [0, 1],
+                "flag_meanings": "no_disturbance disturbance",
                 "grid_mapping": "crs",
                 "_FillValue": _FillValue,
             })
-
-        if "efda_agent" in ds:
-            ds["efda_agent"].attrs.update({
+    
+        if "disturbance_agent" in ds:
+            ds["disturbance_agent"].attrs.update({
                 "long_name": "EFDA disturbance agent",
-                "description": "The causal agents assigned are wind/bark beetle complex (1), fire (2), harvest (3) and mixed agents (4, where more than one agent occurred.",
+                "description": (
+                    "Causal agent of forest disturbance following the EFDA classification."
+                ),
+                "units": "categorical",
+                "flag_values": [1, 2, 3, 4],
+                "flag_meanings": [
+                    "wind_bark_beetle",
+                    "fire",
+                    "harvest",
+                    "mixed"
+                ],
+                "flag_descriptions": [
+                    "Wind and bark beetle disturbance complex",
+                    "Wildfire-related disturbance",
+                    "Planned or salvage logging",
+                    "Mixed agents (more than one disturbance agent occurred)"
+                ],
                 "grid_mapping": "crs",
                 "_FillValue": _FillValue,
             })
-            
+    
+        # Global attributes (optional but recommended)
         meta = {
                 "title": "European Forest Disturbance Atlas (EFDA) v2.1.1",
                 "description": (
@@ -221,6 +242,7 @@ class EFDAWriter(BaseZarrWriter):
             }
 
         self.set_global_metadata(ds, meta)
+    
         return ds
 
     # ------------------------------------------------------------------
@@ -230,11 +252,11 @@ class EFDAWriter(BaseZarrWriter):
         zchunks = (1, chunks["latitude"], chunks["longitude"])
     
         return {
-            "efda_disturbance": {
+            "disturbance_occurence": {
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
             },
-            "efda_agent": {
+            "disturbance_agent": {
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
             },
