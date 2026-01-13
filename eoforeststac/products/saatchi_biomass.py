@@ -13,8 +13,6 @@ SAATCHI_BIOMASS_CFG = {
         "distributed as a global aboveground biomass mosaic for reference year 2020. "
         "This STAC collection packages the Zenodo deliverable 'Mapping Global Live Woody Vegetation "
         "Biomass at Optimum Spatial Resolutions' and associated supplementary documentation.\n\n"
-        "Primary data file on Zenodo: 'global_agb_100m_combined_mosaic_2020_cog.tif' "
-        "(Cloud-Optimized GeoTIFF).\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
@@ -104,14 +102,7 @@ SAATCHI_BIOMASS_CFG = {
             "type": "text/html",
             "title": "Related work (compiled article / deliverable link)",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
+        
     ],
 
     # ------------------------------------------------------------------
@@ -134,15 +125,14 @@ SAATCHI_BIOMASS_CFG = {
         "reference_year": [2020],
 
         "variables": ["aboveground_biomass"],
-        "units": ["Mg ha-1"],
+        "units_by_variable": {
+                            "aboveground_biomass": "Mg  ha-1"},
 
         "eo:gsd": [100.0],
         "proj:epsg": [4326],
 
         "product_family": ["Saatchi & Yu global AGB"],
         "data_format": ["zarr"],
-
-        "data_files": ["global_agb_100m_combined_mosaic_2020_cog.tif"],
     },
 
     # ------------------------------------------------------------------

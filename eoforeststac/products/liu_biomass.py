@@ -10,9 +10,7 @@ LIU_BIOMASS_CFG = {
     "title": "Liu et al. – Europe canopy cover, canopy height, and aboveground biomass (30 m)",
     "description": (
         "European maps of canopy cover, canopy height, and aboveground biomass derived from "
-        "high-resolution PlanetScope imagery and airborne LiDAR canopy height models using deep learning. "
-        "The Zenodo release includes aggregated canopy cover/height products and a biomass map at 30 m "
-        "resolution computed from canopy cover and height using allometric equations.\n\n"
+        "high-resolution PlanetScope imagery and airborne LiDAR canopy height models using deep learning.\n\n"
         "IMPORTANT – Usage restrictions: This dataset is provided for non-commercial scientific, "
         "education, and research purposes only, reflecting restrictions associated with PlanetScope "
         "imagery access under research licensing. Users must not use the dataset for commercial purposes "
@@ -120,14 +118,6 @@ LIU_BIOMASS_CFG = {
             "type": "application/pdf",
             "title": "Planet Education & Research Program terms (non-commercial license)",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -148,7 +138,11 @@ LIU_BIOMASS_CFG = {
     "summaries": {
         "temporal_resolution": ["static"],
         "variables": ["canopy_cover", "canopy_height", "aboveground_biomass"],
-        "units": ["percent", "m", "Mg ha-1"],  # adjust if your stored units differ
+        "units_by_variable": {
+              "canopy_cover": "percent",
+              "canopy_height": "m",
+              "aboveground_biomass": "Mg ha-1",
+            },
 
         # Spatial metadata — only set if you’re confident
         "eo:gsd": [30.0],       # biomass map explicitly at 30 m; cover/height may differ
@@ -161,10 +155,7 @@ LIU_BIOMASS_CFG = {
         "usage_constraints": ["non-commercial scientific/education/research only"],
         "license_notes": [
             "Derived from PlanetScope imagery under research licensing; non-commercial use only."
-        ],
-        "biomass_resolution_note": [
-            "Biomass map provided at 30 m resolution (computed from canopy cover & height)."
-        ],
+        ]
     },
 
     # ------------------------------------------------------------------
