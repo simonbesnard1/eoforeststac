@@ -12,7 +12,7 @@ FORESTPATHS_GENUS_CFG = {
         "European tree genus map at 10 m resolution for year 2020 (early access). "
         "Derived from Sentinel-1 and Sentinel-2 time series using a CatBoost model trained on "
         "forest inventories, citizen science observations, orthophoto interpretation, and LUCAS.\n\n"
-        "The map distinguishes eight classes including Larix, Picea, Pinus, Fagus, and Quercus. "
+        "The map distinguishes eight classes including Larix, Picea, Pinus, Fagus, and Quercus.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
 
@@ -104,14 +104,6 @@ FORESTPATHS_GENUS_CFG = {
             "type": "text/html",
             "title": "Release announcement (ForestPaths)",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -133,14 +125,13 @@ FORESTPATHS_GENUS_CFG = {
         "temporal_resolution": ["static"],
 
         # core data semantics
-        "variables": ["tree_genus_class"],
+        "variables": ["genus"],
         "units": ["categorical"],
 
         # spatial metadata
         "eo:gsd": [10.0],
         "proj:epsg": [3035],
 
-        "product_family": ["ForestPaths"],
         "data_format": ["zarr"],
 
         # classification legend (0..7)
@@ -154,10 +145,6 @@ FORESTPATHS_GENUS_CFG = {
             {"value": 6, "name": "Other broadleaf"},
             {"value": 7, "name": "No trees"},
         ],
-
-        # distribution hints
-        "distribution_original": ["Cloud Optimized GeoTIFF (COG) tiles"],
-        "tiling": ["100km grid"],
     },
 
     # ------------------------------------------------------------------

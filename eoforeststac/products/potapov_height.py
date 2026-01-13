@@ -83,14 +83,6 @@ POTAPOV_HEIGHT_CFG = {
             "type": "text/html",
             "title": "Primary citation (Remote Sensing of Environment, 2020)",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -120,7 +112,6 @@ POTAPOV_HEIGHT_CFG = {
         "eo:gsd": [30.0],
         "proj:epsg": [4326],
 
-        "product_family": ["Potapov et al. canopy height"],
         "data_format": ["zarr"],
     },
 
