@@ -102,13 +102,6 @@ CCI_BIOMASS_CFG = {
              "type": "text/html",
              "title": "Dataset DOI",
          },
-        
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -129,8 +122,10 @@ CCI_BIOMASS_CFG = {
     "summaries": {
         "temporal_resolution": ["annual"],
         "variables": ["aboveground_biomass", "aboveground_biomass_std"],
-        "units": ["Mg ha-1"],
-
+        "units_by_variable": {"aboveground_biomass": "Mg ha-1",
+                              "aboveground_biomass_std": "Mg ha-1"
+                               },
+        
         "eo:gsd": [100.0],
         "proj:epsg": [4326],
 

@@ -14,7 +14,7 @@ ROBINSON_CR_CFG = {
         "The dataset provides CR parameters (A, b, k) and their standard errors, plus derived layers "
         "including maximum annual accumulation rate, the age at which that maximum rate occurs, and "
         "a relative benefit metric used in the associated publication.\n\n"
-        "Parameters can be combined to reconstruct growth trajectories using the Chapman–Richards form "
+        "Parameters can be combined to reconstruct growth trajectories using the Chapman-Richards form "
         "described in the record README.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
@@ -117,14 +117,6 @@ ROBINSON_CR_CFG = {
             "type": "text/html",
             "title": "Web application: Natural forest regeneration carbon accumulation explorer",
         },
-
-        # Your packaging project
-        {
-            "rel": "about",
-            "href": "https://github.com/simonbesnard1/eoforeststac",
-            "type": "text/html",
-            "title": "STAC packaging project (EOForestSTAC)",
-        },
     ],
 
     # ------------------------------------------------------------------
@@ -156,15 +148,18 @@ ROBINSON_CR_CFG = {
             "max_removal_potential_benefit_25",
         ],
         # keep a simple global units list AND keep your detailed mapping
-        "units": ["Mg C ha-1", "Mg C ha-1 yr-1", "years", "%"],
         "units_by_variable": {
             "cr_a": "Mg C ha-1",
+            "cr_a_error": "Mg C ha-1",
+            "cr_b": "adimensional",
+            "cr_b_error": "adimensional",
+            "cr_k": "adimensional",
+            "cr_k_error": "adimensional",
             "max_rate": "Mg C ha-1 yr-1",
             "age_at_max_rate": "years",
             "max_removal_potential_benefit_25": "%",
         },
 
-        "product_family": ["Robinson et al. secondary-forest growth curves"],
         "data_format": ["zarr"],
 
         "model": ["Chapman–Richards"],
@@ -180,7 +175,7 @@ ROBINSON_CR_CFG = {
         "zarr": {
             "title": "Zarr dataset",
             "description": (
-                "Cloud-optimized Zarr store of Chapman–Richards parameters (A, b, k), their standard errors, "
+                "Cloud-optimized Zarr store of Chapman-Richards parameters (A, b, k), their standard errors, "
                 "and derived layers (max_rate, age_at_max_rate, benefit_25)."
             ),
             "roles": ["data"],
@@ -203,7 +198,7 @@ ROBINSON_CR_CFG = {
             title=f"Robinson et al. CR parameters & derived layers v{v} (Zarr)",
             roles=["data"],
             description=(
-                "Cloud-optimized Zarr store of Chapman–Richards parameters (A, b, k), their standard errors, "
+                "Cloud-optimized Zarr store of Chapman-Richards parameters (A, b, k), their standard errors, "
                 "and derived layers (max_rate, age_at_max_rate, benefit_25) from Robinson et al. (2025). "
                 "Original distribution is GeoTIFF (EPSG:4326, ~1 km)."
             ),
