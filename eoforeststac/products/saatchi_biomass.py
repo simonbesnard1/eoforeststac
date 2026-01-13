@@ -126,7 +126,7 @@ SAATCHI_BIOMASS_CFG = {
 
         "variables": ["aboveground_biomass"],
         "units_by_variable": {
-                            "aboveground_biomass": "Mg  ha-1"},
+                            "aboveground_biomass": "Mg ha-1"},
 
         "eo:gsd": [100.0],
         "proj:epsg": [4326],

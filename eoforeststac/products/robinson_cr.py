@@ -162,7 +162,6 @@ ROBINSON_CR_CFG = {
 
         "data_format": ["zarr"],
 
-        "model": ["Chapman–Richards"],
         "notes": [
             "Parameter names and units follow the Zenodo README; see record for full definitions and the growth equation."
         ],
