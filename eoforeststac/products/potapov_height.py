@@ -7,9 +7,9 @@ POTAPOV_HEIGHT_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "POTAPOV_HEIGHT",
-    "title": "Global Canopy Height (Potapov et al.) – Multi-epoch canopy height (2005–2020)",
+    "title": "Global Canopy Height (Potapov et al.) - Multi-epoch canopy height (2000-2020)",
     "description": (
-        "Global canopy height maps provided for multiple reference years (2005, 2010, 2015, 2020). "
+        "Global canopy height maps provided for multiple reference years (2000, 2005, 2010, 2015, 2020). "
         "The product integrates spaceborne LiDAR information with optical imagery to produce gridded "
         "canopy height estimates. See the dataset documentation for full processing details and "
         "citation guidance.\n\n"
@@ -30,7 +30,7 @@ POTAPOV_HEIGHT_CFG = {
             [-180.0, -90.0],
         ]],
     },
-    "start_datetime": datetime.datetime(2005, 1, 1, tzinfo=datetime.timezone.utc),
+    "start_datetime": datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
 
     # ------------------------------------------------------------------
@@ -102,7 +102,7 @@ POTAPOV_HEIGHT_CFG = {
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["multi-epoch"],
-        "reference_years": [2005, 2010, 2015, 2020],
+        "reference_years": [2000, 2005, 2010, 2015, 2020],
 
         "variables": ["canopy_height"],
         "units": ["m"],
@@ -152,6 +152,7 @@ POTAPOV_HEIGHT_CFG = {
     # Version notes (epochs)
     # ------------------------------------------------------------------
     "version_notes": {
+        "2000": "Canopy height for reference year 2000.",
         "2005": "Canopy height for reference year 2005.",
         "2010": "Canopy height for reference year 2010.",
         "2015": "Canopy height for reference year 2015.",

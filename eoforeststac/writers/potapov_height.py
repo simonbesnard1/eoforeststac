@@ -1,10 +1,10 @@
-# eoforeststac/writers/potapov_height_vrt.py
+# eoforeststac/writers/potapov_height.py
 
 from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
-from typing import Dict, Optional, Sequence, Union, List
+from typing import Dict, Optional, Union, List
 
 import numpy as np
 import xarray as xr
