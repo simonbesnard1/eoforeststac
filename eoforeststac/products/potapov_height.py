@@ -7,7 +7,7 @@ POTAPOV_HEIGHT_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "POTAPOV_HEIGHT",
-    "title": "Global Canopy Height (Potapov et al.) - Multi-epoch canopy height (2000-2020)",
+    "title": "Global Canopy Height (Potapov et al.) (30m)",
     "description": (
         "Global canopy height maps provided for multiple reference years (2000, 2005, 2010, 2015, 2020). "
         "The product integrates spaceborne LiDAR information with optical imagery to produce gridded "
@@ -124,12 +124,7 @@ POTAPOV_HEIGHT_CFG = {
             "description": "Cloud-optimized Zarr store of global canopy height for a given reference year/epoch.",
             "roles": ["data"],
             "type": "application/vnd.zarr",
-        },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
+        }
     },
 
     # ------------------------------------------------------------------

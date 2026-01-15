@@ -7,7 +7,7 @@ HANSEN_GFC_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "HANSEN_GFC",
-    "title": "Hansen Global Forest Change (GFC) – Tree cover and annual loss (30 m)",
+    "title": "Hansen Global Forest Change (GFC) – Tree cover and annual loss/gain (30 m)",
     "description": (
         "Global Forest Change (GFC) dataset derived from time-series analysis of Landsat imagery, "
         "characterizing percent tree cover for year 2000, annual tree cover loss (2001 onward), "
@@ -167,12 +167,7 @@ HANSEN_GFC_CFG = {
             "description": "Cloud-optimized Zarr store of Hansen Global Forest Change layers.",
             "roles": ["data"],
             "type": "application/vnd.zarr",
-        },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
+        }
     },
 
     # ------------------------------------------------------------------

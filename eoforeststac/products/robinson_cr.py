@@ -7,7 +7,7 @@ ROBINSON_CR_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "ROBINSON_CR",
-    "title": "Robinson et al. – Chapman-Richards growth-curve parameters for secondary-forest aboveground carbon dynamics",
+    "title": "Robinson et al. – Chapman-Richards growth-curve parameters for secondary-forest aboveground carbon dynamics (1km)",
     "description": (
         "Global, pixel-level Chapman–Richards (CR) growth-curve parameters and derived outputs "
         "describing aboveground carbon (AGC) accumulation in young secondary forests. "
@@ -179,12 +179,7 @@ ROBINSON_CR_CFG = {
             ),
             "roles": ["data"],
             "type": "application/vnd.zarr",
-        },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
+        }
     },
 
     # ------------------------------------------------------------------

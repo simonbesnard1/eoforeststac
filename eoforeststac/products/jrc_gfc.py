@@ -151,12 +151,7 @@ JRC_GFC_CFG = {
             "description": "Cloud-optimized Zarr store of JRC GFC2020 (forest presence/absence for 2020).",
             "roles": ["data"],
             "type": "application/vnd.zarr",
-        },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
+        }
     },
 
     # ------------------------------------------------------------------

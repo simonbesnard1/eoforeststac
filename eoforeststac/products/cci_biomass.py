@@ -138,22 +138,13 @@ CCI_BIOMASS_CFG = {
         "description": "Annual aboveground biomass (AGB) maps (Mg ha-1).",
         "roles": ["data"],
         "type": "application/vnd.zarr"
-      }
-    },
-    
-    "assets" : {
-        "thumbnail": {
-            "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
-            "type": "image/png",
-            "title": "AGB quicklook",
-            "roles": ["thumbnail"],
-        },
-        "icon": {
-            "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/icons/cci_biomass.svg",
-            "type": "image/svg+xml",
-            "title": "ESA CCI Biomass icon",
-            "roles": ["thumbnail"], 
-        },
+      },
+      # "thumbnail": {
+      #       "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
+      #       "type": "image/png",
+      #       "title": "AGB quicklook",
+      #       "roles": ["thumbnail"],
+      #   }
     },
    
     # ------------------------------------------------------------------
