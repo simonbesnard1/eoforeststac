@@ -49,7 +49,21 @@ def create_collection(cfg: dict) -> pystac.Collection:
     # Add item_assets (defines asset structure for items)
     if "item_assets" in cfg:
         collection.extra_fields["item_assets"] = cfg["item_assets"]
-    
+        
+    # Add collection-level assets (used by STAC Browser for thumbnails/icons)
+    if "assets" in cfg:
+        for key, a in cfg["assets"].items():
+            collection.add_asset(
+                key,
+                pystac.Asset(
+                    href=a["href"],
+                    media_type=a.get("type"),
+                    title=a.get("title"),
+                    roles=a.get("roles", []),
+                    description=a.get("description"),
+                ),
+            )
+
     return collection
 
 

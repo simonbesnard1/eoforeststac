@@ -117,7 +117,6 @@ CCI_BIOMASS_CFG = {
 
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
-    # Keep conservative: only include what you’re sure of.
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["annual"],
@@ -146,7 +145,22 @@ CCI_BIOMASS_CFG = {
         "type": "image/png"
       }
     },
-        
+    
+    "assets" : {
+        "thumbnail": {
+            "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
+            "type": "image/png",
+            "title": "AGB quicklook",
+            "roles": ["thumbnail"],
+        },
+        "icon": {
+            "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/icons/cci_biomass.svg",
+            "type": "image/svg+xml",
+            "title": "ESA CCI Biomass icon",
+            "roles": ["thumbnail"], 
+        },
+    },
+   
     # ------------------------------------------------------------------
     # Asset template (add roles + description as you requested)
     # ------------------------------------------------------------------
