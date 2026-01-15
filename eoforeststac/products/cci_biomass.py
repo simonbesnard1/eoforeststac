@@ -7,7 +7,7 @@ CCI_BIOMASS_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "CCI_BIOMASS",
-    "title": "ESA CCI Biomass – Global annual aboveground biomass (100m)",
+    "title": "ESA CCI Biomass – Global annual aboveground biomass (10 0m)",
     "description": (
         "Annual global aboveground biomass (AGB) maps produced within the ESA Climate Change Initiative "
         "(CCI) Biomass project. The product supports carbon-cycle analysis, model evaluation, and "

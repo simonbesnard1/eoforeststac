@@ -7,7 +7,7 @@ SAATCHI_BIOMASS_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "SAATCHI_BIOMASS",
-    "title": "Saatchi & Yu - 2020 Global aboveground biomass (AGB) (100m)",
+    "title": "Saatchi & Yu - 2020 Global aboveground biomass (100 m)",
     "description": (
         "Global live woody vegetation / aboveground biomass mapping product at 100 m spatial resolution, "
         "distributed as a global aboveground biomass mosaic for reference year 2020. "

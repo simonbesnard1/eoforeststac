@@ -7,7 +7,7 @@ LIU_BIOMASS_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "LIU_BIOMASS",
-    "title": "Liu et al. – Europe aboveground biomass, canopy cover, and canopy height, (30 m)",
+    "title": "Liu et al. – Europe aboveground biomass, canopy cover, and canopy height (30 m)",
     "description": (
         "European maps of aboveground biomass, canopy cover, and canopy height derived from "
         "high-resolution PlanetScope imagery and airborne LiDAR canopy height models using deep learning.\n\n"
