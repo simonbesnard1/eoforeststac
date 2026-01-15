@@ -7,9 +7,9 @@ LIU_BIOMASS_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "LIU_BIOMASS",
-    "title": "Liu et al. – Europe canopy cover, canopy height, and aboveground biomass (30 m)",
+    "title": "Liu et al. – Europe aboveground biomass, canopy cover, and canopy height, (30 m)",
     "description": (
-        "European maps of canopy cover, canopy height, and aboveground biomass derived from "
+        "European maps of aboveground biomass, canopy cover, and canopy height derived from "
         "high-resolution PlanetScope imagery and airborne LiDAR canopy height models using deep learning.\n\n"
         "IMPORTANT – Usage restrictions: This dataset is provided for non-commercial scientific, "
         "education, and research purposes only, reflecting restrictions associated with PlanetScope "
@@ -170,12 +170,7 @@ LIU_BIOMASS_CFG = {
             ),
             "roles": ["data"],
             "type": "application/vnd.zarr",
-        },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
+        }
     },
 
     # ------------------------------------------------------------------

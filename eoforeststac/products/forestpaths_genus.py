@@ -156,12 +156,7 @@ FORESTPATHS_GENUS_CFG = {
             "description": "Cloud-optimized Zarr store of the ForestPaths tree genus classification map (2020).",
             "roles": ["data"],
             "type": "application/vnd.zarr",
-        },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
+        }
     },
 
     # ------------------------------------------------------------------

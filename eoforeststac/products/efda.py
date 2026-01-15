@@ -176,11 +176,6 @@ EFDA_CFG = {
             "roles": ["data"],
             "type": "application/vnd.zarr",
         },
-        "thumbnail": {
-            "title": "Preview",
-            "roles": ["thumbnail"],
-            "type": "image/png",
-        },
     },
 
     # ------------------------------------------------------------------
