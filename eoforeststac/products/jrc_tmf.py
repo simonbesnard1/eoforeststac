@@ -7,7 +7,7 @@ JRC_TMF_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "JRC_TMF",
-    "title": "JRC Tropical Moist Forests (TMF) - Forest change (degradation, deforestation, regrowth) (30m)",
+    "title": "JRC Tropical Moist Forests (TMF) - Forest change (degradation, deforestation, regrowth) (30 m)",
     "description": (
         "Pan-tropical dataset on forest cover change in tropical moist forests (TMF) derived from "
         "Landsat time series. Wall-to-wall maps depict TMF extent and disturbances (deforestation "

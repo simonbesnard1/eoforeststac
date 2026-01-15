@@ -7,7 +7,7 @@ POTAPOV_HEIGHT_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "POTAPOV_HEIGHT",
-    "title": "Global Canopy Height (Potapov et al.) (30m)",
+    "title": "Global Canopy Height (Potapov et al.) (30 m)",
     "description": (
         "Global canopy height maps provided for multiple reference years (2000, 2005, 2010, 2015, 2020). "
         "The product integrates spaceborne LiDAR information with optical imagery to produce gridded "
