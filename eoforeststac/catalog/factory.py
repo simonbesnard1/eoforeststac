@@ -117,22 +117,6 @@ def create_item(cfg: dict, version: str) -> pystac.Item:
         asset_key = cfg["asset_template"].get("key", "data")
         item.add_asset(asset_key, asset_factory(cfg, version))
     
-    # Add thumbnail asset if thumbnail link exists
-    thumb_link = next(
-        (l for l in cfg.get("links", []) if l["rel"] in ("thumbnail")),
-        None
-    )
-    if thumb_link:
-        item.add_asset(
-            "thumbnail",
-            pystac.Asset(
-                href=thumb_link["href"],
-                media_type=thumb_link.get("type", "image/png"),
-                title=thumb_link.get("title", "Thumbnail"),
-                roles=["thumbnail"],
-            ),
-        )
-    
     # Add links to item (e.g., documentation, DOI)
     if "links" in cfg:
         for link_cfg in cfg["links"]:

@@ -147,7 +147,7 @@ def _build_base_tree(
     root.catalog_type = pystac.CatalogType.RELATIVE_PUBLISHED
 
     # Optional: hint for stac-browser
-    root.extra_fields.setdefault("stac_browser", {"showThumbnailsAsAssets": False})
+    root.extra_fields.setdefault("stac_browser", {"showThumbnailsAsAssets": True})
 
     # Build a lookup of product builders
     specs_by_id: Dict[str, ProductSpec] = {s.product_id: s for s in _product_specs()}
@@ -530,7 +530,7 @@ def build_root_catalog(
     internal_root.extra_fields.setdefault(
         "stac_browser",
         {
-            "showThumbnailsAsAssets": False,
+            "showThumbnailsAsAssets": True,
         },
     )
 
