@@ -24,31 +24,32 @@ requires-python = ">=3.10"
 
 dependencies = [
     # --- Core numerical stack ---
-    "numpy==1.26.4",
-    "xarray>=2024.1.0",
+    "numpy==2.4.1",
+    "xarray==2025.12.0",
 
     # --- Zarr ---
-    "zarr==2.18",
+    "zarr==2.18.0",
+    "numcodecs==0.15.1,
 
     # --- Chunking ---
-    "dask[array]>=2024.4.0",
+    "dask[array]==2025.12.0",
 
     # --- S3 / Ceph ---
     "boto3==1.35",
-    "botocore>=1.35,<1.36",
-    "s3fs>=2024.5,<2025.0",
-    "fsspec>=2024.5,<2025.0",
+    "botocore==1.35",
+    "s3fs==2024.12.0",
+    "fsspec==2024.12.0",
 
     # --- Raster ---
-    "rasterio>=1.3",
-    "rioxarray>=0.15",
-    "geopandas",
+    "rasterio==1.5.0",
+    "rioxarray==0.20.0",
+    "geopandas==1.1.2",
 
     # --- STAC ---
-    "pystac>=1.14.1",
-    "stactools>=0.4.4",
+    "pystac>=1.14.3",
+    "stactools==0.5.3",
 
-    "pyproj>=3.6"
+    "pyproj>=3.7.2"
 ]
 
 [project.urls]
