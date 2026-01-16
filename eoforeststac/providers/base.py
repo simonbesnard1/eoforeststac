@@ -14,10 +14,12 @@ class BaseProvider:
     ):
         self.catalog_url = catalog_url
         self.endpoint_url = endpoint_url
-        self.anon = anon
-
-        self.s3_fs = fsspec.filesystem("s3", anon=anon, endpoint_url=endpoint_url)
-
+        self.anon = anon        
+        storage_options = {
+            "anon": anon,
+            "client_kwargs": {"endpoint_url": endpoint_url},
+        }        
+        self.s3_fs = fsspec.filesystem("s3", **storage_options)
         self._register_stac_io()
         self.catalog = self._load_catalog()
 
