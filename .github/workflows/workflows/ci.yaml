@@ -1,0 +1,134 @@
+name: CI
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+  workflow_dispatch: # Allows manual trigger
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  detect-ci-trigger:
+    name: Detect CI Trigger
+    runs-on: ubuntu-latest
+    if: |
+      github.repository == 'simonbesnard1/eoforeststac'
+      && (github.event_name == 'push' || github.event_name == 'pull_request')
+    outputs:
+      triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+      - uses: xarray-contrib/ci-trigger@v1
+        id: detect-trigger
+        with:
+          keyword: "[skip-ci]"
+
+  test:
+    name: "Ubuntu-latest Python 3.10"
+    runs-on: ubuntu-latest
+    needs: detect-ci-trigger
+    if: needs.detect-ci-trigger.outputs.triggered == 'false'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: ci/requirements/environment.yml
+          environment-name: eoforeststac-tests
+          cache-environment: true
+          cache-environment-key: "ubuntu-latest-py3.10-${{ hashFiles('ci/requirements/environment.yml') }}"
+          create-args: >-
+            python=3.10
+
+      - name: Activate Conda & Install eoforeststac
+        shell: bash -l {0}
+        run: |
+          micromamba activate eoforeststac-tests
+          python -m pip install --no-deps -e .
+
+      - name: Check Installed Packages
+        shell: bash -l {0}
+        run: |
+          micromamba activate eoforeststac-tests
+          python -c "import pkg_resources; print([d.project_name for d in pkg_resources.working_set])"
+
+      - name: Verify eoforeststac Import
+        shell: bash -l {0}
+        run: |
+          micromamba activate eoforeststac-tests
+          python -c "import eoforeststac"
+
+      - name: Version info
+        shell: bash -l {0}
+        run: |
+          micromamba activate eoforeststac-tests
+          python eoforeststac/utils/print_versions.py
+
+      - name: Restore Hypothesis Cache
+        id: cache-hypothesis
+        uses: actions/cache/restore@v5
+        with:
+          path: .hypothesis/
+          key: cache-hypothesis
+          enableCrossOsArchive: true
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          micromamba activate eoforeststac-tests
+          python -m pytest -n 4 --timeout 180 \
+          --cov=eoforeststac --cov-report=xml --junitxml=pytest.xml
+
+      - name: Save Hypothesis Cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: .hypothesis/
+          key: cache-hypothesis
+          enableCrossOsArchive: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Test results for ${{ runner.os }}-${{ matrix.python-version }} ${{ matrix.env }}
+          path: pytest.xml
+
+      - name: Upload code coverage to Codecov
+        uses: codecov/codecov-action@v5.5.2
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: RUNNER_OS,PYTHON_VERSION
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  event_file:
+    name: "Event File"
+    runs-on: ubuntu-latest
+    if: github.repository == 'simonbesnard1/eoforeststac'
+    steps:
+      - name: Upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: Event File
+          path: ${{ github.event_path }}
+
+
