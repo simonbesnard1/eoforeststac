@@ -15,8 +15,8 @@ roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
-    collection_id="EFDA",
-    version="2.1.1",
+    collection_id="CCI_BIOMASS",
+    version="6.0",
 )
 
 ds_biomass = subset(
@@ -31,20 +31,19 @@ ds = provider.open_dataset(
 
 ds_efda = subset(
     ds,
-    geometry=geometry,                 # geometry in EPSG:4326
-    time=("2020-01-01", "2020-12-31"))
+    geometry=geometry)
 
 
 aligner = DatasetAligner(
-    target="EFDA",
+    target="CCI_BIOMASS",
     resampling={
-        "EFDA": {"default": "average"},
+        "CCI_BIOMASS": {"default": "average"},
         "SAATCHI_BIOMASS": {"default": "average"}
         }
 )
 
 aligned = aligner.align({
-    "EFDA": ds_biomass,
+    "CCI_BIOMASS": ds_biomass,
     "SAATCHI_BIOMASS": ds_efda
 })
 

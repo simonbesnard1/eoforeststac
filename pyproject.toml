@@ -29,7 +29,7 @@ dependencies = [
 
     # --- Zarr ---
     "zarr==2.18.0",
-    "numcodecs==0.15.1,
+    "numcodecs==0.15.1",
 
     # --- Chunking ---
     "dask[array]==2025.12.0",
