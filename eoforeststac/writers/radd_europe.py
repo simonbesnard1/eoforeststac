@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
@@ -8,6 +9,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import rioxarray
+import zarr
 
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
@@ -15,100 +17,117 @@ from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 class RADDEuropeWriter(BaseZarrWriter):
     """
-    Writer for RADD Europe alert dates (YYddd) and forest mask (0/1).
+    Streaming writer for RADD Europe alert dates (YYddd) + forest mask (0/1),
+    following the same routine as the EFDA writer: append along time with to_zarr.
 
     Inputs
     ------
-    - alert_vrt : single VRT with YYddd alert dates (0 = no alert)
-    - mask_vrt  : single VRT with forest mask (1 = forest)
+    alert_vrt : str
+        Single VRT with alert date codes encoded as YYddd (0 = no alert).
+    mask_vrt : str
+        Single VRT with forest mask. Valid classes within domain are 0/1.
+        Pixels outside the valid domain should become _FillValue (-9999).
 
-    Output
-    ------
-    - disturbance(time, latitude, longitude) uint8
-      Monthly binary disturbance occurrence
-    - forest_mask(latitude, longitude) uint8
+    Output (Zarr)
+    -------------
+    disturbance_occurrence(time, latitude, longitude) int16
+        1 only in the month of the alert for forest pixels; 0 otherwise;
+        _FillValue outside valid domain.
+    forest_mask(latitude, longitude) int16
+        0/1 within valid domain; _FillValue outside valid domain.
+
+    CRS
+    ---
+    Native projection is ETRS89 / LAEA Europe (EPSG:3035).
     """
 
     # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
-    def load_variable(self, vrt: Path, name: str) -> xr.DataArray:
+    def load_variable(
+        self,
+        vrt: Path,
+        name: str,
+        *,
+        chunks: Optional[Dict[str, int]] = None,
+    ) -> xr.DataArray:
+        """
+        Load a single VRT lazily. If chunks is provided, apply spatial chunking
+        at read time to avoid later rechunk explosions.
+        """
+        rio_chunks = None
+        if chunks:
+            rio_chunks = {}
+            # rioxarray uses x/y; we will rename to longitude/latitude later
+            if "longitude" in chunks:
+                rio_chunks["x"] = chunks["longitude"]
+            if "latitude" in chunks:
+                rio_chunks["y"] = chunks["latitude"]
+
         da = (
             rioxarray.open_rasterio(
                 vrt,
                 masked=True,
-                chunks="auto",
+                chunks=rio_chunks if rio_chunks else "auto",
             )
             .squeeze(drop=True)
             .rename(name)
         )
         return da
 
-    def load_dataset(self, alert_vrt: str, mask_vrt: str) -> xr.Dataset:
+    def load_dataset(
+        self,
+        alert_vrt: str,
+        mask_vrt: str,
+        *,
+        spatial_chunks: Optional[Dict[str, int]] = None,
+    ) -> xr.Dataset:
         return xr.Dataset(
             {
-                "alert_code": self.load_variable(Path(alert_vrt), "alert_code"),
-                "forest_mask": self.load_variable(Path(mask_vrt), "forest_mask"),
+                "alert_code": self.load_variable(Path(alert_vrt), "alert_code", chunks=spatial_chunks),
+                "forest_mask_raw": self.load_variable(Path(mask_vrt), "forest_mask_raw", chunks=spatial_chunks),
             }
         )
 
     # ------------------------------------------------------------------
-    # Decode YYddd → datetime64
+    # Decode YYddd → month index (int32, months since 1970-01)
     # ------------------------------------------------------------------
     @staticmethod
-    def _decode_yydoy(block: np.ndarray) -> np.ndarray:
+    def _yydoy_to_month_index(block: np.ndarray) -> np.ndarray:
         """
-        Decode YYddd → datetime64[ns]; 0 → NaT
-        """
-        out = np.empty(block.shape, dtype="datetime64[ns]")
-        out[:] = np.datetime64("NaT")
+        Convert YYddd codes into a month index (datetime64[M] integer).
 
-        valid = block > 0
+        Input:
+            block: integer array with YYddd. 0 means 'no alert'.
+
+        Output:
+            int32 month index for valid pixels, -1 for 0/invalid.
+        """
+        arr = block.astype(np.int64, copy=False)
+        out = np.full(arr.shape, -1, dtype=np.int32)
+
+        valid = arr > 0
         if not np.any(valid):
             return out
 
-        yy = block[valid] // 1000
-        doy = block[valid] % 1000
+        yy = (arr[valid] // 1000).astype(np.int64)
+        doy = (arr[valid] % 1000).astype(np.int64)
+
         year = 2000 + yy
 
-        yyyyddd = year * 1000 + doy
-        s = np.char.zfill(yyyyddd.astype(str), 7)
+        # Build date using numpy datetime arithmetic
+        year_start = year.astype("datetime64[Y]").astype("datetime64[D]")
+        date = year_start + (doy - 1).astype("timedelta64[D]")
 
-        out[valid] = pd.to_datetime(
-            s, format="%Y%j", errors="coerce"
-        ).to_numpy()
-
+        # Convert to month resolution, then to int32 month index
+        out[valid] = date.astype("datetime64[M]").astype(np.int32)
         return out
 
     # ------------------------------------------------------------------
-    # Process
+    # Process helpers
     # ------------------------------------------------------------------
-    def process_dataset(
-        self,
-        ds: xr.Dataset,
-        *,
-        start: str = "2020-01-01",
-        end: str = "2023-12-01",
-        crs: str = "EPSG:3035",
-        fill_value: int = -9999,
-        version: str = "1.0",
-        chunks: Optional[Dict[str, int]] = None,
-    ) -> xr.Dataset:
-        """
-        Convert alert dates to a monthly disturbance cube.
-    
-        Semantics
-        ---------
-        - forest_mask: {0,1} are valid classes; outside-domain pixels are fill_value (-9999)
-        - disturbance: within-domain pixels are {0,1}; outside-domain pixels are fill_value (-9999)
-          Additionally, non-forest pixels (forest_mask==0) are forced to 0 (not disturbed).
-        """
-    
-        # CRS
-        ds = self.set_crs(ds, crs=crs)
-    
-        # Rename dims (NOTE: for EPSG:3035, you may prefer 'easting'/'northing',
-        # but keeping your names as requested)
+    @staticmethod
+    def _rename_xy_to_latlon(ds: xr.Dataset) -> xr.Dataset:
         rename = {}
         if "x" in ds.dims:
             rename["x"] = "longitude"
@@ -116,134 +135,116 @@ class RADDEuropeWriter(BaseZarrWriter):
             rename["y"] = "latitude"
         if rename:
             ds = ds.rename(rename)
-    
-        # ------
-        # Phase 1 chunking: only spatial dims exist at this point
-        # ------
-        if chunks:
-            spatial_chunks = {k: v for k, v in chunks.items() if k in ("latitude", "longitude")}
-            if spatial_chunks:
-                ds = ds.chunk(spatial_chunks)
-    
-        # ----------------------------
-        # Forest mask: domain validity
-        # ----------------------------
-        fm_raw = ds["forest_mask"]
-    
-        # rioxarray often turns nodata into NaN (masked=True). Use "isfinite" as domain flag.
-        # If your mask uses an explicit nodata instead, this still works after masked read.
-        domain_valid = xr.ufuncs.isfinite(fm_raw)
-    
-        # Normalize forest_mask to int16 with fill_value outside domain
-        fm = xr.where(domain_valid, fm_raw, fill_value).astype("int16").rename("forest_mask")
-    
-        # Optional: enforce only 0/1 inside domain (helps catch weird values early)
-        # Anything not 0/1 inside domain becomes fill_value (or raise if you prefer).
-        fm = xr.where(domain_valid & ((fm == 0) | (fm == 1)), fm, fill_value).astype("int16")
-    
-        # ----------------------------
-        # Decode alert date YYddd -> datetime
-        # ----------------------------
-        alert_dt = xr.apply_ufunc(
-            self._decode_yydoy,
+            for old, new in rename.items():
+                if old in ds.coords:
+                    ds = ds.rename({old: new})
+        return ds
+
+    def build_static_layers(
+        self,
+        ds: xr.Dataset,
+        *,
+        _FillValue: int,
+    ) -> Dict[str, xr.DataArray]:
+        """
+        Build static 2D layers:
+          - domain_valid (bool)
+          - forest_mask (int16 with _FillValue outside-domain)
+          - alert_month_index (int32; -1 for no alert)
+        """
+        fm_raw = ds["forest_mask_raw"]
+
+        # domain validity: masked areas -> NaN when masked=True
+        domain_valid = xr.ufuncs.isfinite(fm_raw).rename("domain_valid")
+
+        forest_mask = xr.where(domain_valid, fm_raw, _FillValue).astype("int16").rename("forest_mask")
+        forest_mask = xr.where(
+            domain_valid & ((forest_mask == 0) | (forest_mask == 1)),
+            forest_mask,
+            _FillValue,
+        ).astype("int16")
+
+        alert_month_index = xr.apply_ufunc(
+            self._yydoy_to_month_index,
             ds["alert_code"].astype("int32"),
             dask="parallelized",
-            output_dtypes=[np.dtype("datetime64[ns]")],
-        )
-        alert_month = alert_dt.astype("datetime64[M]")
-    
-        # Monthly time axis
-        time = pd.date_range(start=start, end=end, freq="MS")
-        time_da = xr.DataArray(
-            time.to_numpy(dtype="datetime64[M]"),
-            dims="time",
-            coords={"time": time},
-        )
-    
-        # Broadcast comparison → {0,1} inside domain (temporarily uint8/boolean is fine)
-        disturbance01 = (alert_month == time_da)
-    
-        # ----------------------------
-        # Apply domain + forest logic
-        # ----------------------------
-        # Start with int16 so we can store fill_value
-        disturbance = disturbance01.astype("int16")
-    
-        # Outside-domain pixels -> fill_value
-        disturbance = disturbance.where(domain_valid, other=fill_value)
-    
-        # Inside-domain but non-forest (fm==0) -> force to 0
-        disturbance = disturbance.where(fm != 0, other=0)
+            output_dtypes=[np.int32],
+        ).rename("alert_month_index")
 
-        disturbance = disturbance.rename("disturbance_occurence")
-        
-        disturbance.attrs.update(
-            {
-                "long_name": "Monthly forest disturbance occurrence",
-                "description": (
-                    "Binary monthly disturbance flag derived from RADD alert "
-                    "dates (YYddd). A pixel is flagged only in the month of "
-                    "the alert and only where forest_mask = 1."
-                ),
-                "grid_mapping": "crs",
-                "_FillValue": fill_value,
-                "valid_min": 0,
-                "valid_max": 1,
-            }
-        )
+        return {
+            "domain_valid": domain_valid,
+            "forest_mask": forest_mask,
+            "alert_month_index": alert_month_index,
+        }
 
-        fm.attrs.update(
-            {
-                "long_name": "Forest mask",
-                "description": "Binary forest mask (1=forest, 0=non-forest).",
-                "grid_mapping": "crs",
-                "_FillValue": fill_value,
-            }
-        )
+    # ------------------------------------------------------------------
+    # Metadata
+    # ------------------------------------------------------------------
+    def add_metadata(
+        self,
+        ds: xr.Dataset,
+        *,
+        _FillValue: int,
+        crs: str,
+        version: str,
+    ) -> xr.Dataset:
+        # variable attrs
+        if "disturbance_occurrence" in ds:
+            ds["disturbance_occurrence"].attrs.update(
+                {
+                    "long_name": "Monthly forest disturbance occurrence",
+                    "description": (
+                        "Binary monthly disturbance flag derived from RADD alert dates (YYddd). "
+                        "A pixel is flagged only in the month of the alert. Pixels outside the "
+                        "valid mask domain are set to -9999. Non-forest pixels are forced to 0."
+                    ),
+                    "grid_mapping": "crs",
+                    "_FillValue": _FillValue,
+                    "valid_min": 0,
+                    "valid_max": 1,
+                }
+            )
 
-        out = xr.Dataset(
-            {
-                "disturbance_occurence": disturbance,
-                "forest_mask": fm,
-            }
-        )
+        if "forest_mask" in ds:
+            ds["forest_mask"].attrs.update(
+                {
+                    "long_name": "Forest mask",
+                    "description": (
+                        "Categorical forest mask. Within the valid domain: 1=forest, 0=non-forest. "
+                        "Pixels outside the valid domain are -9999."
+                    ),
+                    "grid_mapping": "crs",
+                    "_FillValue": _FillValue,
+                    "valid_min": 0,
+                    "valid_max": 1,
+                }
+            )
 
+        # global attrs
         self.set_global_metadata(
-            out,
+            ds,
             {
                 "title": "RADD Europe - Monthly forest disturbance occurrence",
                 "description": (
-                        "RADD Europe forest disturbance alerts derived from Sentinel-1 radar time series, "
-                        "providing event-based detection of forest disturbance across Europe. "
-                        "Native alert dates encoded as YYddd are converted into a monthly time series "
-                        "indicating the occurrence of a disturbance event in the corresponding month. "
-                        "Disturbance is flagged only for forested pixels, as defined by an accompanying "
-                        "binary forest mask."
-                    ),
+                    "RADD Europe forest disturbance alerts derived from Sentinel-1 radar time series, "
+                    "providing event-based detection of forest disturbance across Europe. Native alert "
+                    "dates encoded as YYddd are converted into a monthly time series indicating the "
+                    "month in which an alert was triggered for each pixel. Disturbance is masked to "
+                    "forest pixels using an accompanying categorical forest mask."
+                ),
                 "temporal_resolution": "monthly",
                 "product_version": version,
-                "institution": (
-                    "Laboratory of Geo-information Science and Remote Sensing, Wageningen University"
-                ),
+                "institution": "Laboratory of Geo-information Science and Remote Sensing, Wageningen University",
                 "created_by": "van der Woude et al.",
                 "spatial_resolution": "10 m",
                 "crs": crs,
                 "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             },
         )
-        
-        # ------
-        # Phase 2 chunking: time exists now
-        # ------
-        if chunks:
-            out_chunks = {k: v for k, v in chunks.items() if k in out.dims}
-            if out_chunks:
-                out = out.chunk(out_chunks)
-        
-                return out
+        return ds
 
     # ------------------------------------------------------------------
-    # Write
+    # Write (EFDA-style streaming)
     # ------------------------------------------------------------------
     def write(
         self,
@@ -253,47 +254,115 @@ class RADDEuropeWriter(BaseZarrWriter):
         *,
         start: str = "2020-01-01",
         end: str = "2023-12-01",
-        crs: str = "EPSG:3035",
         version: str = "1.0",
+        crs: str = "EPSG:3035",
+        _FillValue: int = -9999,
         chunks: Optional[Dict[str, int]] = None,
+        consolidate_at_end: bool = True,
     ) -> str:
         """
-        alert_vrt + mask_vrt → monthly disturbance Zarr
-        """
+        Stream monthly slices into a single Zarr store along time.
 
+        This mirrors the EFDA writer pattern:
+          - initialize store with first timestep (mode='w', encoding=...)
+          - append along time for subsequent timesteps (mode='a', append_dim='time')
+          - consolidate metadata once at the end (optional)
+        """
         if chunks is None:
             chunks = {"time": 1, "latitude": 2048, "longitude": 2048}
 
-        print("Loading RADD Europe VRTs…")
-        ds = self.load_dataset(alert_vrt, mask_vrt)
+        # Spatial chunking at read time (avoid Dask rechunk explosions)
+        spatial_chunks = {k: v for k, v in chunks.items() if k in ("latitude", "longitude")}
 
-        print("Processing monthly disturbance cube…")
-        ds = self.process_dataset(
-            ds,
-            start=start,
-            end=end,
-            crs=crs,
-            chunks=chunks,
-            version= version
-        )
-                
+        print("RADD: loading VRTs…")
+        ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)
+
+        # CRS + rename dims
+        ds_in = self.set_crs(ds_in, crs=crs)
+        ds_in = self._rename_xy_to_latlon(ds_in)
+
+        # Ensure spatial chunking is present (time does not exist yet)
+        if spatial_chunks:
+            ds_in = ds_in.chunk(spatial_chunks)
+
+        # Precompute static layers (2D) once
+        static = self.build_static_layers(ds_in, _FillValue=_FillValue)
+        domain_valid = static["domain_valid"]
+        forest_mask = static["forest_mask"]
+        alert_month_index = static["alert_month_index"]
+
+        # Monthly timesteps
+        times = pd.date_range(start=start, end=end, freq="MS")
+        month_index = times.to_numpy(dtype="datetime64[M]").astype(np.int32)
+
+        # Prepare store using BaseZarrWriter (credentials handled there)
+        store = self.make_store(output_zarr)
+
+        # Encoding for initialization (dims are time, latitude, longitude)
         encoding = {
-            "disturbance_occurence": {
-                "chunks": (
-                    chunks["latitude"],
-                    chunks["longitude"],
-                    chunks["time"],
-                ),
+            "disturbance_occurrence": {
+                "dtype": "int16",
+                "chunks": (chunks["time"], chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
+                "_FillValue": np.int16(_FillValue),
             },
             "forest_mask": {
-                "chunks": (
-                    chunks["latitude"],
-                    chunks["longitude"],
-                ),
+                "dtype": "int16",
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
+                "_FillValue": np.int16(_FillValue),
             },
         }
 
-        print("Writing Zarr…")
-        return self.write_to_zarr(ds, output_zarr, encoding=encoding)
+        for i, (t, m_idx) in enumerate(zip(times, month_index)):
+            print(f"RADD: processing {t.strftime('%Y-%m')} ({i + 1}/{len(times)})")
+
+            # 2D slice for this month
+            dist2d = (alert_month_index == np.int32(m_idx)).astype("int16")
+
+            # outside-domain -> fill value
+            dist2d = dist2d.where(domain_valid, other=_FillValue)
+
+            # non-forest inside domain -> 0
+            dist2d = dist2d.where(forest_mask != 0, other=0)
+
+            # Expand to time=1 dataset so append_dim='time' works
+            ds_step = xr.Dataset(
+                {
+                    "disturbance_occurrence": dist2d.expand_dims(time=[t]),
+                    # write forest_mask only once (first step)
+                    **({"forest_mask": forest_mask} if i == 0 else {}),
+                }
+            )
+
+            # Chunk step dataset to match target layout
+            ds_step = ds_step.chunk(
+                {
+                    "time": chunks["time"],
+                    "latitude": chunks["latitude"],
+                    "longitude": chunks["longitude"],
+                }
+            )
+
+            # metadata once (first step is enough)
+            if i == 0:
+                ds_step = self.add_metadata(ds_step, _FillValue=_FillValue, crs=crs, version=version)
+            else:
+                ds_step = self._strip_cf_serialization_attrs(ds_step)
+
+            ds_step.to_zarr(
+                store=store,
+                mode="w" if i == 0 else "a",
+                append_dim=None if i == 0 else "time",
+                encoding=encoding if i == 0 else None,
+                consolidated=False,
+            )
+
+            del ds_step
+            gc.collect()
+
+        if consolidate_at_end:
+            zarr.consolidate_metadata(store)
+
+        print(f"RADD: done → {output_zarr}")
+        return output_zarr
