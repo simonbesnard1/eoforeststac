@@ -57,6 +57,12 @@ from eoforeststac.catalog.liu_biomass import (
     create_liu_biomass_item,
 )
 
+from eoforeststac.catalog.radd_europe import (
+    create_radd_europe_collection,
+    create_radd_europe_item,
+)
+
+
 # ---------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------
@@ -73,6 +79,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "FORESTPATHS_GENUS": ["0.0.1"],
     "HANSEN_GFC": ["1.12"],
     "LIU_BIOMASS": ["0.1"],
+    "RADD_EUROPE": ["1.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -92,7 +99,7 @@ THEMES: Dict[str, Dict[str, object]] = {
         "title": "Disturbance & Change",
         "description": "Forest disturbance, loss, and change layers from continental to global scales.",
         "keywords": ["disturbance", "mortality", "forest loss", "change", "harvest", "fire"],
-        "products": ["EFDA", "JRC_TMF", "HANSEN_GFC", "JRC_GFC2020"],
+        "products": ["EFDA", "JRC_TMF", "HANSEN_GFC", "JRC_GFC2020", "RADD_EUROPE"],
     },
     "structure-demography": {
         "title": "Structure & Demography",
@@ -124,6 +131,7 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
         ProductSpec("FORESTPATHS_GENUS", create_forestpaths_genus_collection, create_forestpaths_genus_item),
         ProductSpec("HANSEN_GFC", create_hansen_gfc_collection, create_hansen_gfc_item),
         ProductSpec("LIU_BIOMASS", create_liu_biomass_collection, create_liu_biomass_item),
+        ProductSpec("RADD_EUROPE", create_radd_europe_collection, create_radd_europe_item),
     )
 
 
