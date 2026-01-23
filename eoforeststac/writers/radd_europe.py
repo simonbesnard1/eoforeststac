@@ -278,7 +278,7 @@ class RADDEuropeWriter(BaseZarrWriter):
         )
                 
         encoding = {
-            "disturbance": {
+            "disturbance_occurence": {
                 "chunks": (
                     chunks["latitude"],
                     chunks["longitude"],
