@@ -93,13 +93,12 @@ RADD_EUROPE_CFG = {
             "type": "text/html",
             "title": "RADD Forest Disturbance Alert (method overview)",
         },
-        # Put your internal/external paper link here once public (or a preprint/DOI).
-        # {
-        #     "rel": "cite-as",
-        #     "href": "https://doi.org/...",
-        #     "type": "text/html",
-        #     "title": "Dataset / paper DOI",
-        # },
+        {
+            "rel": "cite-as",
+            "href": "hhttps://iopscience.iop.org/article/10.1088/1748-9326/ad2d82",
+            "type": "text/html",
+            "title": "paper DOI",
+        },
         # Terms of use (if you have it)
         # {
         #     "rel": "license",
@@ -146,7 +145,7 @@ RADD_EUROPE_CFG = {
             "title": "Zarr dataset",
             "description": (
                 "Cloud-optimized Zarr store containing monthly disturbance occurrence "
-                "(time, y, x) and a categorical forest mask (y, x)."
+                "and a categorical forest mask."
             ),
             "roles": ["data"],
             "type": "application/vnd.zarr",
