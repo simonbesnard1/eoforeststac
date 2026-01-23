@@ -135,7 +135,9 @@ def site_1d_mahalanobis_BH(
             # context stats
             "B_q95_ctx": muB, "B_sigma_ctx": sigB, "n_ctx_B": int(b_ctx.size),
             # core distance summaries
-            "B_MD_median": sB["median"], "B_MD_mean": sB["mean"], "B_MD_p90": sB["p90"], "B_MD_max": sB["max"], "n_core_B": sB["n"],
+            "B_MD_median": sB["median"], 
+            "B_MD_mean": sB["mean"], "B_MD_p90": sB["p90"], 
+            "B_MD_max": sB["max"], "n_core_B": sB["n"],
         })
 
     return pd.DataFrame(rows)
@@ -165,4 +167,87 @@ df_dm = site_1d_mahalanobis_BH(
     roi_paths= roi_paths,
     B2020=B.sel(time='2020-01-01')['aboveground_biomass']
 )
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig, ax = plt.subplots(1, 1, figsize=(7.2, 6), constrained_layout=True)
+
+sc = ax.scatter(
+    df_dm["B_MD_median"],
+    df_dm["B_MD_p90"],
+    c=df_dm["B_q95_ctx"],
+    cmap="viridis",
+    s=40,
+    alpha=0.85
+)
+
+ax.set_ylabel("Mahalanobis distance (p90)", fontsize=13)
+ax.set_xlabel("Mahalanobis distance (median)", fontsize=13)
+ax.set_title("Mahalanobis distance across FLUXNET sites", fontsize=15, fontweight="bold")
+
+cbar = plt.colorbar(sc, ax=ax)
+cbar.set_label("Biomass potential (q95, 5 km) [MgC ha$^{-1}$]"
+    , fontsize=12)
+
+ax.legend(frameon=False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+
+fig, ax = plt.subplots(1, 1, figsize=(6.8, 4.6), constrained_layout=True)
+
+ax.hist(
+    df_dm["B_MD_median"],
+    bins=25,
+    color="#4C72B0",
+    alpha=0.85
+)
+
+ax.set_xlabel("Mahalanobis distance to steady state", fontsize=13)
+ax.set_ylabel("Number of sites", fontsize=13)
+ax.set_title("Most ecosystems are far from steady state", fontsize=15, fontweight="bold")
+
+ax.legend(frameon=False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import gridspec
+
+fig, ax = plt.subplots(1, 1, figsize=(6, 4.5), constrained_layout=True)
+
+sc = ax.scatter(
+    df_dm["B_MD_median"],
+    df_dm["B_MD_p90"],
+    c=df_dm["B_q95_ctx"],
+    cmap="viridis",
+    s=40,
+    alpha=0.85
+)
+
+ax.plot([0, mx], [0, mx], "k--", lw=2)
+ax.set_xlabel("Mahalanobis distance (median)", fontsize=13)
+ax.set_ylabel("Mahalanobis distance (p90)", fontsize=13)
+ax.legend(frameon=False) 
+ax.spines["top"].set_visible(False) 
+ax.spines["right"].set_visible(False)
+ax.set_title("Mahalanobis distance across FLUXNET sites", fontsize=15, fontweight="bold")
+
+# Inset histogram
+axins = ax.inset_axes([0.6, 0.1, 0.35, 0.35])
+axins.hist(df_dm["B_MD_median"], bins=20, color="#4C72B0", alpha=0.85)
+axins.set_title("Median MD", fontsize=10)
+axins.tick_params(labelsize=9)
+axins.spines["top"].set_visible(False) 
+axins.spines["right"].set_visible(False)
+
+
+cbar = plt.colorbar(sc, ax=ax)
+cbar.set_label("Biomass potential (q95)")
+
+plt.savefig('/home/simon/Documents/science/GFZ/presentation/fluxcom-x/kickoff2026_besnard/images/data_mahalanobis', dpi=220, bbox_inches="tight")
+
 
