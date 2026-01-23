@@ -129,21 +129,13 @@ RADD_EUROPE_CFG = {
 
         # disturbance is a binary indicator, forest_mask is categorical
         "units_by_variable": {
-            "disturbance": "1",
-            "forest_mask": "1",
+            "disturbance_occurence": "binary",
+            "forest_mask": "binary",
         },
 
         "eo:gsd": [10.0],
         "proj:epsg": [3035],
-
-        "product_family": ["RADD"],
         "data_format": ["zarr"],
-
-        # Nodata semantics are unusually important here
-        "nodata_by_variable": {
-            "disturbance": -9999,
-            "forest_mask": -9999,
-        },
     },
 
     # ------------------------------------------------------------------
