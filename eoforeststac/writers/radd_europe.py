@@ -127,6 +127,24 @@ class RADDEuropeWriter(BaseZarrWriter):
         for v in ds.data_vars:
             ds[v].attrs.pop("_FillValue", None)
         return ds
+    
+    def _strip_cf_serialization_attrs(self, ds: xr.Dataset) -> xr.Dataset:
+        """
+        Remove CF/Zarr serialization-related attributes that must NOT
+        be present when appending to an existing Zarr store.
+        """
+        STRIP_KEYS = {
+            "_FillValue",
+            "missing_value",
+            "scale_factor",
+            "add_offset",
+        }
+    
+        for var in ds.data_vars:
+            for key in STRIP_KEYS:
+                ds[var].attrs.pop(key, None)
+    
+        return ds
 
     def build_static_layers(self, ds: xr.Dataset, *, fill_value: int):
         fm_raw = ds["forest_mask_raw"]
