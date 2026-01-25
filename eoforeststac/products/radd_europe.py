@@ -9,10 +9,10 @@ RADD_EUROPE_CFG = {
     "id": "RADD_EUROPE",
     "title": "RADD Europe - Monthly forest disturbance occurrence (Sentinel-1, 10 m)",
     "description": (
-        "Monthly forest disturbance occurrence for Europe derived from RADD (RAdar for Detecting "
-        "Deforestation) alerts based on Sentinel-1 radar time series. Native alert dates encoded as "
-        "YYddd are converted into a monthly time series indicating the month in which an alert was "
-        "triggered for each pixel.\n\n"
+        "Monthly forest disturbance occurrence for Europe derived from RADD (RAdar for Detecting"
+        "Deforestation) alerts based on Sentinel-1 radar time series. Native alert dates encoded"
+        "as YYddd are retained as a static alert layer and additionally converted into a monthly"
+        "time series indicating the month in which an alert was triggered for each pixel.\n\n"
         "The collection includes (i) a monthly binary disturbance cube and (ii) a forest mask. "
         "Within the valid domain, the forest mask has classes 0/1; pixels outside the mask domain "
         "are set to -9999. Disturbance is provided on a monthly time axis and uses -9999 outside "
@@ -124,12 +124,32 @@ RADD_EUROPE_CFG = {
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["monthly"],
-        "variables": ["disturbance", "forest_mask"],
-
-        # disturbance is a binary indicator, forest_mask is categorical
+        "variables": [
+            "disturbance_occurence",
+            "alert_yydoy",
+            "forest_mask",
+        ],
+    
         "units_by_variable": {
             "disturbance_occurence": "binary",
+            "alert_yydoy": "YYddd",
             "forest_mask": "binary",
+        },
+        "variable_descriptions": {
+            "disturbance_occurence": (
+                "Binary monthly indicator of forest disturbance occurrence. "
+                "A value of 1 indicates that a RADD alert was triggered in the corresponding month. "
+                "Values are 0 otherwise within the valid forest mask domain."
+            ),
+            "alert_yydoy": (
+                "Native RADD alert date encoded as YYddd (year since 2000 and day of year). "
+                "Each pixel contains at most one alert date. Pixels without alerts or "
+                "outside the valid domain are set to the dataset fill value."
+            ),
+            "forest_mask": (
+                "Categorical forest mask indicating forest (1) and non-forest (0) areas "
+                "within the valid domain."
+            ),
         },
 
         "eo:gsd": [10.0],
@@ -169,10 +189,11 @@ RADD_EUROPE_CFG = {
             title=f"RADD Europe v{v} (Zarr)",
             roles=["data"],
             description=(
-                "Cloud-optimized Zarr store containing monthly forest disturbance occurrence "
-                "derived from RADD alert dates (YYddd), plus a categorical forest mask. "
+                "Cloud-optimized Zarr store containing (i) monthly forest disturbance occurrence,"
+                "(ii) native RADD alert dates encoded as YYddd, and (iii) a categorical forest mask."
                 "Projection: EPSG:3035."
             ),
         ),
     },
 }
+
