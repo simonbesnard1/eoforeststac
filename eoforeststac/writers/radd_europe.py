@@ -85,21 +85,32 @@ class RADDEuropeWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     @staticmethod
     def _yydoy_to_month_index(block: np.ndarray) -> np.ndarray:
+        """
+        Convert YYddd codes into a month index (datetime64[M] integer).
+        YY=20, ddd=004 -> 2020-01 -> month index
+    
+        Output:
+          int32 month index for valid pixels, -1 for 0/invalid.
+        """
         arr = block.astype(np.int64, copy=False)
         out = np.full(arr.shape, -1, dtype=np.int32)
-
-        valid = arr > 0
+    
+        valid = np.isfinite(arr) & (arr > 0)
         if not np.any(valid):
             return out
-
+    
         yy = (arr[valid] // 1000).astype(np.int64)
         doy = (arr[valid] % 1000).astype(np.int64)
         year = 2000 + yy
-
-        year_start = year.astype("datetime64[Y]").astype("datetime64[D]")
-        date = year_start + (doy - 1).astype("timedelta64[D]")
-        out[valid] = date.astype("datetime64[M]").astype(np.int32)
+    
+        yyyyddd = year * 1000 + doy  # e.g., 2020004
+        s = np.char.zfill(yyyyddd.astype(str), 7)
+    
+        dt = pd.to_datetime(s, format="%Y%j", errors="coerce")
+        out[valid] = dt.to_numpy(dtype="datetime64[M]").astype(np.int32)
+    
         return out
+
 
     # ------------------------------------------------------------------
     # Helpers
@@ -165,8 +176,16 @@ class RADDEuropeWriter(BaseZarrWriter):
             dask="parallelized",
             output_dtypes=[np.int32],
         )
+        
+        alert_raw = ds["alert_code"].astype("int32")
 
-        return domain_valid, forest_mask, alert_month_index
+        # If alert_code is float because of masked=True, coerce NaNs to fill_value
+        alert_yydoy = xr.where(xr.ufuncs.isfinite(alert_raw), alert_raw, fill_value).astype("int32")
+        
+        # Outside domain (based on forest mask domain): force fill_value
+        alert_yydoy = xr.where(domain_valid, alert_yydoy, fill_value).astype("int32")
+
+        return domain_valid, forest_mask, alert_month_index, alert_yydoy
 
     # ------------------------------------------------------------------
     # Metadata (NO _FillValue in attrs!)
@@ -198,6 +217,19 @@ class RADDEuropeWriter(BaseZarrWriter):
                     "grid_mapping": "crs",
                     "valid_min": 0,
                     "valid_max": 1,
+                }
+            )
+            
+        if "alert_yydoy" in ds:
+            ds["alert_yydoy"].attrs.update(
+                {
+                    "long_name": "RADD alert date code (YYddd)",
+                    "description": (
+                        "Native RADD alert date encoding as YYddd (year since 2000 and day-of-year). "
+                        "0 indicates no alert within the record. Outside the valid domain uses the dataset fill value."
+                    ),
+                    "grid_mapping": "crs",
+                    "valid_min": 0,
                 }
             )
 
@@ -250,12 +282,11 @@ class RADDEuropeWriter(BaseZarrWriter):
 
         ds_in = self.set_crs(ds_in, crs=crs)
         ds_in = self._rename_xy_to_latlon(ds_in)
+        target_chunks = {"latitude": chunks["latitude"], "longitude": chunks["longitude"]}
+        ds_in["alert_code"] = ds_in["alert_code"].chunk(target_chunks)
+        ds_in["forest_mask_raw"] = ds_in["forest_mask_raw"].chunk(target_chunks)
 
-        # IMPORTANT: do NOT re-chunk again here if you already chunked at read time
-        # (This is a common cause of "Increasing number of chunks by factor ...")
-        # If you must, only do it when not already chunked as desired.
-
-        domain_valid, forest_mask, alert_month_index = self.build_static_layers(ds_in, fill_value=_FillValue)
+        domain_valid, forest_mask, alert_month_index, alert_yydoy = self.build_static_layers(ds_in, fill_value=_FillValue)
 
         times = pd.date_range(start=start, end=end, freq="MS")
         month_index = times.to_numpy(dtype="datetime64[M]").astype(np.int32)
@@ -263,19 +294,25 @@ class RADDEuropeWriter(BaseZarrWriter):
         store = self.make_store(output_zarr)
 
         encoding = {
-            "disturbance_occurrence": {
-                "dtype": "int16",
-                "chunks": (chunks["time"], chunks["latitude"], chunks["longitude"]),
-                "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
-            },
-            "forest_mask": {
-                "dtype": "int16",
-                "chunks": (chunks["latitude"], chunks["longitude"]),
-                "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
-            },
-        }
+                "disturbance_occurrence": {
+                    "dtype": "int16",
+                    "chunks": (chunks["time"], chunks["latitude"], chunks["longitude"]),
+                    "compressor": DEFAULT_COMPRESSOR,
+                    "_FillValue": np.int16(_FillValue),
+                },
+                "forest_mask": {
+                    "dtype": "int16",
+                    "chunks": (chunks["latitude"], chunks["longitude"]),
+                    "compressor": DEFAULT_COMPRESSOR,
+                    "_FillValue": np.int16(_FillValue),
+                },
+                "alert_yydoy": {
+                    "dtype": "int32",
+                    "chunks": (chunks["latitude"], chunks["longitude"]),
+                    "compressor": DEFAULT_COMPRESSOR,
+                    "_FillValue": np.int32(_FillValue),
+                },
+            }
 
         for i, (t, m_idx) in enumerate(zip(times, month_index)):
             print(f"RADD: processing {t.strftime('%Y-%m')} ({i + 1}/{len(times)})")
@@ -285,11 +322,18 @@ class RADDEuropeWriter(BaseZarrWriter):
             dist2d = dist2d.where(forest_mask != 0, other=0)
 
             ds_step = xr.Dataset(
-                {
-                    "disturbance_occurrence": dist2d.expand_dims(time=[t]),
-                    **({"forest_mask": forest_mask} if i == 0 else {}),
-                }
-            )
+                        {
+                            "disturbance_occurrence": dist2d.expand_dims(time=[t]),
+                            **(
+                                {
+                                    "forest_mask": forest_mask,
+                                    "alert_yydoy": alert_yydoy,
+                                }
+                                if i == 0
+                                else {}
+                            ),
+                        }
+                    )
 
             # Chunk only if needed; but make sure it matches encoding layout
             ds_step = ds_step.chunk(
@@ -309,7 +353,7 @@ class RADDEuropeWriter(BaseZarrWriter):
 
             # Critical: remove _FillValue from attrs (keep only in encoding)
             ds_step = self._drop_fillvalue_attr(ds_step)
-
+            
             ds_step.to_zarr(
                 store=store,
                 mode="w" if i == 0 else "a",
