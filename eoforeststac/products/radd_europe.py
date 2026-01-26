@@ -9,13 +9,12 @@ RADD_EUROPE_CFG = {
     "id": "RADD_EUROPE",
     "title": "RADD Europe - Monthly forest disturbance occurrence (Sentinel-1, 10 m)",
     "description": (
-        "Monthly forest disturbance occurrence for Europe derived from RADD (RAdar for Detecting"
-        "Deforestation) alerts based on Sentinel-1 radar time series. Native alert dates encoded"
-        "as YYddd are retained as a static alert layer and additionally converted into a monthly"
-        "time series indicating the month in which an alert was triggered for each pixel.\n\n"
-        "The collection includes (i) a monthly binary disturbance cube and (ii) a forest mask. "
-        "Within the valid domain, the forest mask has classes 0/1; pixels outside the mask domain "
-        "are set to -9999. Disturbance is provided on a monthly time axis and uses -9999 outside "
+        "Monthly forest disturbance occurrence for Europe derived from RADD (RAdar for Detecting Deforestation)"
+        "alerts based on Sentinel-1 radar time series and ERA5 temperature data. Native alert dates encoded as YYddd"
+        "are retained as a static alert layer and additionally converted into a monthly time series indicating the month"
+        "in which an alert was triggered for each pixel. The collection includes (i) a monthly binary disturbance cube (ii)"
+        "native alert dates and (iii) a forest mask. Within the valid domain, the forest mask has classes 0/1; pixels outside"
+        "the mask domain are set to -9999. Binary disturbance occurrence is provided on a monthly time axis and uses -9999 outside"
         "the valid domain. Data are provided in the ETRS89 / LAEA Europe projection (EPSG:3035)."
     ),
 
@@ -61,7 +60,18 @@ RADD_EUROPE_CFG = {
             "roles": ["processor", "host"],
             "url": "https://www.gfz.de",
         },
-    ],
+        
+        {
+       "name": "FORWARDS - The ForestWard Observatory to Secure Resilience of European Forests",
+           "roles": ["funding"],
+           "url": "https://cordis.europa.eu/project/id/101084481",
+       },
+       {
+           "name": "OEMC - Open-Earth-Monitor Cyberinfrastructure",
+           "roles": ["funding"],
+           "url": "https://cordis.europa.eu/project/id/101059548",
+       },
+   ],
 
     # ------------------------------------------------------------------
     # Discovery helpers
