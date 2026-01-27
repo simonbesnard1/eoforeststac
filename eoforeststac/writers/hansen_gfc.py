@@ -159,7 +159,7 @@ class HansenGFCWriter(BaseZarrWriter):
                     "(1–24 → 2001–2024)."
                 ),
                 "units": "year",
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "_FillValue": fill_value,
             })
 
@@ -179,7 +179,7 @@ class HansenGFCWriter(BaseZarrWriter):
             ds[name].attrs.update({
                 "long_name": meta["long_name"],
                 "description": meta["description"],
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "_FillValue": fill_value,
             })
 

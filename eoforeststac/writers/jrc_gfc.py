@@ -95,7 +95,7 @@ class JRCGFC2020Writer(BaseZarrWriter):
         ds["forest_cover"].attrs.update({
             "long_name": "Global Forest Cover",
             "description": "Categorical forest cover classification for reference year 2020",
-            "grid_mapping": "crs",
+            "grid_mapping": "spatial_ref",
             "_FillValue": fill_value,
             "valid_min": 0,
             "valid_max": 2,

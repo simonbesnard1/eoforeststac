@@ -57,7 +57,7 @@ class GAMIWriter(BaseZarrWriter):
             ds["forest_age"].attrs.update({
                 "long_name": "Forest age using ML + Landsat-based time since disturbance fusion",
                 "units": "years",
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "valid_min": 1,
                 "valid_max": 300,
                 "_FillValue": fill_value,

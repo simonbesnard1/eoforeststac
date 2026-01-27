@@ -154,7 +154,7 @@ class LiuBiomassWriter(BaseZarrWriter):
             attrs = {
                 "long_name": meta["long_name"],
                 "description": meta["description"],
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "_FillValue": fill_value,
             }
 

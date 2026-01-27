@@ -145,7 +145,7 @@ class RobinsonCRWriter(BaseZarrWriter):
             if var in ds:
                 ds[var].attrs.update({
                     **meta,
-                    "grid_mapping": "crs",
+                    "grid_mapping": "spatial_ref",
                     "_FillValue": fill_value,
                     "source": (
                         "Robinson et al., Protect young secondary forests "

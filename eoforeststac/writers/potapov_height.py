@@ -127,7 +127,7 @@ class PotapovHeightWriter(BaseZarrWriter):
             "long_name": "Canopy height",
             "description": "Canopy top height for discrete reference years (stacked from annual/epoch VRTs).",
             "units": "m",
-            "grid_mapping": "crs",
+            "grid_mapping": "spatial_ref",
             "_FillValue": fill_value,
             "valid_min": 0.0 if clamp_min is not None else None,
             "source": "Potapov et al., University of Maryland / GLAD",
