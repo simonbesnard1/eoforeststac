@@ -166,7 +166,7 @@ class JRCTMFWriter(BaseZarrWriter):
             ds[name].attrs.update({
                 "long_name": meta["long_name"],
                 "description": meta["description"],
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "_FillValue": fill_value,
             })
             if "units" in meta:
@@ -304,7 +304,7 @@ class JRCTMFWriter(BaseZarrWriter):
                     da.attrs.update({
                         "long_name": self.ANNUAL_CHANGE["long_name"],
                         "description": self.ANNUAL_CHANGE["description"],
-                        "grid_mapping": "crs",
+                        "grid_mapping": "spatial_ref",
                         "_FillValue": fill_value,
                         "legend": self.ANNUAL_CHANGE["legend"],
                     })

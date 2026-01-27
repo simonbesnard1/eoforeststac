@@ -136,7 +136,7 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
                     "and Sentinel-2 data for reference year 2020. "
                     "Categorical map describing dominant tree genus or functional group."
                 ),
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "valid_min": 0,
                 "valid_max": 7,
             

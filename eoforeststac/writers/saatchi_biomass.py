@@ -102,7 +102,7 @@ class SaatchiBiomassWriter(BaseZarrWriter):
             ds["agb"].attrs.update({
                 "long_name": "Aboveground biomass (AGB), Saatchi et al. (2020)",
                 "units": "Mg/ha",
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "valid_min": 0,
                 "valid_max": 1000,
                 "_FillValue": fill_value,

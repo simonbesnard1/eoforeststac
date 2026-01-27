@@ -191,7 +191,7 @@ class EFDAWriter(BaseZarrWriter):
                 "units": "binary",
                 "flag_values": [0, 1],
                 "flag_meanings": "no_disturbance disturbance",
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "_FillValue": _FillValue,
             })
     
@@ -215,7 +215,7 @@ class EFDAWriter(BaseZarrWriter):
                     "Planned or salvage logging",
                     "Mixed agents (more than one disturbance agent occurred)"
                 ],
-                "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                 "_FillValue": _FillValue,
             })
     

@@ -217,7 +217,7 @@ class RADDEuropeWriter(BaseZarrWriter):
                         "A pixel is flagged only in the month of the alert. Pixels outside the "
                         "valid mask domain use the dataset fill value. Non-forest pixels are forced to 0."
                     ),
-                    "grid_mapping": "crs",
+                "grid_mapping": "spatial_ref",
                     "valid_min": 0,
                     "valid_max": 1,
                 }
@@ -231,7 +231,7 @@ class RADDEuropeWriter(BaseZarrWriter):
                         "Categorical forest mask. Within the valid domain: 1=forest, 0=non-forest. "
                         "Outside-domain pixels use the dataset fill value."
                     ),
-                    "grid_mapping": "crs",
+                    "grid_mapping": "spatial_ref",
                     "valid_min": 0,
                     "valid_max": 1,
                 }
@@ -245,7 +245,7 @@ class RADDEuropeWriter(BaseZarrWriter):
                         "Native RADD alert date encoding as YYddd (year since 2000 and day-of-year). "
                         "0 indicates no alert within the record. Outside the valid domain uses the dataset fill value."
                     ),
-                    "grid_mapping": "crs",
+                    "grid_mapping": "spatial_ref",
                     "valid_min": 0,
                 }
             )
