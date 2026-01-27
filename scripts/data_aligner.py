@@ -11,7 +11,7 @@ provider = ZarrProvider(
     anon=True,
 )
 
-roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/CZ-Lnz.geojson")
+roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/FR-Pue.geojson")
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
@@ -21,8 +21,7 @@ ds = provider.open_dataset(
 
 ds_biomass = subset(
     ds,
-    geometry=geometry,                 # geometry in EPSG:4326
-    time=("2007-01-01", "2020-12-31"))  # optional
+    geometry=geometry)  # optional
 
 ds = provider.open_dataset(
     collection_id="CCI_BIOMASS",
