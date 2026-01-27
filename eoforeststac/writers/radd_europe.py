@@ -159,27 +159,14 @@ class RADDEuropeWriter(BaseZarrWriter):
 
     def build_static_layers(self, ds: xr.Dataset, fill_value: int = -9999):
         fm_raw = ds["forest_mask_raw"]
-    
-        # masked=True often yields NaN outside-domain
         domain_valid = xr.ufuncs.isfinite(fm_raw)
     
-        # Forest mask: keep 0/1 in-domain, fill_value outside-domain (and for weird values)
-        forest_mask = (
-            fm_raw
-            .where(domain_valid, other=fill_value)
-            .astype("int16")
-        )
-        forest_mask = (
-            forest_mask
-            .where((forest_mask == 0) | (forest_mask == 1), other=fill_value)
-            .astype("int16")
-        )
+        forest_mask = fm_raw.where(domain_valid, other=fill_value).astype("int16")
+        forest_mask = forest_mask.where((forest_mask == 0) | (forest_mask == 1), other=fill_value).astype("int16")
     
-        # Month index from alert_code (note: cast to int32 here is OK because 0 is valid, NaNs should be handled)
-        # But if alert_code contains NaNs, handle them before astype:
         alert_code_int = (
             ds["alert_code"]
-            .where(xr.ufuncs.isfinite(ds["alert_code"]), other=0)  # 0 means "no alert"
+            .where(xr.ufuncs.isfinite(ds["alert_code"]), other=0)
             .astype("int32")
         )
     
@@ -190,19 +177,7 @@ class RADDEuropeWriter(BaseZarrWriter):
             output_dtypes=[np.int32],
         )
     
-        # Keep native YYddd as a 2D layer:
-        # Replace NaNs FIRST, then cast. Use int16 (fits both YYddd and -9999).
-        alert_yydoy = (
-            ds["alert_code"]
-            .where(xr.ufuncs.isfinite(ds["alert_code"]), other=fill_value)
-            .astype("int16")
-        )
-        
-        # Outside domain -> fill_value
-        alert_yydoy = alert_yydoy.where(domain_valid, other=fill_value).astype("int16")
-    
-        return domain_valid, forest_mask, alert_month_index, alert_yydoy
-    
+        return domain_valid, forest_mask, alert_month_index
 
     # ------------------------------------------------------------------
     # Metadata (NO _FillValue in attrs!)
@@ -337,6 +312,9 @@ class RADDEuropeWriter(BaseZarrWriter):
             dist2d = (alert_month_index == np.int32(m_idx)).astype("int16")
             dist2d = dist2d.where(domain_valid, other=_FillValue)
             dist2d = dist2d.where(forest_mask != 0, other=0)
+            if i == 0:
+                alert_yydoy = ds_in["alert_code"].where(domain_valid, other=_FillValue)
+                alert_yydoy = alert_yydoy.where(xr.ufuncs.isfinite(alert_yydoy), other=_FillValue).astype("int16")
 
             ds_step = xr.Dataset(
                         {

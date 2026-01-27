@@ -13,7 +13,7 @@ import xarray as xr
 
 
 
-path = "s3://dog.atlaseo-glm.eo-gridded-data/collections/HANSEN_GFC/HANSEN_GFC_v1.12.zarr"
+path = "s3://dog.atlaseo-glm.eo-gridded-data/collections/FORESTPATHS_GENUS/FORESTPATHS_GENUS_v0.0.1.zarr"
 
 storage_options = {
     "client_kwargs": {"endpoint_url": "https://s3.gfz-potsdam.de"},

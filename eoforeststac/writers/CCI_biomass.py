@@ -59,7 +59,7 @@ class CCI_BiomassWriter(BaseZarrWriter):
                     "of all living trees per unit area, excluding stumps and roots."
                 ),
                 "source": "ESA Climate Change Initiative – Biomass v6, Santoro & Cartus (2025)",
-                "grid_mapping": "spatial_ref",
+                "grid_mapping": "crs",
             })
 
         if "aboveground_biomass_std" in ds:
@@ -69,7 +69,7 @@ class CCI_BiomassWriter(BaseZarrWriter):
                 "_FillValue": fill_value,
                 "description": "Per-pixel estimate of aboveground biomass uncertainty (1-sigma).",
                 "source": "ESA Climate Change Initiative – Biomass v6",
-                "grid_mapping": "spatial_ref",
+                "grid_mapping": "crs",
             })
 
         # --- Global metadata ---
