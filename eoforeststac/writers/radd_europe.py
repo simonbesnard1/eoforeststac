@@ -278,7 +278,7 @@ class RADDEuropeWriter(BaseZarrWriter):
         ds_in["alert_code"] = ds_in["alert_code"].chunk(target_chunks)
         ds_in["forest_mask_raw"] = ds_in["forest_mask_raw"].chunk(target_chunks)
 
-        domain_valid, forest_mask, alert_month_index, alert_yydoy = self.build_static_layers(ds_in, fill_value=_FillValue)
+        domain_valid, forest_mask, alert_month_index = self.build_static_layers(ds_in, fill_value=_FillValue)
 
         times = pd.date_range(start=start, end=end, freq="MS")
         month_index = times.to_numpy(dtype="datetime64[M]").astype(np.int32)
