@@ -11,9 +11,11 @@ import zarr
 from zarr.convenience import consolidate_metadata
 import xarray as xr
 
+AWS_ACCESS_KEY_ID = ""
+AWS_SECRET_ACCESS_KEY = ""
 
 
-path = "s3://dog.atlaseo-glm.eo-gridded-data/collections/FORESTPATHS_GENUS/FORESTPATHS_GENUS_v0.0.1.zarr"
+path = "s3://dog.atlaseo-glm.eo-gridded-data/collections/POTAPOV_HEIGHT/POTAPOV_HEIGHT_v1.0.zarr"
 
 storage_options = {
     "client_kwargs": {"endpoint_url": "https://s3.gfz-potsdam.de"},
