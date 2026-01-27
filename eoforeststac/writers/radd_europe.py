@@ -157,35 +157,52 @@ class RADDEuropeWriter(BaseZarrWriter):
     
         return ds
 
-    def build_static_layers(self, ds: xr.Dataset, *, fill_value: int):
+    def build_static_layers(self, ds: xr.Dataset, fill_value: int = -9999):
         fm_raw = ds["forest_mask_raw"]
-
+    
         # masked=True often yields NaN outside-domain
         domain_valid = xr.ufuncs.isfinite(fm_raw)
-
-        forest_mask = xr.where(domain_valid, fm_raw, fill_value).astype("int16")
-        forest_mask = xr.where(
-            domain_valid & ((forest_mask == 0) | (forest_mask == 1)),
-            forest_mask,
-            fill_value,
-        ).astype("int16")
-
+    
+        # Forest mask: keep 0/1 in-domain, fill_value outside-domain (and for weird values)
+        forest_mask = (
+            fm_raw
+            .where(domain_valid, other=fill_value)
+            .astype("int16")
+        )
+        forest_mask = (
+            forest_mask
+            .where((forest_mask == 0) | (forest_mask == 1), other=fill_value)
+            .astype("int16")
+        )
+    
+        # Month index from alert_code (note: cast to int32 here is OK because 0 is valid, NaNs should be handled)
+        # But if alert_code contains NaNs, handle them before astype:
+        alert_code_int = (
+            ds["alert_code"]
+            .where(xr.ufuncs.isfinite(ds["alert_code"]), other=0)  # 0 means "no alert"
+            .astype("int32")
+        )
+    
         alert_month_index = xr.apply_ufunc(
             self._yydoy_to_month_index,
-            ds["alert_code"].astype("int32"),
+            alert_code_int,
             dask="parallelized",
             output_dtypes=[np.int32],
         )
+    
+        # Keep native YYddd as a 2D layer:
+        # Replace NaNs FIRST, then cast. Use int16 (fits both YYddd and -9999).
+        alert_yydoy = (
+            ds["alert_code"]
+            .where(xr.ufuncs.isfinite(ds["alert_code"]), other=fill_value)
+            .astype("int16")
+        )
         
-        alert_raw = ds["alert_code"].astype("int32")
-
-        # If alert_code is float because of masked=True, coerce NaNs to fill_value
-        alert_yydoy = xr.where(xr.ufuncs.isfinite(alert_raw), alert_raw, fill_value).astype("int32")
-        
-        # Outside domain (based on forest mask domain): force fill_value
-        alert_yydoy = xr.where(domain_valid, alert_yydoy, fill_value).astype("int32")
-
+        # Outside domain -> fill_value
+        alert_yydoy = alert_yydoy.where(domain_valid, other=fill_value).astype("int16")
+    
         return domain_valid, forest_mask, alert_month_index, alert_yydoy
+    
 
     # ------------------------------------------------------------------
     # Metadata (NO _FillValue in attrs!)
@@ -279,7 +296,7 @@ class RADDEuropeWriter(BaseZarrWriter):
 
         print("RADD: loading VRTs…")
         ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)
-
+        
         ds_in = self.set_crs(ds_in, crs=crs)
         ds_in = self._rename_xy_to_latlon(ds_in)
         target_chunks = {"latitude": chunks["latitude"], "longitude": chunks["longitude"]}
