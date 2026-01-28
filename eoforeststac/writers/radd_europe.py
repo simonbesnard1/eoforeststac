@@ -18,7 +18,6 @@ from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 class RADDEuropeWriter(BaseZarrWriter):
     """
     Streaming writer for RADD Europe alert dates (YYddd) + forest mask (0/1),
-    following the EFDA pattern: append along time with to_zarr.
 
     Output (Zarr)
     -------------
@@ -252,7 +251,7 @@ class RADDEuropeWriter(BaseZarrWriter):
         return ds
 
     # ------------------------------------------------------------------
-    # Write RADD Data
+    # Write
     # ------------------------------------------------------------------
     def write(
         self,
