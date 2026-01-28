@@ -1,0 +1,38 @@
+name: eoforeststac-tests
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - boto3
+  - bottleneck
+  - cartopy
+  - cftime
+  - dask
+  - distributed
+  - flox
+  - fsspec
+  - geopandas
+  - h5netcdf
+  - h5py
+  - hdf5
+  - hypothesis
+  - lxml # Optional dep of pydap
+  - netcdf4
+  - numba
+  - numpy>=2
+  - packaging
+  - pandas
+  - pip
+  - pre-commit
+  - pyarrow # pandas raises a deprecation warning without this, breaking doctests
+  - pydap
+  - pydap-server
+  - pytest
+  - pytest-cov
+  - pytest-env
+  - pytest-xdist
+  - pytest-timeout
+  - requests
+  - retry
+  - scipy
+  - xarray
