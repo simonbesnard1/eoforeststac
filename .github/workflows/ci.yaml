@@ -49,7 +49,7 @@ jobs:
         uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ci/requirements/environment.yml
-          environment-name: eoforeststac-tests
+          environment-name: eoforeststac-ci
           cache-environment: true
           cache-environment-key: "ubuntu-latest-py3.10-${{ hashFiles('ci/requirements/environment.yml') }}"
           create-args: >-
@@ -58,25 +58,25 @@ jobs:
       - name: Activate Conda & Install eoforeststac
         shell: bash -l {0}
         run: |
-          micromamba activate eoforeststac-tests
+          micromamba activate eoforeststac-ci
           python -m pip install --no-deps -e .
 
       - name: Check Installed Packages
         shell: bash -l {0}
         run: |
-          micromamba activate eoforeststac-tests
+          micromamba activate eoforeststac-ci
           python -c "import pkg_resources; print([d.project_name for d in pkg_resources.working_set])"
 
       - name: Verify eoforeststac Import
         shell: bash -l {0}
         run: |
-          micromamba activate eoforeststac-tests
+          micromamba activate eoforeststac-ci
           python -c "import eoforeststac"
 
       - name: Version info
         shell: bash -l {0}
         run: |
-          micromamba activate eoforeststac-tests
+          micromamba activate eoforeststac-ci
           python eoforeststac/utils/print_versions.py
 
       - name: Restore Hypothesis Cache
@@ -90,7 +90,7 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
-          micromamba activate eoforeststac-tests
+          micromamba activate eoforeststac-ci
           python -m pytest -n 4 --timeout 180 \
           --cov=eoforeststac --cov-report=xml --junitxml=pytest.xml
 
