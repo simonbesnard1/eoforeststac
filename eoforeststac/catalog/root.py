@@ -98,13 +98,26 @@ THEMES: Dict[str, Dict[str, object]] = {
     "disturbance-change": {
         "title": "Disturbance & Change",
         "description": "Forest disturbance, loss, and change layers from continental to global scales.",
-        "keywords": ["disturbance", "mortality", "forest loss", "change", "harvest", "fire"],
+        "keywords": [
+            "disturbance",
+            "mortality",
+            "forest loss",
+            "change",
+            "harvest",
+            "fire",
+        ],
         "products": ["EFDA", "JRC_TMF", "HANSEN_GFC", "JRC_GFC2020", "RADD_EUROPE"],
     },
     "structure-demography": {
         "title": "Structure & Demography",
         "description": "Forest age, canopy height, and composition layers to study structure and dynamics.",
-        "keywords": ["forest age", "canopy height", "genus", "composition", "demography"],
+        "keywords": [
+            "forest age",
+            "canopy height",
+            "genus",
+            "composition",
+            "demography",
+        ],
         "products": ["GAMI", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
     },
 }
@@ -120,18 +133,38 @@ class ProductSpec:
 def _product_specs() -> Tuple[ProductSpec, ...]:
     """Single registry of products and their builders."""
     return (
-        ProductSpec("CCI_BIOMASS", create_cci_biomass_collection, create_cci_biomass_item),
-        ProductSpec("SAATCHI_BIOMASS", create_saatchi_biomass_collection, create_saatchi_biomass_item),
+        ProductSpec(
+            "CCI_BIOMASS", create_cci_biomass_collection, create_cci_biomass_item
+        ),
+        ProductSpec(
+            "SAATCHI_BIOMASS",
+            create_saatchi_biomass_collection,
+            create_saatchi_biomass_item,
+        ),
         ProductSpec("JRC_TMF", create_jrc_tmf_collection, create_jrc_tmf_item),
         ProductSpec("EFDA", create_efda_collection, create_efda_item),
-        ProductSpec("POTAPOV_HEIGHT", create_potapov_height_collection, create_potapov_height_item),
+        ProductSpec(
+            "POTAPOV_HEIGHT",
+            create_potapov_height_collection,
+            create_potapov_height_item,
+        ),
         ProductSpec("GAMI", create_gami_collection, create_gami_item),
         ProductSpec("JRC_GFC2020", create_jrc_gfc_collection, create_jrc_gfc_item),
-        ProductSpec("ROBINSON_CR", create_robinson_cr_collection, create_robinson_cr_item),
-        ProductSpec("FORESTPATHS_GENUS", create_forestpaths_genus_collection, create_forestpaths_genus_item),
+        ProductSpec(
+            "ROBINSON_CR", create_robinson_cr_collection, create_robinson_cr_item
+        ),
+        ProductSpec(
+            "FORESTPATHS_GENUS",
+            create_forestpaths_genus_collection,
+            create_forestpaths_genus_item,
+        ),
         ProductSpec("HANSEN_GFC", create_hansen_gfc_collection, create_hansen_gfc_item),
-        ProductSpec("LIU_BIOMASS", create_liu_biomass_collection, create_liu_biomass_item),
-        ProductSpec("RADD_EUROPE", create_radd_europe_collection, create_radd_europe_item),
+        ProductSpec(
+            "LIU_BIOMASS", create_liu_biomass_collection, create_liu_biomass_item
+        ),
+        ProductSpec(
+            "RADD_EUROPE", create_radd_europe_collection, create_radd_europe_item
+        ),
     )
 
 
@@ -181,10 +214,14 @@ def _build_base_tree(
         product_ids = list(meta["products"])  # type: ignore[assignment]
         for prod_id in product_ids:
             if prod_id not in specs_by_id:
-                raise KeyError(f"Theme '{theme_id}' references unknown product_id '{prod_id}'")
+                raise KeyError(
+                    f"Theme '{theme_id}' references unknown product_id '{prod_id}'"
+                )
 
             if prod_id in assigned:
-                raise ValueError(f"Product '{prod_id}' is listed in multiple themes; choose one parent only.")
+                raise ValueError(
+                    f"Product '{prod_id}' is listed in multiple themes; choose one parent only."
+                )
             assigned.add(prod_id)
 
             spec = specs_by_id[prod_id]
@@ -226,7 +263,9 @@ def _write_internal_with_package_writers(root: pystac.Catalog) -> None:
     Works for themed catalogs (nested Catalog -> Collection -> Item).
     """
     if root.self_href is None:
-        raise ValueError("Catalog has no self_href; call normalize_hrefs() before writing.")
+        raise ValueError(
+            "Catalog has no self_href; call normalize_hrefs() before writing."
+        )
 
     write_json(root.self_href, root.to_dict())
 
@@ -261,11 +300,15 @@ def _apply_root_metadata(
         catalog.extra_fields["keywords"] = keywords
 
     if about_url:
-        catalog.add_link(pystac.Link(rel="about", target=about_url, title="Source code"))
+        catalog.add_link(
+            pystac.Link(rel="about", target=about_url, title="Source code")
+        )
 
     if documentation_url:
         catalog.add_link(
-            pystac.Link(rel="documentation", target=documentation_url, title="Documentation")
+            pystac.Link(
+                rel="documentation", target=documentation_url, title="Documentation"
+            )
         )
 
     if stac_browser is not None:
@@ -282,6 +325,7 @@ def _ensure_absolute_root_self_links(pub_dict: dict, self_href: str) -> dict:
         if link.get("rel") in {"self", "root"}:
             link["href"] = self_href
     return pub_dict
+
 
 def _write_browser_variant(
     base_versions: Mapping[str, List[str]],
@@ -317,8 +361,12 @@ def _write_browser_variant(
     pystac.Catalog
         The published (https-normalized) root Catalog object.
     """
-    pub_root, _ = _build_base_tree(base_versions, catalog_id=catalog_id, description=description)
-    dst_root, _ = _build_base_tree(base_versions, catalog_id=catalog_id, description=description)
+    pub_root, _ = _build_base_tree(
+        base_versions, catalog_id=catalog_id, description=description
+    )
+    dst_root, _ = _build_base_tree(
+        base_versions, catalog_id=catalog_id, description=description
+    )
 
     # Apply the same human metadata to both trees BEFORE normalization/serialization
     _apply_root_metadata(
@@ -363,7 +411,9 @@ def _write_browser_variant(
         cats: list[pystac.Catalog] = []
         for child in node.get_children():
             # Collections are Catalog subclasses — exclude them here
-            if isinstance(child, pystac.Catalog) and not isinstance(child, pystac.Collection):
+            if isinstance(child, pystac.Catalog) and not isinstance(
+                child, pystac.Collection
+            ):
                 cats.append(child)
                 cats.extend(_iter_catalog_nodes(child))
         return cats
@@ -461,10 +511,9 @@ def build_root_catalog(
     browser_write_base: Optional[str] = None,
     # Root metadata
     catalog_id: str = "EOForestSTAC",
-    description :str =
-        "A thematic atlas of forest Earth observation datasets, bringing together "
-        "global and regional products on biomass, carbon cycling, disturbance, "
-        "canopy structure, and forest demography to support integrated ecosystem analysis.",
+    description: str = "A thematic atlas of forest Earth observation datasets, bringing together "
+    "global and regional products on biomass, carbon cycling, disturbance, "
+    "canopy structure, and forest demography to support integrated ecosystem analysis.",
     title: str = "EOForestSTAC – EO Forest STAC Catalog",
     providers: Optional[list[dict]] = None,
     license_: str = "various",
@@ -531,7 +580,9 @@ def build_root_catalog(
         )
     if documentation_url:
         internal_root.add_link(
-            pystac.Link(rel="documentation", target=documentation_url, title="Documentation")
+            pystac.Link(
+                rel="documentation", target=documentation_url, title="Documentation"
+            )
         )
 
     # stac-browser optional hints
@@ -566,11 +617,11 @@ def build_root_catalog(
             description=description,
             # (Optional) forward the same “human” fields if your _write_browser_variant
             # rebuilds a fresh tree. If it doesn’t accept these yet, ignore this.
-            title=title,              # type: ignore[arg-type]
-            providers=providers,      # type: ignore[arg-type]
-            license_=license_,        # type: ignore[arg-type]
-            keywords=keywords,        # type: ignore[arg-type]
-            about_url=about_url,      # type: ignore[arg-type]
+            title=title,  # type: ignore[arg-type]
+            providers=providers,  # type: ignore[arg-type]
+            license_=license_,  # type: ignore[arg-type]
+            keywords=keywords,  # type: ignore[arg-type]
+            about_url=about_url,  # type: ignore[arg-type]
             documentation_url=documentation_url,  # type: ignore[arg-type]
         )
 
@@ -625,10 +676,10 @@ def build_browser_catalog(
         write_base=write_base,
         catalog_id=catalog_id,
         description=description,
-        title=title,                    # type: ignore[arg-type]
-        providers=providers,            # type: ignore[arg-type]
-        license_=license_,              # type: ignore[arg-type]
-        keywords=keywords,              # type: ignore[arg-type]
-        about_url=about_url,            # type: ignore[arg-type]
+        title=title,  # type: ignore[arg-type]
+        providers=providers,  # type: ignore[arg-type]
+        license_=license_,  # type: ignore[arg-type]
+        keywords=keywords,  # type: ignore[arg-type]
+        about_url=about_url,  # type: ignore[arg-type]
         documentation_url=documentation_url,  # type: ignore[arg-type]
     )

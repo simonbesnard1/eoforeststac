@@ -69,14 +69,12 @@ class JRCGFC2020Writer(BaseZarrWriter):
             for old, new in rename_dims.items():
                 if old in ds.coords:
                     ds = ds.rename({old: new})
-        
+
         # --------------------------------------------------
         # Add reference time coordinate (single epoch)
         # --------------------------------------------------
         if "time" not in ds.coords:
-            ds = ds.assign_coords(
-                time=np.datetime64("2020-01-01")
-            )
+            ds = ds.assign_coords(time=np.datetime64("2020-01-01"))
 
         # --- Chunking (after renaming) ---
         if chunks is not None:
@@ -92,15 +90,17 @@ class JRCGFC2020Writer(BaseZarrWriter):
         ds = ds.astype("uint8")
 
         # --- Variable metadata ---
-        ds["forest_cover"].attrs.update({
-            "long_name": "Global Forest Cover",
-            "description": "Categorical forest cover classification for reference year 2020",
-            "grid_mapping": "spatial_ref",
-            "_FillValue": fill_value,
-            "valid_min": 0,
-            "valid_max": 2,
-            "source": "JRC Global Forest Cover 2020",
-        })
+        ds["forest_cover"].attrs.update(
+            {
+                "long_name": "Global Forest Cover",
+                "description": "Categorical forest cover classification for reference year 2020",
+                "grid_mapping": "spatial_ref",
+                "_FillValue": fill_value,
+                "valid_min": 0,
+                "valid_max": 2,
+                "source": "JRC Global Forest Cover 2020",
+            }
+        )
 
         # --- Global metadata ---
         meta = {
@@ -161,14 +161,11 @@ class JRCGFC2020Writer(BaseZarrWriter):
 
         encoding = {
             var: {
-                "chunks": (
-                    chunks["latitude"],
-                    chunks["longitude"]
-                ),
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
             for var in ds.data_vars
         }
-        
+
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

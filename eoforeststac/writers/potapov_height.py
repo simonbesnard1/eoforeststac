@@ -29,6 +29,7 @@ class PotapovHeightWriter(BaseZarrWriter):
     Output:
       single Zarr with variable 'canopy_height' and dimension (time, latitude, longitude)
     """
+
     # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
@@ -38,8 +39,8 @@ class PotapovHeightWriter(BaseZarrWriter):
         """
         da = rioxarray.open_rasterio(
             vrt_path,
-            masked=True,          # nodata -> NaN where possible
-            chunks="auto",        # lazy dask chunks
+            masked=True,  # nodata -> NaN where possible
+            chunks="auto",  # lazy dask chunks
             cache=False,
         )
 
@@ -59,7 +60,7 @@ class PotapovHeightWriter(BaseZarrWriter):
         self,
         vrt_files: Dict[int, str],
         crs: str = "EPSG:4326",
-        chunks: Optional[Dict[str, int]] = None
+        chunks: Optional[Dict[str, int]] = None,
     ) -> xr.Dataset:
         """
         Load and stack VRTs across years into a Dataset with time dimension.
@@ -71,7 +72,9 @@ class PotapovHeightWriter(BaseZarrWriter):
 
         # Load first as reference grid
         ref = self.load_dataset(vrt_files[years[0]])
-        ref = self.set_crs(ref.to_dataset(name='canopy_height'), crs=crs)['canopy_height']
+        ref = self.set_crs(ref.to_dataset(name="canopy_height"), crs=crs)[
+            "canopy_height"
+        ]
 
         arrays: List[xr.DataArray] = []
         for y in years:
@@ -116,24 +119,30 @@ class PotapovHeightWriter(BaseZarrWriter):
 
         # Clamp physically impossible negatives (optional)
         if clamp_min is not None:
-            ds["canopy_height"] = ds["canopy_height"].where(ds["canopy_height"] >= clamp_min)
+            ds["canopy_height"] = ds["canopy_height"].where(
+                ds["canopy_height"] >= clamp_min
+            )
 
         # Apply fill value (turn NaN -> fill_value) and dtype
         ds = self.apply_fillvalue(ds, fill_value=fill_value)
         ds["canopy_height"] = ds["canopy_height"].astype(dtype)
 
         # Variable attrs (CF-ish)
-        ds["canopy_height"].attrs.update({
-            "long_name": "Canopy height",
-            "description": "Canopy top height for discrete reference years (stacked from annual/epoch VRTs).",
-            "units": "m",
-            "grid_mapping": "spatial_ref",
-            "_FillValue": fill_value,
-            "valid_min": 0.0 if clamp_min is not None else None,
-            "source": "Potapov et al., University of Maryland / GLAD",
-        })
+        ds["canopy_height"].attrs.update(
+            {
+                "long_name": "Canopy height",
+                "description": "Canopy top height for discrete reference years (stacked from annual/epoch VRTs).",
+                "units": "m",
+                "grid_mapping": "spatial_ref",
+                "_FillValue": fill_value,
+                "valid_min": 0.0 if clamp_min is not None else None,
+                "source": "Potapov et al., University of Maryland / GLAD",
+            }
+        )
         # Remove None attrs to keep metadata clean
-        ds["canopy_height"].attrs = {k: v for k, v in ds["canopy_height"].attrs.items() if v is not None}
+        ds["canopy_height"].attrs = {
+            k: v for k, v in ds["canopy_height"].attrs.items() if v is not None
+        }
 
         # Global metadata
         meta = {
@@ -161,7 +170,7 @@ class PotapovHeightWriter(BaseZarrWriter):
         version: str = "1.0",
         fill_value: Union[int, float] = -9999,
         crs: str = "EPSG:4326",
-        chunks: Optional[Dict[str, int]] = None
+        chunks: Optional[Dict[str, int]] = None,
     ) -> str:
         """
         Build a time stack from VRTs and write to Zarr.
@@ -186,11 +195,7 @@ class PotapovHeightWriter(BaseZarrWriter):
                 raise FileNotFoundError(f"Missing VRT files for years: {missing}")
 
         print("Loading and stacking VRTs…")
-        ds = self.build_time_stack(
-            vrt_files=vrt_files,
-            crs=crs,
-            chunks=chunks
-        )
+        ds = self.build_time_stack(vrt_files=vrt_files, crs=crs, chunks=chunks)
 
         print("Processing dataset…")
         ds = self.process_dataset(
@@ -202,16 +207,16 @@ class PotapovHeightWriter(BaseZarrWriter):
 
         # Encoding: derive from actual dask chunks
         encoding = {
-               var: {
-                   "chunks": (
-                       chunks["time"],
-                       chunks["latitude"],
-                       chunks["longitude"],
-                   ),
-                   "compressor": DEFAULT_COMPRESSOR,
-               }
-               for var in ds.data_vars
-           }
+            var: {
+                "chunks": (
+                    chunks["time"],
+                    chunks["latitude"],
+                    chunks["longitude"],
+                ),
+                "compressor": DEFAULT_COMPRESSOR,
+            }
+            for var in ds.data_vars
+        }
 
         print("Writing Zarr…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

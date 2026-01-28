@@ -17,7 +17,6 @@ RADD_EUROPE_CFG = {
         "the mask domain are set to -9999. Binary disturbance occurrence is provided on a monthly time axis and uses -9999 outside"
         "the valid domain. Data are provided in the ETRS89 / LAEA Europe projection (EPSG:3035)."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
@@ -26,29 +25,28 @@ RADD_EUROPE_CFG = {
     "bbox": [-25.0, 34.0, 45.0, 72.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-25.0, 34.0],
-            [-25.0, 72.0],
-            [ 45.0, 72.0],
-            [ 45.0, 34.0],
-            [-25.0, 34.0],
-        ]],
+        "coordinates": [
+            [
+                [-25.0, 34.0],
+                [-25.0, 72.0],
+                [45.0, 72.0],
+                [45.0, 34.0],
+                [-25.0, 34.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/RADD_EUROPE/collection.json",
     "base_path": f"{BASE_S3_URL}/RADD_EUROPE",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
     # If you have an explicit license/terms page, update this.
     "license": "proprietary",
-
     "providers": [
         {
             "name": "Wageningen University & Research (WUR)",
@@ -60,19 +58,17 @@ RADD_EUROPE_CFG = {
             "roles": ["processor", "host"],
             "url": "https://www.gfz.de",
         },
-        
         {
-       "name": "FORWARDS - The ForestWard Observatory to Secure Resilience of European Forests",
-           "roles": ["funding"],
-           "url": "https://cordis.europa.eu/project/id/101084481",
-       },
-       {
-           "name": "OEMC - Open-Earth-Monitor Cyberinfrastructure",
-           "roles": ["funding"],
-           "url": "https://cordis.europa.eu/project/id/101059548",
-       },
-   ],
-
+            "name": "FORWARDS - The ForestWard Observatory to Secure Resilience of European Forests",
+            "roles": ["funding"],
+            "url": "https://cordis.europa.eu/project/id/101084481",
+        },
+        {
+            "name": "OEMC - Open-Earth-Monitor Cyberinfrastructure",
+            "roles": ["funding"],
+            "url": "https://cordis.europa.eu/project/id/101059548",
+        },
+    ],
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -88,9 +84,7 @@ RADD_EUROPE_CFG = {
         "zarr",
         "stac",
     ],
-
     "themes": ["forest disturbance", "risk", "forest structure"],
-
     # ------------------------------------------------------------------
     # Links (what makes STAC Browser feel curated)
     # ------------------------------------------------------------------
@@ -98,8 +92,8 @@ RADD_EUROPE_CFG = {
         {
             "rel": "about",
             "href": "https://www.wur.nl/en/research-results/chair-groups/environmental-sciences/"
-                    "laboratory-of-geo-information-science-and-remote-sensing/research/"
-                    "sensing-measuring/radd-forest-disturbance-alert.htm",
+            "laboratory-of-geo-information-science-and-remote-sensing/research/"
+            "sensing-measuring/radd-forest-disturbance-alert.htm",
             "type": "text/html",
             "title": "RADD Forest Disturbance Alert (method overview)",
         },
@@ -117,7 +111,6 @@ RADD_EUROPE_CFG = {
         #     "title": "Terms of use / licensing",
         # },
     ],
-
     # ------------------------------------------------------------------
     # Extensions
     # ------------------------------------------------------------------
@@ -128,7 +121,6 @@ RADD_EUROPE_CFG = {
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries
     # ------------------------------------------------------------------
@@ -139,7 +131,6 @@ RADD_EUROPE_CFG = {
             "alert_yydoy",
             "forest_mask",
         ],
-    
         "units_by_variable": {
             "disturbance_occurence": "binary",
             "alert_yydoy": "YYddd",
@@ -161,12 +152,10 @@ RADD_EUROPE_CFG = {
                 "within the valid domain."
             ),
         },
-
         "eo:gsd": [10.0],
         "proj:epsg": [3035],
         "data_format": ["zarr"],
     },
-
     # ------------------------------------------------------------------
     # Item assets (how a client should interpret the asset)
     # ------------------------------------------------------------------
@@ -188,7 +177,6 @@ RADD_EUROPE_CFG = {
         #     "roles": ["thumbnail"],
         # },
     },
-
     # ------------------------------------------------------------------
     # Asset template
     # ------------------------------------------------------------------
@@ -206,4 +194,3 @@ RADD_EUROPE_CFG = {
         ),
     },
 }
-

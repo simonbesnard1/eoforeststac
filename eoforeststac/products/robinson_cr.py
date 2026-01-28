@@ -18,31 +18,30 @@ ROBINSON_CR_CFG = {
         "described in the record README.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / nominal temporal extent
     # ------------------------------------------------------------------
     "bbox": [-180.0, -90.0, 108.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-180.0, -90.0],
-            [-180.0,  90.0],
-            [ 108.0,  90.0],
-            [ 108.0, -90.0],
-            [-180.0, -90.0],
-        ]],
+        "coordinates": [
+            [
+                [-180.0, -90.0],
+                [-180.0, 90.0],
+                [108.0, 90.0],
+                [108.0, -90.0],
+                [-180.0, -90.0],
+            ]
+        ],
     },
     # Static model output; you use publication year as nominal envelope
     "start_datetime": datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2025, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/ROBINSON_CR/collection.json",
     "base_path": f"{BASE_S3_URL}/ROBINSON_CR",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -69,7 +68,6 @@ ROBINSON_CR_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -86,12 +84,10 @@ ROBINSON_CR_CFG = {
         "stac",
     ],
     "themes": ["carbon", "forest dynamics", "model parameters"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-        
         # Canonical links (paper + data + explorer)
         {
             "rel": "cite-as",
@@ -118,7 +114,6 @@ ROBINSON_CR_CFG = {
             "title": "Web application: Natural forest regeneration carbon accumulation explorer",
         },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -130,21 +125,23 @@ ROBINSON_CR_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["static"],
-
         # spatial metadata grounded in README
         "proj:epsg": [4326],
         "eo:gsd": [1000.0],
-
         "variables": [
-            "cr_a", "cr_b", "cr_k",
-            "cr_a_error", "cr_b_error", "cr_k_error",
-            "max_rate", "age_at_max_rate",
+            "cr_a",
+            "cr_b",
+            "cr_k",
+            "cr_a_error",
+            "cr_b_error",
+            "cr_k_error",
+            "max_rate",
+            "age_at_max_rate",
             "max_removal_potential_benefit_25",
         ],
         # keep a simple global units list AND keep your detailed mapping
@@ -159,14 +156,11 @@ ROBINSON_CR_CFG = {
             "age_at_max_rate": "years",
             "max_removal_potential_benefit_25": "%",
         },
-
         "data_format": ["zarr"],
-
         "notes": [
             "Parameter names and units follow the Zenodo README; see record for full definitions and the growth equation."
         ],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -181,7 +175,6 @@ ROBINSON_CR_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------
@@ -198,7 +191,6 @@ ROBINSON_CR_CFG = {
             ),
         ),
     },
-
     # ------------------------------------------------------------------
     # Version notes (optional)
     # ------------------------------------------------------------------

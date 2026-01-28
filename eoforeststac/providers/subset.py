@@ -33,6 +33,7 @@ except ImportError:  # optional dependency
 # CRS utilities
 # ---------------------------------------------------------------------
 
+
 def infer_dataset_crs(ds: xr.Dataset) -> str:
     """
     Infer CRS from an xarray Dataset.
@@ -82,6 +83,7 @@ def infer_dataset_crs(ds: xr.Dataset) -> str:
 # Coordinate utilities
 # ---------------------------------------------------------------------
 
+
 def _get_xy_names(
     ds: xr.Dataset,
     lon: Optional[str] = None,
@@ -102,8 +104,7 @@ def _get_xy_names(
             return cand_lon, cand_lat
 
     raise ValueError(
-        "Could not infer horizontal coordinates. "
-        "Specify lon= and lat= explicitly."
+        "Could not infer horizontal coordinates. " "Specify lon= and lat= explicitly."
     )
 
 
@@ -120,6 +121,7 @@ def _latitude_slice(lat_coord, miny, maxy):
 # Bounding-box subsetting
 # ---------------------------------------------------------------------
 
+
 def subset_bbox(
     ds: xr.Dataset,
     bbox: Tuple[float, float, float, float],
@@ -135,15 +137,18 @@ def subset_bbox(
 
     lat_slice = _latitude_slice(ds[lat_name], miny, maxy)
 
-    return ds.sel({
-        lon_name: slice(minx, maxx),
-        lat_name: lat_slice,
-    })
+    return ds.sel(
+        {
+            lon_name: slice(minx, maxx),
+            lat_name: lat_slice,
+        }
+    )
 
 
 # ---------------------------------------------------------------------
 # Geometry-based subsetting
 # ---------------------------------------------------------------------
+
 
 def subset_geometry(
     ds: xr.Dataset,
@@ -175,11 +180,7 @@ def subset_geometry(
     ds_crs = infer_dataset_crs(ds)
 
     # Reproject geometry (INPUT IS ALWAYS EPSG:4326)
-    geom_proj = (
-        gpd.GeoSeries([geom], crs="EPSG:4326")
-        .to_crs(ds_crs)
-        .iloc[0]
-    )
+    geom_proj = gpd.GeoSeries([geom], crs="EPSG:4326").to_crs(ds_crs).iloc[0]
 
     # Bounding-box subset (cheap, lazy)
     ds = subset_bbox(ds, geom_proj.bounds, lon=lon, lat=lat)
@@ -226,6 +227,7 @@ def subset_time(
 # ---------------------------------------------------------------------
 # Convenience orchestration
 # ---------------------------------------------------------------------
+
 
 def subset(
     ds: xr.Dataset,

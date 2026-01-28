@@ -41,7 +41,7 @@ class BaseZarrWriter:
             fs_kwargs["secret"] = secret
 
         self.s3 = s3fs.S3FileSystem(**fs_kwargs)
-        
+
     # ---------- core helpers ----------
 
     def make_store(self, zarr_path: str):

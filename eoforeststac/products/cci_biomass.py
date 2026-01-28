@@ -14,35 +14,33 @@ CCI_BIOMASS_CFG = {
         "large-scale assessments of biomass distribution and change.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-180.0, -90.0],
-            [-180.0,  90.0],
-            [ 180.0,  90.0],
-            [ 180.0, -90.0],
-            [-180.0, -90.0],
-        ]],
+        "coordinates": [
+            [
+                [-180.0, -90.0],
+                [-180.0, 90.0],
+                [180.0, 90.0],
+                [180.0, -90.0],
+                [-180.0, -90.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2007, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/CCI_BIOMASS/collection.json",
     "base_path": f"{BASE_S3_URL}/CCI_BIOMASS",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
     "license": "Open-access",
-
     "providers": [
         {
             "name": "ESA Climate Change Initiative (CCI)",
@@ -55,7 +53,6 @@ CCI_BIOMASS_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -71,15 +68,12 @@ CCI_BIOMASS_CFG = {
         "zarr",
         "stac",
     ],
-
     # Optional but often useful for “atlas” grouping (your own convention)
     "themes": ["carbon", "biomass", "forest structure"],
-
     # ------------------------------------------------------------------
     # Links (what makes STAC Browser feel curated)
     # ------------------------------------------------------------------
     "links": [
-        
         # Official documentation
         {
             "rel": "about",
@@ -87,7 +81,6 @@ CCI_BIOMASS_CFG = {
             "type": "text/html",
             "title": "ESA CCI Biomass project page",
         },
-
         # If you have a canonical terms/licensing page, link it explicitly
         {
             "rel": "license",
@@ -95,15 +88,13 @@ CCI_BIOMASS_CFG = {
             "type": "text/html",
             "title": "ESA CCI terms of use / licensing",
         },
-
         {
-             "rel": "cite-as",
-             "href": "https://doi.org/10.5285/AF60720C1E404A9E9D2C145D2B2EAD4E",
-             "type": "text/html",
-             "title": "Dataset DOI",
-         },
+            "rel": "cite-as",
+            "href": "https://doi.org/10.5285/AF60720C1E404A9E9D2C145D2B2EAD4E",
+            "type": "text/html",
+            "title": "Dataset DOI",
+        },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -112,41 +103,37 @@ CCI_BIOMASS_CFG = {
         "https://stac-extensions.github.io/proj/v1.1.0/schema.json",
         "https://stac-extensions.github.io/file/v2.1.0/schema.json",
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json", # bands, nodata, etc.
+        "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",  # bands, nodata, etc.
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["annual"],
         "variables": ["aboveground_biomass", "aboveground_biomass_std"],
-        
-        "units_by_variable": {"aboveground_biomass": "Mg ha-1",
-                              "aboveground_biomass_std": "Mg ha-1"},
-        
+        "units_by_variable": {
+            "aboveground_biomass": "Mg ha-1",
+            "aboveground_biomass_std": "Mg ha-1",
+        },
         "eo:gsd": [100.0],
         "proj:epsg": [4326],
-
         "product_family": ["ESA CCI Biomass"],
         "data_format": ["zarr"],
     },
-    
     "item_assets": {
-      "zarr": {
-        "title": "Zarr dataset",
-        "description": "Annual aboveground biomass (AGB) maps (Mg ha-1).",
-        "roles": ["data"],
-        "type": "application/vnd.zarr"
-      },
-      # "thumbnail": {
-      #       "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
-      #       "type": "image/png",
-      #       "title": "AGB quicklook",
-      #       "roles": ["thumbnail"],
-      #   }
+        "zarr": {
+            "title": "Zarr dataset",
+            "description": "Annual aboveground biomass (AGB) maps (Mg ha-1).",
+            "roles": ["data"],
+            "type": "application/vnd.zarr",
+        },
+        # "thumbnail": {
+        #       "href": "https://raw.githubusercontent.com/simonbesnard1/eoforeststac/main/doc/_static/thumbnails/cci_biomass.png",
+        #       "type": "image/png",
+        #       "title": "AGB quicklook",
+        #       "roles": ["thumbnail"],
+        #   }
     },
-   
     # ------------------------------------------------------------------
     # Asset template (add roles + description as you requested)
     # ------------------------------------------------------------------
@@ -163,4 +150,3 @@ CCI_BIOMASS_CFG = {
         ),
     },
 }
-

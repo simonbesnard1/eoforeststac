@@ -143,15 +143,17 @@ class RobinsonCRWriter(BaseZarrWriter):
         # --- Variable metadata ---
         for var, meta in self.VARIABLES.items():
             if var in ds:
-                ds[var].attrs.update({
-                    **meta,
-                    "grid_mapping": "spatial_ref",
-                    "_FillValue": fill_value,
-                    "source": (
-                        "Robinson et al., Protect young secondary forests "
-                        "for optimum carbon removal"
-                    ),
-                })
+                ds[var].attrs.update(
+                    {
+                        **meta,
+                        "grid_mapping": "spatial_ref",
+                        "_FillValue": fill_value,
+                        "source": (
+                            "Robinson et al., Protect young secondary forests "
+                            "for optimum carbon removal"
+                        ),
+                    }
+                )
 
         # --- Global metadata ---
         global_meta = {
@@ -222,6 +224,6 @@ class RobinsonCRWriter(BaseZarrWriter):
             }
             for var in ds.data_vars
         }
-        
+
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

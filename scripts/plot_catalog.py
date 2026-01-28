@@ -9,27 +9,28 @@ import matplotlib as mpl
 
 params = {
     # font
-    'font.family': 'serif',
+    "font.family": "serif",
     # 'font.serif': 'Times', #'cmr10',
-    'font.size': 16,
+    "font.size": 16,
     # axes
-    'axes.titlesize': 12,
-    'axes.labelsize': 12,
-    'axes.linewidth': 0.5,
+    "axes.titlesize": 12,
+    "axes.labelsize": 12,
+    "axes.linewidth": 0.5,
     # ticks
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'xtick.major.width': 0.3,
-    'ytick.major.width': 0.3,
-    'xtick.minor.width': 0.3,
-    'ytick.minor.width': 0.3,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "xtick.major.width": 0.3,
+    "ytick.major.width": 0.3,
+    "xtick.minor.width": 0.3,
+    "ytick.minor.width": 0.3,
     # legend
-    'legend.fontsize': 14,
+    "legend.fontsize": 14,
     # tex
-    'text.usetex': True,
+    "text.usetex": True,
 }
 
 mpl.rcParams.update(params)
+
 
 def pick_main_variable(ds):
     """
@@ -42,7 +43,6 @@ def pick_main_variable(ds):
                 return name
     # fallback
     return list(ds.data_vars)[0]
-
 
 
 def plot_all_collections_for_roi(
@@ -73,9 +73,7 @@ def plot_all_collections_for_roi(
             continue
 
         # pick latest version (lexicographic works for your catalog)
-        versions = sorted(
-            i.id.replace(f"{col_id}_v", "") for i in items
-        )
+        versions = sorted(i.id.replace(f"{col_id}_v", "") for i in items)
         version = versions[-1]
 
         print(f"Opening {col_id} v{version}")
@@ -124,7 +122,7 @@ def plot_all_collections_for_roi(
         if "members" in da.dims:
             da = da.median("members")
             time_note += " (members-median)"
-        
+
         # reduce time if needed
         if "time" in da.dims:
             if da.sizes["time"] == 1:
@@ -144,10 +142,10 @@ def plot_all_collections_for_roi(
         ax.set_xlabel("")
         ax.set_ylabel("")
 
-    for ax in axes[len(datasets):]:
+    for ax in axes[len(datasets) :]:
         ax.axis("off")
 
-    plt.savefig('/home/simon/Documents/fig1_v3.png', dpi=300)
+    plt.savefig("/home/simon/Documents/fig1_v3.png", dpi=300)
 
 
 provider = ZarrProvider(
@@ -166,4 +164,3 @@ plot_all_collections_for_roi(
     geom,
     time=("2000-01-01", "2022-12-31"),
 )
-

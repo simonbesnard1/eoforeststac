@@ -14,30 +14,29 @@ HANSEN_GFC_CFG = {
         "tree cover gain (2000–2012), and a data mask.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-180.0, -90.0],
-            [-180.0,  90.0],
-            [ 180.0,  90.0],
-            [ 180.0, -90.0],
-            [-180.0, -90.0],
-        ]],
+        "coordinates": [
+            [
+                [-180.0, -90.0],
+                [-180.0, 90.0],
+                [180.0, 90.0],
+                [180.0, -90.0],
+                [-180.0, -90.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/HANSEN_GFC/collection.json",
     "base_path": f"{BASE_S3_URL}/HANSEN_GFC",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -60,7 +59,6 @@ HANSEN_GFC_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -78,12 +76,10 @@ HANSEN_GFC_CFG = {
         "stac",
     ],
     "themes": ["disturbance", "forest structure", "land cover change"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-        
         # Official documentation / access points
         {
             "rel": "about",
@@ -103,7 +99,6 @@ HANSEN_GFC_CFG = {
             "type": "text/html",
             "title": "Web visualization (Global Forest Change app)",
         },
-
         # Canonical citation
         {
             "rel": "cite-as",
@@ -112,7 +107,6 @@ HANSEN_GFC_CFG = {
             "title": "Hansen et al., Science (2013) – primary citation",
         },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -124,7 +118,6 @@ HANSEN_GFC_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
@@ -137,27 +130,22 @@ HANSEN_GFC_CFG = {
             "gain",
             "datamask",
         ],
-        
         # keep a simple global units list AND keep your detailed mapping
         "units_by_variable": {
             "treecover2000": "percent",
             "loss": "binary",
             "lossyear": "year",
             "gain": "binary",
-            "datamask": "binary"
+            "datamask": "binary",
         },
-        
         # Spatial metadata
-        "eo:gsd": [30.0],        # often reported ~30.92 m; keep 30 m as a clean atlas value
+        "eo:gsd": [30.0],  # often reported ~30.92 m; keep 30 m as a clean atlas value
         "proj:epsg": [4326],
-
         "data_format": ["zarr"],
-
         # Dataset-specific semantics
         "gain_period": ["2000–2012"],
         "loss_period": ["2001–2024"],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -169,7 +157,6 @@ HANSEN_GFC_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------
@@ -185,7 +172,6 @@ HANSEN_GFC_CFG = {
             ),
         ),
     },
-
     # ------------------------------------------------------------------
     # Version notes
     # ------------------------------------------------------------------

@@ -16,30 +16,29 @@ JRC_TMF_CFG = {
         "change collection.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-180.0, -30.0, 180.0, 30.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-180.0, -30.0],
-            [-180.0,  30.0],
-            [ 180.0,  30.0],
-            [ 180.0, -30.0],
-            [-180.0, -30.0],
-        ]],
+        "coordinates": [
+            [
+                [-180.0, -30.0],
+                [-180.0, 30.0],
+                [180.0, 30.0],
+                [180.0, -30.0],
+                [-180.0, -30.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(1990, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/JRC_TMF/collection.json",
     "base_path": f"{BASE_S3_URL}/JRC_TMF",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -61,7 +60,6 @@ JRC_TMF_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -80,12 +78,10 @@ JRC_TMF_CFG = {
         "stac",
     ],
     "themes": ["disturbance", "land cover change", "carbon"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-        
         # Official resources
         {
             "rel": "about",
@@ -111,7 +107,6 @@ JRC_TMF_CFG = {
             "type": "text/html",
             "title": "TMF Explorer (interactive viewer)",
         },
-
         # Canonical citation
         {
             "rel": "cite-as",
@@ -120,7 +115,6 @@ JRC_TMF_CFG = {
             "title": "Vancutsem et al., Science Advances (2021) – key paper",
         },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -131,37 +125,37 @@ JRC_TMF_CFG = {
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
-
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["annual"],
-
         # keep these conservative unless you want to enumerate actual band names
-        "variables": ["AnnualChange", "DeforestationYear", "DegradationYear", "TransitionMap_MainClasses", "TransitionMap_Subtypes", "UndisturbedDegradedForest"],
-        
-        "units_by_variable": {"AnnualChange": "categorical",
-                              "DeforestationYear": "year",
-                              "DegradationYear": "year",
-                              "TransitionMap_MainClasses": "categorical",
-                              "TransitionMap_Subtypes": "categorical",
-                              "UndisturbedDegradedForest": "binary",
-                              },
-        
+        "variables": [
+            "AnnualChange",
+            "DeforestationYear",
+            "DegradationYear",
+            "TransitionMap_MainClasses",
+            "TransitionMap_Subtypes",
+            "UndisturbedDegradedForest",
+        ],
+        "units_by_variable": {
+            "AnnualChange": "categorical",
+            "DeforestationYear": "year",
+            "DegradationYear": "year",
+            "TransitionMap_MainClasses": "categorical",
+            "TransitionMap_Subtypes": "categorical",
+            "UndisturbedDegradedForest": "binary",
+        },
         # spatial metadata
         "eo:gsd": [30.0],
         "proj:epsg": [4326],  # swap if your Zarr is stored in another CRS
-
         "data_format": ["zarr"],
-
         "layers_note": [
             "TMF dataset contains multiple layers including annual change and transition products (see user guide)."
         ],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -176,7 +170,6 @@ JRC_TMF_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------
@@ -193,7 +186,6 @@ JRC_TMF_CFG = {
             ),
         ),
     },
-
     # ------------------------------------------------------------------
     # Version notes (optional)
     # ------------------------------------------------------------------

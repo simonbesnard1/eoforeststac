@@ -15,30 +15,29 @@ JRC_GFC_CFG = {
         "on deforestation-free supply chains (EUDR) cutoff date context.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-180.0, -90.0],
-            [-180.0,  90.0],
-            [ 180.0,  90.0],
-            [ 180.0, -90.0],
-            [-180.0, -90.0],
-        ]],
+        "coordinates": [
+            [
+                [-180.0, -90.0],
+                [-180.0, 90.0],
+                [180.0, 90.0],
+                [180.0, -90.0],
+                [-180.0, -90.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/JRC_GFC2020/collection.json",
     "base_path": f"{BASE_S3_URL}/JRC_GFC2020",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -60,7 +59,6 @@ JRC_GFC_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -78,12 +76,10 @@ JRC_GFC_CFG = {
         "stac",
     ],
     "themes": ["land cover", "forest structure", "policy"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-       
         # Canonical resources
         {
             "rel": "about",
@@ -110,7 +106,6 @@ JRC_GFC_CFG = {
             "title": "EU Open Data Portal entry (GFC2020 v3 metadata)",
         },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -122,7 +117,6 @@ JRC_GFC_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
@@ -130,18 +124,16 @@ JRC_GFC_CFG = {
         "temporal_resolution": ["static"],
         "variables": ["forest"],
         "units": ["binary"],
-
         "eo:gsd": [10.0],
-        "proj:epsg": [4326],  # consistent with bbox/geometry (swap if your Zarr is in another CRS)
-
+        "proj:epsg": [
+            4326
+        ],  # consistent with bbox/geometry (swap if your Zarr is in another CRS)
         "data_format": ["zarr"],
-
         "classes": [
             {"value": 0, "name": "non-forest"},
             {"value": 1, "name": "forest"},
         ],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -153,7 +145,6 @@ JRC_GFC_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------
@@ -169,7 +160,6 @@ JRC_GFC_CFG = {
             ),
         ),
     },
-
     # ------------------------------------------------------------------
     # Version notes (optional)
     # ------------------------------------------------------------------
