@@ -28,13 +28,17 @@ class DiscoveryProvider(BaseProvider):
         """
         themes: Dict[str, str] = {}
         for child in self.catalog.get_children():
-            if isinstance(child, pystac.Catalog) and not isinstance(child, pystac.Collection):
+            if isinstance(child, pystac.Catalog) and not isinstance(
+                child, pystac.Collection
+            ):
                 themes[child.id] = child.title or child.id
         return themes
 
     def get_theme(self, theme_id: str) -> Optional[pystac.Catalog]:
         for child in self.catalog.get_children():
-            if isinstance(child, pystac.Catalog) and not isinstance(child, pystac.Collection):
+            if isinstance(child, pystac.Catalog) and not isinstance(
+                child, pystac.Collection
+            ):
                 if child.id == theme_id:
                     return child
         return None
@@ -115,7 +119,9 @@ class DiscoveryProvider(BaseProvider):
     # ------------------------------------------------------------
     # Versions (unchanged)
     # ------------------------------------------------------------
-    def list_versions(self, collection_id: str, asset_key: Optional[str] = None) -> List[str]:
+    def list_versions(
+        self, collection_id: str, asset_key: Optional[str] = None
+    ) -> List[str]:
         collection = self.get_collection(collection_id)
         if collection is None:
             raise KeyError(f"Collection '{collection_id}' not found.")
@@ -137,7 +143,7 @@ class DiscoveryProvider(BaseProvider):
     def _parse_version_from_item_id(item_id: str, collection_id: str) -> Optional[str]:
         prefix = f"{collection_id}_v"
         if item_id.startswith(prefix):
-            return item_id[len(prefix):]
+            return item_id[len(prefix) :]
         return None
 
     @staticmethod

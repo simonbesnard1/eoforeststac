@@ -60,14 +60,12 @@ from eoforeststac.core.config import (
 __all__ = [
     # version
     "__version__",
-
     # namespaces
     "catalog",
     "products",
     "providers",
     "writers",
     "core",
-
     # writers
     "BaseZarrWriter",
     "CCI_BiomassWriter",
@@ -76,12 +74,10 @@ __all__ = [
     "EFDAWriter",
     "JRCTMFWriter",
     "PotapovHeightWriter",
-
     # catalog builders
     "build_root_catalog",
     "create_collection",
     "create_item",
-
     # config
     "BASE_S3_URL",
     "S3_ENDPOINT_URL",

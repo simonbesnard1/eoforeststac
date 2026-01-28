@@ -14,32 +14,32 @@ class BaseProvider:
     ):
         self.catalog_url = catalog_url
         self.endpoint_url = endpoint_url
-        self.anon = anon        
+        self.anon = anon
         storage_options = {
             "anon": anon,
             "client_kwargs": {"endpoint_url": endpoint_url},
-        }        
+        }
         self.s3_fs = fsspec.filesystem("s3", **storage_options)
         self._register_stac_io()
         self.catalog = self._load_catalog()
 
     def _register_stac_io(self) -> None:
         """StacIO that can read both s3:// and https:// hrefs via fsspec."""
+
         class FsspecStacIO(pystac.StacIO):
             def read_text(self, href: str, *args, **kwargs) -> str:
                 with fsspec.open(href, "r") as f:
                     return f.read()
-    
+
             def write_text(self, href: str, txt: str, *args, **kwargs) -> None:
                 with fsspec.open(href, "w") as f:
                     f.write(txt)
-    
+
             def exists(self, href: str, *args, **kwargs) -> bool:
                 fs, path = fsspec.core.url_to_fs(href)
                 return fs.exists(path)
-    
-        pystac.StacIO.set_default(FsspecStacIO)
 
+        pystac.StacIO.set_default(FsspecStacIO)
 
     def _load_catalog(self) -> pystac.Catalog:
         # fsspec.open works for s3:// and https:// (if you ever switch)
@@ -48,9 +48,9 @@ class BaseProvider:
 
         cat = pystac.Catalog.from_dict(catalog_dict)
         cat.set_self_href(self.catalog_url)
-        
+
         return cat
-    
+
     # -----------------------------
     # STAC accessors
     # -----------------------------
@@ -64,7 +64,9 @@ class BaseProvider:
             raise KeyError(f"Collection '{collection_id}' not found.")
         item = collection.get_item(item_id)
         if item is None:
-            raise KeyError(f"Item '{item_id}' not found in collection '{collection_id}'.")
+            raise KeyError(
+                f"Item '{item_id}' not found in collection '{collection_id}'."
+            )
         return item
 
     # -----------------------------

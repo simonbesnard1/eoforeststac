@@ -15,30 +15,29 @@ FORESTPATHS_GENUS_CFG = {
         "The map distinguishes eight classes including Larix, Picea, Pinus, Fagus, and Quercus.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-35.0, 34.0, 45.0, 72.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-35.0, 34.0],
-            [-35.0, 72.0],
-            [ 45.0, 72.0],
-            [ 45.0, 34.0],
-            [-35.0, 34.0],
-        ]],
+        "coordinates": [
+            [
+                [-35.0, 34.0],
+                [-35.0, 72.0],
+                [45.0, 72.0],
+                [45.0, 34.0],
+                [-35.0, 34.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/FORESTPATHS_GENUS/collection.json",
     "base_path": f"{BASE_S3_URL}/FORESTPATHS_GENUS",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -61,7 +60,6 @@ FORESTPATHS_GENUS_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -79,12 +77,10 @@ FORESTPATHS_GENUS_CFG = {
         "stac",
     ],
     "themes": ["forest structure", "species composition", "classification"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-    
         # Canonical citation / landing pages
         {
             "rel": "cite-as",
@@ -105,7 +101,6 @@ FORESTPATHS_GENUS_CFG = {
             "title": "Release announcement (ForestPaths)",
         },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -117,23 +112,18 @@ FORESTPATHS_GENUS_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["static"],
-
         # core data semantics
         "variables": ["genus"],
         "units": ["categorical"],
-
         # spatial metadata
         "eo:gsd": [10.0],
         "proj:epsg": [3035],
-
         "data_format": ["zarr"],
-
         # classification legend (0..7)
         "classes": [
             {"value": 0, "name": "Larix"},
@@ -146,7 +136,6 @@ FORESTPATHS_GENUS_CFG = {
             {"value": 7, "name": "No trees"},
         ],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -158,7 +147,6 @@ FORESTPATHS_GENUS_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------

@@ -19,25 +19,21 @@ class SaatchiBiomassWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
-    def load_dataset(
-        self,
-        tif_path: str
-    ) -> xr.Dataset:
+    def load_dataset(self, tif_path: str) -> xr.Dataset:
         """
         Load GeoTIFF lazily and return a Dataset with variable name `agb`.
         """
-    
+
         da = (
             rioxarray.open_rasterio(
                 tif_path,
-                masked=True,       
+                masked=True,
             )
             .squeeze(drop=True)
             .rename("agb")
         )
-    
-        return da.to_dataset()
 
+        return da.to_dataset()
 
     # ------------------------------------------------------------------
     # Process
@@ -54,10 +50,10 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         Apply fill values, CRS, dimension harmonization, chunking,
         and metadata harmonization.
         """
-    
+
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
-    
+
         # ------------------------------------------------------------------
         # Rename raster dimensions to geodetic ones
         # ------------------------------------------------------------------
@@ -66,50 +62,47 @@ class SaatchiBiomassWriter(BaseZarrWriter):
             rename_dims["x"] = "longitude"
         if "y" in ds.dims:
             rename_dims["y"] = "latitude"
-    
+
         if rename_dims:
             ds = ds.rename(rename_dims)
-    
+
             # also rename coordinates explicitly if present
             for old, new in rename_dims.items():
                 if old in ds.coords:
                     ds = ds.rename({old: new})
-   
+
         # --------------------------------------------------
         # Add reference time coordinate (single epoch)
         # --------------------------------------------------
         if "time" not in ds.coords:
-            ds = ds.assign_coords(
-                time=np.datetime64("2020-01-01")
-            )
+            ds = ds.assign_coords(time=np.datetime64("2020-01-01"))
 
         # --- Chunking (after renaming!) ---
         if chunks is not None:
             ds = ds.chunk(chunks)
-            
+
         # --- Zero → NaN → fill_value → dtype (SAFE) ---
         for var in ds.data_vars:
-            ds[var] = (
-                ds[var]
-                .where(ds[var] != 0)
-            )
-            
+            ds[var] = ds[var].where(ds[var] != 0)
+
         # --- Fill values + dtype ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
-    
+
         # --- Variable metadata ---
         if "agb" in ds:
-            ds["agb"].attrs.update({
-                "long_name": "Aboveground biomass (AGB), Saatchi et al. (2020)",
-                "units": "Mg/ha",
-                "grid_mapping": "spatial_ref",
-                "valid_min": 0,
-                "valid_max": 1000,
-                "_FillValue": fill_value,
-                "scale_factor": 0.1,
-                "add_offset": 0.0,
-                "source": "Saatchi et al. 2020 Harmonized Global Biomass dataset",
-            })
+            ds["agb"].attrs.update(
+                {
+                    "long_name": "Aboveground biomass (AGB), Saatchi et al. (2020)",
+                    "units": "Mg/ha",
+                    "grid_mapping": "spatial_ref",
+                    "valid_min": 0,
+                    "valid_max": 1000,
+                    "_FillValue": fill_value,
+                    "scale_factor": 0.1,
+                    "add_offset": 0.0,
+                    "source": "Saatchi et al. 2020 Harmonized Global Biomass dataset",
+                }
+            )
 
         # --- Global metadata ---
         meta = {
@@ -132,9 +125,9 @@ class SaatchiBiomassWriter(BaseZarrWriter):
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "_FillValue": fill_value,
         }
-    
+
         self.set_global_metadata(ds, meta)
-    
+
         return ds
 
     # ------------------------------------------------------------------
@@ -175,10 +168,7 @@ class SaatchiBiomassWriter(BaseZarrWriter):
         # Zarr encoding derived from actual Dask chunks
         encoding = {
             var: {
-                "chunks": (
-                    chunks["latitude"],
-                    chunks["longitude"]
-                ),
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
             for var in ds.data_vars

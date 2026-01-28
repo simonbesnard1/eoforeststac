@@ -27,7 +27,9 @@ storage_options = {
 mapper = fsspec.get_mapper(path, **storage_options)
 
 # 1) Read with xarray to know what are actual data variables
-ds = xr.open_zarr(mapper, consolidated=False)  # no need for consolidated to inspect names
+ds = xr.open_zarr(
+    mapper, consolidated=False
+)  # no need for consolidated to inspect names
 data_vars = list(ds.data_vars)
 print(f"Found {len(data_vars)} data_vars")
 

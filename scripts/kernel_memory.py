@@ -4,11 +4,12 @@ import matplotlib.pyplot as plt
 
 os.makedirs("assets", exist_ok=True)
 
+
 def make_disturbance_decay_figure(
     out="assets/concept_disturbance_decay_metric.png",
     nyears=35,
     event_year=5,
-    tau=8.0,          # decay timescale (years)
+    tau=8.0,  # decay timescale (years)
 ):
     t = np.arange(nyears)  # 0..nyears-1
 
@@ -27,7 +28,14 @@ def make_disturbance_decay_figure(
 
     # Event marker
     ax.axvline(event_year, linestyle=":", linewidth=3)
-    ax.text(event_year + 0.5, 0.5, "disturbance\noccurs", va="top", fontweight="bold", fontsize=13)
+    ax.text(
+        event_year + 0.5,
+        0.5,
+        "disturbance\noccurs",
+        va="top",
+        fontweight="bold",
+        fontsize=13,
+    )
 
     # Annotations
     ax.annotate(
@@ -36,7 +44,7 @@ def make_disturbance_decay_figure(
         xytext=(event_year + 4, 0.92),
         arrowprops=dict(arrowstyle="->", linewidth=2),
         fontsize=12,
-        fontweight="bold"
+        fontweight="bold",
     )
 
     # Show tau at ~1/e point
@@ -49,14 +57,17 @@ def make_disturbance_decay_figure(
             xytext=(t_tau + 3, 0.55),
             arrowprops=dict(arrowstyle="->", linewidth=2),
             fontsize=12,
-            fontweight="bold"
+            fontweight="bold",
         )
 
     ax.set_ylim(-0.05, 1.05)
     ax.set_xlabel("Time (years)", fontsize=14)
     ax.set_ylabel("Disturbance decay metric", fontsize=14)
-    ax.set_title("Disturbance memory: 1 at event, decays to 0 with time since disturbance",
-                 fontsize=15, fontweight="bold")
+    ax.set_title(
+        "Disturbance memory: 1 at event, decays to 0 with time since disturbance",
+        fontsize=15,
+        fontweight="bold",
+    )
 
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -65,6 +76,7 @@ def make_disturbance_decay_figure(
     plt.savefig(out, dpi=220, bbox_inches="tight")
     plt.close()
     print("Wrote:", out)
+
 
 if __name__ == "__main__":
     make_disturbance_decay_figure()

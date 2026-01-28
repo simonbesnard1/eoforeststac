@@ -48,20 +48,22 @@ class GAMIWriter(BaseZarrWriter):
         # --- Chunking ---
         if chunks is not None:
             ds = ds.chunk(chunks)
-        
+
         # --- Fill values and dtype ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int16")
 
         # --- Variable-level metadata ---
         if "forest_age" in ds:
-            ds["forest_age"].attrs.update({
-                "long_name": "Forest age using ML + Landsat-based time since disturbance fusion",
-                "units": "years",
-                "grid_mapping": "crs",
-                "valid_min": 1,
-                "valid_max": 300,
-                "_FillValue": fill_value,
-            })
+            ds["forest_age"].attrs.update(
+                {
+                    "long_name": "Forest age using ML + Landsat-based time since disturbance fusion",
+                    "units": "years",
+                    "grid_mapping": "crs",
+                    "valid_min": 1,
+                    "valid_max": 300,
+                    "_FillValue": fill_value,
+                }
+            )
 
         # --- Global metadata ---
         meta = {
@@ -117,17 +119,16 @@ class GAMIWriter(BaseZarrWriter):
 
         # 🔑 Encoding derived from *actual* Dask chunks
         encoding = {
-                var: {
-                    "chunks": (
-                        chunks["latitude"],
-                        chunks["longitude"],
-                        chunks["time"],
-                    ),
-                    "compressor": DEFAULT_COMPRESSOR,
-                }
-                for var in ds.data_vars
+            var: {
+                "chunks": (
+                    chunks["latitude"],
+                    chunks["longitude"],
+                    chunks["time"],
+                ),
+                "compressor": DEFAULT_COMPRESSOR,
             }
-
+            for var in ds.data_vars
+        }
 
         print("Writing Zarr to Ceph…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

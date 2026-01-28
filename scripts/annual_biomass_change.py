@@ -7,24 +7,24 @@ import matplotlib as mpl
 
 params = {
     # font
-    'font.family': 'serif',
+    "font.family": "serif",
     # 'font.serif': 'Times', #'cmr10',
-    'font.size': 16,
+    "font.size": 16,
     # axes
-    'axes.titlesize': 12,
-    'axes.labelsize': 12,
-    'axes.linewidth': 0.5,
+    "axes.titlesize": 12,
+    "axes.labelsize": 12,
+    "axes.linewidth": 0.5,
     # ticks
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'xtick.major.width': 0.3,
-    'ytick.major.width': 0.3,
-    'xtick.minor.width': 0.3,
-    'ytick.minor.width': 0.3,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "xtick.major.width": 0.3,
+    "ytick.major.width": 0.3,
+    "xtick.minor.width": 0.3,
+    "ytick.minor.width": 0.3,
     # legend
-    'legend.fontsize': 14,
+    "legend.fontsize": 14,
     # tex
-    'text.usetex': True,
+    "text.usetex": True,
 }
 
 mpl.rcParams.update(params)
@@ -74,8 +74,8 @@ def biomass_change_gross_net(
     # 1) Smooth
     B_smooth = (
         B.rolling(time=smooth_window, center=center, min_periods=min_periods)
-         .mean()
-         .rename("B_smooth")
+        .mean()
+        .rename("B_smooth")
     )
 
     # 2) First difference (year-to-year change)
@@ -108,9 +108,10 @@ def biomass_change_gross_net(
 
     return ds
 
+
 def biomass_change_gross_net_savgol(
     B: xr.DataArray,
-    window_length: int = 7,   # must be odd
+    window_length: int = 7,  # must be odd
     polyorder: int = 1,
     per_year: bool = True,
 ) -> xr.Dataset:
@@ -138,7 +139,9 @@ def biomass_change_gross_net_savgol(
             return x  # not enough data
         x_f = x.copy()
         x_f[~good] = np.interp(t[~good], t[good], x[good])
-        return savgol_filter(x_f, window_length=window_length, polyorder=polyorder, mode="interp")
+        return savgol_filter(
+            x_f, window_length=window_length, polyorder=polyorder, mode="interp"
+        )
 
     B_smooth = xr.apply_ufunc(
         _savgol_1d,
@@ -159,8 +162,15 @@ def biomass_change_gross_net_savgol(
     gross_loss = losses.sum("time", skipna=True).rename("gross_loss")
     net_change = dB.sum("time", skipna=True).rename("net_change")
 
-    ds = xr.Dataset({"B_smooth": B_smooth, "dB": dB,
-                     "net_change": net_change, "gross_gain": gross_gain, "gross_loss": gross_loss})
+    ds = xr.Dataset(
+        {
+            "B_smooth": B_smooth,
+            "dB": dB,
+            "net_change": net_change,
+            "gross_gain": gross_gain,
+            "gross_loss": gross_loss,
+        }
+    )
 
     n_steps = dB.sizes["time"]
     if per_year and n_steps > 0:
@@ -176,7 +186,9 @@ provider = ZarrProvider(
     anon=True,
 )
 
-roi = gpd.read_file("/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/DE-Hai.geojson")
+roi = gpd.read_file(
+    "/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/DE-Hai.geojson"
+)
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
@@ -184,13 +196,13 @@ ds = provider.open_dataset(
     version="6.0",
 )
 
-ds_biomass = subset(
-    ds,
-    geometry=geometry)  # optional
+ds_biomass = subset(ds, geometry=geometry)  # optional
 
 
 # B: DataArray(time,y,x) for 2007–2023
-ds_change = biomass_change_gross_net(ds_biomass['aboveground_biomass'], smooth_window=3, center=True)
+ds_change = biomass_change_gross_net(
+    ds_biomass["aboveground_biomass"], smooth_window=3, center=True
+)
 
 # Maps:
 net = ds_change["net_change"]
@@ -199,18 +211,17 @@ loss = ds_change["gross_loss"]
 
 # Annualized:
 net_rate = ds_change["net_rate"]
-changes_ = biomass_change_gross_net_savgol(ds_biomass['aboveground_biomass'].chunk(dict(time=-1)), window_length=3)
+changes_ = biomass_change_gross_net_savgol(
+    ds_biomass["aboveground_biomass"].chunk(dict(time=-1)), window_length=3
+)
 
 
-#%% Plotting
+# %% Plotting
 import matplotlib.pyplot as plt
 
+
 def plot_4_maps(
-    net, gain, loss, net_rate,
-    titles=None,
-    out_png=None,
-    robust=True,
-    q=(0.02, 0.98)
+    net, gain, loss, net_rate, titles=None, out_png=None, robust=True, q=(0.02, 0.98)
 ):
     """
     Plot net/gain/loss/net_rate in a 2x2 panel with robust color limits.
@@ -225,7 +236,12 @@ def plot_4_maps(
         ]
 
     fig, axs = plt.subplots(2, 2, figsize=(12.6, 8.8), constrained_layout=True)
-    panels = [(net, titles[0]), (gain, titles[1]), (loss, titles[2]), (net_rate, titles[3])]
+    panels = [
+        (net, titles[0]),
+        (gain, titles[1]),
+        (loss, titles[2]),
+        (net_rate, titles[3]),
+    ]
 
     for ax, (da, title) in zip(axs.ravel(), panels):
         vmin = vmax = None
@@ -246,4 +262,6 @@ def plot_4_maps(
         plt.close()
     else:
         plt.show()
+
+
 plot_4_maps(net, net_rate, gain, loss, out_png="assets/biomass_change_overview.png")

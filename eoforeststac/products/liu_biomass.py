@@ -17,30 +17,29 @@ LIU_BIOMASS_CFG = {
         "and should follow the dataset’s stated data agreement and citation requirements.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent (Europe; nominal 2019 reference mosaics)
     # ------------------------------------------------------------------
     "bbox": [-25.0, 34.0, 45.0, 72.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-25.0, 34.0],
-            [-25.0, 72.0],
-            [ 45.0, 72.0],
-            [ 45.0, 34.0],
-            [-25.0, 34.0],
-        ]],
+        "coordinates": [
+            [
+                [-25.0, 34.0],
+                [-25.0, 72.0],
+                [45.0, 72.0],
+                [45.0, 34.0],
+                [-25.0, 34.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2019, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2019, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/LIU_BIOMASS/collection.json",
     "base_path": f"{BASE_S3_URL}/LIU_BIOMASS",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -68,7 +67,6 @@ LIU_BIOMASS_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -87,12 +85,10 @@ LIU_BIOMASS_CFG = {
         "stac",
     ],
     "themes": ["biomass", "forest structure", "carbon"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-        
         # Canonical resources + restrictions
         {
             "rel": "about",
@@ -119,7 +115,6 @@ LIU_BIOMASS_CFG = {
             "title": "Planet Education & Research Program terms (non-commercial license)",
         },
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -131,7 +126,6 @@ LIU_BIOMASS_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
@@ -139,25 +133,21 @@ LIU_BIOMASS_CFG = {
         "temporal_resolution": ["static"],
         "variables": ["canopy_cover", "canopy_height", "aboveground_biomass"],
         "units_by_variable": {
-              "canopy_cover": "percent",
-              "canopy_height": "m",
-              "aboveground_biomass": "Mg ha-1",
-            },
-
+            "canopy_cover": "percent",
+            "canopy_height": "m",
+            "aboveground_biomass": "Mg ha-1",
+        },
         # Spatial metadata — only set if you’re confident
-        "eo:gsd": [30.0],       # biomass map explicitly at 30 m; cover/height may differ
+        "eo:gsd": [30.0],  # biomass map explicitly at 30 m; cover/height may differ
         "proj:epsg": [4326],  # uncomment if your Zarr is stored in EPSG:4326
-
         "product_family": ["Liu et al. (Trees outside forests, Europe)"],
         "data_format": ["zarr"],
-
         # Critical usage constraints surfaced for clients
         "usage_constraints": ["non-commercial scientific/education/research only"],
         "license_notes": [
             "Derived from PlanetScope imagery under research licensing; non-commercial use only."
-        ]
+        ],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -172,7 +162,6 @@ LIU_BIOMASS_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------

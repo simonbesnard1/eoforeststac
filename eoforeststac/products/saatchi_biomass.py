@@ -15,30 +15,29 @@ SAATCHI_BIOMASS_CFG = {
         "Biomass at Optimum Spatial Resolutions' and associated supplementary documentation.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-180.0, -90.0],
-            [-180.0,  90.0],
-            [ 180.0,  90.0],
-            [ 180.0, -90.0],
-            [-180.0, -90.0],
-        ]],
+        "coordinates": [
+            [
+                [-180.0, -90.0],
+                [-180.0, 90.0],
+                [180.0, 90.0],
+                [180.0, -90.0],
+                [-180.0, -90.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/SAATCHI_BIOMASS/collection.json",
     "base_path": f"{BASE_S3_URL}/SAATCHI_BIOMASS",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -60,7 +59,6 @@ SAATCHI_BIOMASS_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -77,12 +75,10 @@ SAATCHI_BIOMASS_CFG = {
         "stac",
     ],
     "themes": ["biomass", "carbon", "forest structure"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-       
         # Canonical links
         {
             "rel": "about",
@@ -102,9 +98,7 @@ SAATCHI_BIOMASS_CFG = {
             "type": "text/html",
             "title": "Related work (compiled article / deliverable link)",
         },
-        
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -116,25 +110,19 @@ SAATCHI_BIOMASS_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
         "temporal_resolution": ["static"],
         "reference_year": [2020],
-
         "variables": ["aboveground_biomass"],
-        "units_by_variable": {
-                            "aboveground_biomass": "Mg ha-1"},
-
+        "units_by_variable": {"aboveground_biomass": "Mg ha-1"},
         "eo:gsd": [100.0],
         "proj:epsg": [4326],
-
         "product_family": ["Saatchi & Yu global AGB"],
         "data_format": ["zarr"],
     },
-
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -146,7 +134,6 @@ SAATCHI_BIOMASS_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------
@@ -162,7 +149,6 @@ SAATCHI_BIOMASS_CFG = {
             ),
         ),
     },
-
     # ------------------------------------------------------------------
     # Version notes
     # ------------------------------------------------------------------

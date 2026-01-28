@@ -51,9 +51,11 @@ _COARSEN_AGG_METHODS = {
 # Grid spec
 # -----------------------------------------------------------------------------
 
+
 @dataclass(frozen=True)
 class GridSpec:
     """Immutable grid definition used as a spatial contract."""
+
     crs: str
     transform: Affine
     shape: Tuple[int, int]  # (height, width)
@@ -94,6 +96,7 @@ class GridSpec:
 # CRS & dimension utilities
 # -----------------------------------------------------------------------------
 
+
 def _infer_crs(obj: xr.Dataset | xr.DataArray) -> Optional[str]:
     """Infer CRS from rioxarray or CF grid-mapping metadata."""
     if isinstance(obj, xr.DataArray):
@@ -123,7 +126,9 @@ def _infer_crs(obj: xr.Dataset | xr.DataArray) -> Optional[str]:
 
 def _require_crs(ds: xr.Dataset, name: str) -> str:
     if not isinstance(ds, xr.Dataset):
-        raise TypeError(f"Expected an xarray.Dataset for '{name}', got {type(ds).__name__}")
+        raise TypeError(
+            f"Expected an xarray.Dataset for '{name}', got {type(ds).__name__}"
+        )
     crs = _infer_crs(ds)
     if crs is None:
         raise ValueError(
@@ -160,12 +165,15 @@ def _parse_resampling(method: Union[str, Resampling], *, what: str) -> Resamplin
                 f"Invalid resampling method '{method}' for {what}. "
                 f"Valid options: {sorted(_RESAMPLING_MAP)}"
             )
-    raise TypeError(f"Invalid resampling method type for {what}: {type(method).__name__}")
+    raise TypeError(
+        f"Invalid resampling method type for {what}: {type(method).__name__}"
+    )
 
 
 # -----------------------------------------------------------------------------
 # Resolution snapping
 # -----------------------------------------------------------------------------
+
 
 def _snap_resolution(
     target_res: Tuple[float, float],
@@ -203,6 +211,7 @@ def _snap_resolution(
 # -----------------------------------------------------------------------------
 # Optional coarsening (fast-downsampling before reprojection)
 # -----------------------------------------------------------------------------
+
 
 def _coarsen_dataset(
     ds: xr.Dataset,
@@ -292,8 +301,12 @@ def _coarsen_dataset(
 
     if new_coords:
         out = xr.Dataset(
-            {k: v.assign_coords({d: new_coords[d] for d in v.dims if d in new_coords})
-             for k, v in out.data_vars.items()},
+            {
+                k: v.assign_coords(
+                    {d: new_coords[d] for d in v.dims if d in new_coords}
+                )
+                for k, v in out.data_vars.items()
+            },
             attrs=out.attrs,
         )
 
@@ -384,7 +397,9 @@ class DatasetAligner:
             transform = Affine(*ref.rio.transform()[:6])
             shape = tuple(ref.rio.shape)  # (height, width)
         except Exception as exc:
-            raise ValueError(f"Failed to extract spatial grid from '{self.target_key}'.") from exc
+            raise ValueError(
+                f"Failed to extract spatial grid from '{self.target_key}'."
+            ) from exc
 
         # Optional override of CRS
         if self.target_crs is not None:
@@ -396,12 +411,18 @@ class DatasetAligner:
             if isinstance(self.target_resolution, (int, float)):
                 req_res = (float(self.target_resolution), float(self.target_resolution))
             else:
-                req_res = (float(self.target_resolution[0]), float(self.target_resolution[1]))
+                req_res = (
+                    float(self.target_resolution[0]),
+                    float(self.target_resolution[1]),
+                )
 
             # Snap requested resolution to ref resolution if desired
             ref_res = (float(transform.a), float(abs(transform.e)))
             req_res = _snap_resolution(
-                req_res, ref_res, mode=self.snap_resolution_mode, tol=self.snap_tolerance
+                req_res,
+                ref_res,
+                mode=self.snap_resolution_mode,
+                tol=self.snap_tolerance,
             )
 
             # Keep same extent as reference grid; recompute width/height
@@ -420,8 +441,13 @@ class DatasetAligner:
             transform = new_transform
             shape = (height, width)
 
-        grid = GridSpec(crs=crs, transform=transform, shape=(int(shape[0]), int(shape[1])),
-                        x_dim=self.x_out, y_dim=self.y_out)
+        grid = GridSpec(
+            crs=crs,
+            transform=transform,
+            shape=(int(shape[0]), int(shape[1])),
+            x_dim=self.x_out,
+            y_dim=self.y_out,
+        )
         self._grid = grid
         return grid
 
@@ -434,7 +460,9 @@ class DatasetAligner:
     # Resampling resolution
     # -------------------------------------------------------------------------
 
-    def _get_dataset_resampling(self, key: str) -> Tuple[Resampling, Mapping[str, Resampling]]:
+    def _get_dataset_resampling(
+        self, key: str
+    ) -> Tuple[Resampling, Mapping[str, Resampling]]:
         """
         Returns:
           (dataset_default, per_variable_overrides)
@@ -478,13 +506,15 @@ class DatasetAligner:
             raise ValueError("No datasets provided for alignment.")
 
         grid = self._resolve_target_grid(datasets)
-    
+
         aligned: list[xr.Dataset] = []
 
         for key, ds in datasets.items():
 
             if not isinstance(ds, xr.Dataset):
-                raise TypeError(f"Expected xr.Dataset for '{key}', got {type(ds).__name__}")
+                raise TypeError(
+                    f"Expected xr.Dataset for '{key}', got {type(ds).__name__}"
+                )
 
             ds_crs = _require_crs(ds, key)
 
@@ -496,7 +526,7 @@ class DatasetAligner:
             x_dim = _infer_x_dim(sample)
             y_dim = _infer_y_dim(sample)
             ds = ds.rio.set_spatial_dims(x_dim=x_dim, y_dim=y_dim, inplace=False)
-            
+
             # Ensure CRS is written on every spatial variable
             for name, da in ds.data_vars.items():
                 if da.rio.crs is None:
@@ -539,10 +569,12 @@ class DatasetAligner:
                     ds_reproj[var_name] = da_reproj
 
             # canonical naming
-            ds_reproj = ds_reproj.rename({
-                ds_reproj.rio.x_dim: grid.x_dim,
-                ds_reproj.rio.y_dim: grid.y_dim,
-            })
+            ds_reproj = ds_reproj.rename(
+                {
+                    ds_reproj.rio.x_dim: grid.x_dim,
+                    ds_reproj.rio.y_dim: grid.y_dim,
+                }
+            )
 
             ds_reproj = ds_reproj.rio.write_crs(grid.crs)
             aligned.append(ds_reproj)

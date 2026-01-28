@@ -19,7 +19,7 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
       - Chunked, compressed Zarr on Ceph/S3
 
     Classes (uint8):
-      0 Larix 
+      0 Larix
       1 Picea
       2 Pinus
       3 Fagus
@@ -41,7 +41,7 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
             rioxarray.open_rasterio(
                 tif_path,
                 masked=True,
-                chunks="auto",   # let rasterio+dask decide tiling
+                chunks="auto",  # let rasterio+dask decide tiling
             )
             .squeeze(drop=True)
             .rename("genus")
@@ -88,10 +88,8 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
         # Add reference time coordinate (single epoch)
         # --------------------------------------------------
         if "time" not in ds.coords:
-            ds = ds.assign_coords(
-                time=np.datetime64("2020-01-01")
-            )
-    
+            ds = ds.assign_coords(time=np.datetime64("2020-01-01"))
+
         # --------------------------------------------------------------
         # Chunking (after renaming)
         # --------------------------------------------------------------
@@ -111,25 +109,30 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
         # Coordinate metadata (projected meters)
         # --------------------------------------------------------------
         if "longitude" in ds.coords:
-            ds["longitude"].attrs.update({
-                "long_name": "Projected x coordinate (ETRS89 / LAEA Europe)",
-                "standard_name": "projection_x_coordinate",
-                "units": "m",
-                "axis": "X",
-            })
+            ds["longitude"].attrs.update(
+                {
+                    "long_name": "Projected x coordinate (ETRS89 / LAEA Europe)",
+                    "standard_name": "projection_x_coordinate",
+                    "units": "m",
+                    "axis": "X",
+                }
+            )
 
         if "latitude" in ds.coords:
-            ds["latitude"].attrs.update({
-                "long_name": "Projected y coordinate (ETRS89 / LAEA Europe)",
-                "standard_name": "projection_y_coordinate",
-                "units": "m",
-                "axis": "Y",
-            })
+            ds["latitude"].attrs.update(
+                {
+                    "long_name": "Projected y coordinate (ETRS89 / LAEA Europe)",
+                    "standard_name": "projection_y_coordinate",
+                    "units": "m",
+                    "axis": "Y",
+                }
+            )
 
         # --------------------------------------------------------------
         # Variable metadata
         # --------------------------------------------------------------
-        ds["genus"].attrs.update({
+        ds["genus"].attrs.update(
+            {
                 "long_name": "Tree genus classification",
                 "description": (
                     "European tree genus map at 10 m resolution derived from Sentinel-1 "
@@ -139,7 +142,6 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
                 "grid_mapping": "spatial_ref",
                 "valid_min": 0,
                 "valid_max": 7,
-            
                 # ---- legend (authoritative, explicit) ----
                 "flag_values": [0, 1, 2, 3, 4, 5, 6, 7],
                 "flag_meanings": (
@@ -152,11 +154,11 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
                     "other_broadleaf "
                     "no_trees"
                 ),
-            
                 # provenance
                 "source": "European Tree Genus Map (Sentinel-1 & Sentinel-2)",
                 "reference_year": 2020,
-            })
+            }
+        )
 
         # --------------------------------------------------------------
         # Global metadata
@@ -219,14 +221,11 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
 
         encoding = {
             var: {
-                "chunks": (
-                    chunks["latitude"],
-                    chunks["longitude"]
-                ),
+                "chunks": (chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
             for var in ds.data_vars
         }
-        
+
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

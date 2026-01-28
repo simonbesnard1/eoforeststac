@@ -14,30 +14,29 @@ EFDA_CFG = {
         "agent.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
     "bbox": [-25.0, 34.0, 45.0, 72.0],
     "geometry": {
         "type": "Polygon",
-        "coordinates": [[
-            [-25.0, 34.0],
-            [-25.0, 72.0],
-            [ 45.0, 72.0],
-            [ 45.0, 34.0],
-            [-25.0, 34.0],
-        ]],
+        "coordinates": [
+            [
+                [-25.0, 34.0],
+                [-25.0, 72.0],
+                [45.0, 72.0],
+                [45.0, 34.0],
+                [-25.0, 34.0],
+            ]
+        ],
     },
     "start_datetime": datetime.datetime(1985, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
-
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/EFDA/collection.json",
     "base_path": f"{BASE_S3_URL}/EFDA",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -55,7 +54,6 @@ EFDA_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -76,12 +74,10 @@ EFDA_CFG = {
         "stac",
     ],
     "themes": ["disturbance", "forest structure", "carbon"],
-
     # ------------------------------------------------------------------
     # Links (curated STAC Browser experience)
     # ------------------------------------------------------------------
     "links": [
-       
         # Official dataset / paper
         {
             "rel": "cite-as",
@@ -89,7 +85,6 @@ EFDA_CFG = {
             "type": "text/html",
             "title": "ESSD paper describing EFDA (2025)",
         },
-        
         {
             "rel": "related",
             "href": "https://doi.org/10.5281/zenodo.13333034",
@@ -102,7 +97,6 @@ EFDA_CFG = {
             "type": "text/html",
             "title": "Dataset page (TUM EOEM)",
         },
-
         # Community / interactive resources
         {
             "rel": "related",
@@ -116,9 +110,7 @@ EFDA_CFG = {
             "type": "text/html",
             "title": "Project repository / processing overview",
         },
-
     ],
-
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
     # ------------------------------------------------------------------
@@ -130,42 +122,47 @@ EFDA_CFG = {
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",
         "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-            "temporal_resolution": ["annual"],
-        
-            "variables": [
-                "disturbance_agent",
-                "disturbance_occurence",
-            ],
-        
-            "units_by_variable": {
-                "disturbance_agent": "categorical",
-                "disturbance_occurence": "binary",
-            },
-        
-            # spatial metadata
-            "eo:gsd": [30.0],
-            "proj:epsg": [3035],
-        
-            "data_format": ["zarr"],
-        
-            # Dataset-specific legend
-            "disturbance_agent_legend": [
-                {"value": 1, "label": "wind_bark_beetle", "description": "Wind and bark beetle disturbance complex"},
-                {"value": 2, "label": "fire", "description": "Wildfire-related disturbance"},
-                {"value": 3, "label": "harvest", "description": "Planned or salvage logging"},
-                {
-                    "value": 4,
-                    "label": "mixed",
-                    "description": "Mixed agents (more than one disturbance agent occurred)"
-                },
-            ],
+        "temporal_resolution": ["annual"],
+        "variables": [
+            "disturbance_agent",
+            "disturbance_occurence",
+        ],
+        "units_by_variable": {
+            "disturbance_agent": "categorical",
+            "disturbance_occurence": "binary",
         },
-
+        # spatial metadata
+        "eo:gsd": [30.0],
+        "proj:epsg": [3035],
+        "data_format": ["zarr"],
+        # Dataset-specific legend
+        "disturbance_agent_legend": [
+            {
+                "value": 1,
+                "label": "wind_bark_beetle",
+                "description": "Wind and bark beetle disturbance complex",
+            },
+            {
+                "value": 2,
+                "label": "fire",
+                "description": "Wildfire-related disturbance",
+            },
+            {
+                "value": 3,
+                "label": "harvest",
+                "description": "Planned or salvage logging",
+            },
+            {
+                "value": 4,
+                "label": "mixed",
+                "description": "Mixed agents (more than one disturbance agent occurred)",
+            },
+        ],
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
@@ -177,7 +174,6 @@ EFDA_CFG = {
             "type": "application/vnd.zarr",
         },
     },
-
     # ------------------------------------------------------------------
     # Asset template (roles + description)
     # ------------------------------------------------------------------
@@ -193,7 +189,6 @@ EFDA_CFG = {
             ),
         ),
     },
-
     # ------------------------------------------------------------------
     # Version notes (UI / provenance helper)
     # ------------------------------------------------------------------

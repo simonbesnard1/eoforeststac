@@ -59,15 +59,17 @@ class EFDAWriter(BaseZarrWriter):
             "scale_factor",
             "add_offset",
         }
-    
+
         for var in ds.data_vars:
             for key in STRIP_KEYS:
                 ds[var].attrs.pop(key, None)
-    
+
         return ds
 
     @staticmethod
-    def _standardize_xy_names(obj: xr.Dataset | xr.DataArray) -> xr.Dataset | xr.DataArray:
+    def _standardize_xy_names(
+        obj: xr.Dataset | xr.DataArray,
+    ) -> xr.Dataset | xr.DataArray:
         """
         Rename projected x/y dimensions to longitude/latitude (projected coords).
         """
@@ -110,7 +112,7 @@ class EFDAWriter(BaseZarrWriter):
             .squeeze(drop=True)
             .rename(var_name)
         )
-        
+
         # Attach time coordinate and keep it as length-1 dimension
         da = da.assign_coords(time=np.datetime64(f"{year}-01-01")).expand_dims("time")
         return da
@@ -156,93 +158,104 @@ class EFDAWriter(BaseZarrWriter):
         ds = ds.astype(np.dtype(dtype))
 
         # enforce chunk alignment (time=1 always)
-        ds = ds.chunk({"time": 1, "latitude": chunks["latitude"], "longitude": chunks["longitude"]})
+        ds = ds.chunk(
+            {
+                "time": 1,
+                "latitude": chunks["latitude"],
+                "longitude": chunks["longitude"],
+            }
+        )
 
         # Coordinate attrs (projected LAEA meters)
         if "longitude" in ds.coords:
-            ds["longitude"].attrs.update({
-                "long_name": "Projected x coordinate (LAEA Europe)",
-                "standard_name": "projection_x_coordinate",
-                "units": "m",
-                "axis": "X",
-            })
+            ds["longitude"].attrs.update(
+                {
+                    "long_name": "Projected x coordinate (LAEA Europe)",
+                    "standard_name": "projection_x_coordinate",
+                    "units": "m",
+                    "axis": "X",
+                }
+            )
         if "latitude" in ds.coords:
-            ds["latitude"].attrs.update({
-                "long_name": "Projected y coordinate (LAEA Europe)",
-                "standard_name": "projection_y_coordinate",
-                "units": "m",
-                "axis": "Y",
-            })
+            ds["latitude"].attrs.update(
+                {
+                    "long_name": "Projected y coordinate (LAEA Europe)",
+                    "standard_name": "projection_y_coordinate",
+                    "units": "m",
+                    "axis": "Y",
+                }
+            )
 
         return ds
 
     # ------------------------------------------------------------------
     # Metadata
     # ------------------------------------------------------------------
-    def add_metadata(self, ds: xr.Dataset, _FillValue: int, crs: str, version: str = "1.0") -> xr.Dataset:
+    def add_metadata(
+        self, ds: xr.Dataset, _FillValue: int, crs: str, version: str = "1.0"
+    ) -> xr.Dataset:
         """
         Add variable + global metadata.
         """
-    
+
         if "disturbance_occurence" in ds:
-            ds["disturbance_occurence"].attrs.update({
-                "long_name": "EFDA forest disturbance occurrence",
-                "description": "Annual forest disturbance occurrence mosaic from the European Forest Disturbance Atlas (EFDA).",
-                "units": "binary",
-                "flag_values": [0, 1],
-                "flag_meanings": "no_disturbance disturbance",
-                "grid_mapping": "spatial_ref",
-                "_FillValue": _FillValue,
-            })
-    
+            ds["disturbance_occurence"].attrs.update(
+                {
+                    "long_name": "EFDA forest disturbance occurrence",
+                    "description": "Annual forest disturbance occurrence mosaic from the European Forest Disturbance Atlas (EFDA).",
+                    "units": "binary",
+                    "flag_values": [0, 1],
+                    "flag_meanings": "no_disturbance disturbance",
+                    "grid_mapping": "spatial_ref",
+                    "_FillValue": _FillValue,
+                }
+            )
+
         if "disturbance_agent" in ds:
-            ds["disturbance_agent"].attrs.update({
-                "long_name": "EFDA disturbance agent",
-                "description": (
-                    "Causal agent of forest disturbance following the EFDA classification."
-                ),
-                "units": "categorical",
-                "flag_values": [1, 2, 3, 4],
-                "flag_meanings": [
-                    "wind_bark_beetle",
-                    "fire",
-                    "harvest",
-                    "mixed"
-                ],
-                "flag_descriptions": [
-                    "Wind and bark beetle disturbance complex",
-                    "Wildfire-related disturbance",
-                    "Planned or salvage logging",
-                    "Mixed agents (more than one disturbance agent occurred)"
-                ],
-                "grid_mapping": "spatial_ref",
-                "_FillValue": _FillValue,
-            })
-    
+            ds["disturbance_agent"].attrs.update(
+                {
+                    "long_name": "EFDA disturbance agent",
+                    "description": (
+                        "Causal agent of forest disturbance following the EFDA classification."
+                    ),
+                    "units": "categorical",
+                    "flag_values": [1, 2, 3, 4],
+                    "flag_meanings": ["wind_bark_beetle", "fire", "harvest", "mixed"],
+                    "flag_descriptions": [
+                        "Wind and bark beetle disturbance complex",
+                        "Wildfire-related disturbance",
+                        "Planned or salvage logging",
+                        "Mixed agents (more than one disturbance agent occurred)",
+                    ],
+                    "grid_mapping": "spatial_ref",
+                    "_FillValue": _FillValue,
+                }
+            )
+
         # Global attributes (optional but recommended)
         meta = {
-                "title": "European Forest Disturbance Atlas (EFDA) v2.1.1",
-                "description": (
-                    "The European Forest Disturbance Atlas (EFDA) provides annual estimates "
-                    "of forest disturbance occurrence, severity, and agent across continental "
-                    "Europe from 1985 onward. Derived from a consistent Landsat data cube and "
-                    "classification workflow developed by Viana-Soto and Senf, EFDA covers 38 "
-                    "European countries in EPSG:3035 (ETRS89 / LAEA Europe), capturing disturbance "
-                    "patterns such as natural disturbances and harvest events."
-                ),
-                "version": version,
-                "doi": "10.5281/zenodo.13333034",
-                "references": "Viana-Soto & Senf (2024) European Forest Disturbance Atlas; dataset available at https://doi.org/10.5281/zenodo.13333034",
-                "institution": "Technical University of Munich (Earth Observation for Ecosystem Management)",
-                "contact": "Alba Viana-Soto & Cornelius Senf",
-                "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "spatial_resolution": "30 m",
-                "crs": crs,
-                "_FillValue": _FillValue,
-            }
+            "title": "European Forest Disturbance Atlas (EFDA) v2.1.1",
+            "description": (
+                "The European Forest Disturbance Atlas (EFDA) provides annual estimates "
+                "of forest disturbance occurrence, severity, and agent across continental "
+                "Europe from 1985 onward. Derived from a consistent Landsat data cube and "
+                "classification workflow developed by Viana-Soto and Senf, EFDA covers 38 "
+                "European countries in EPSG:3035 (ETRS89 / LAEA Europe), capturing disturbance "
+                "patterns such as natural disturbances and harvest events."
+            ),
+            "version": version,
+            "doi": "10.5281/zenodo.13333034",
+            "references": "Viana-Soto & Senf (2024) European Forest Disturbance Atlas; dataset available at https://doi.org/10.5281/zenodo.13333034",
+            "institution": "Technical University of Munich (Earth Observation for Ecosystem Management)",
+            "contact": "Alba Viana-Soto & Cornelius Senf",
+            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "spatial_resolution": "30 m",
+            "crs": crs,
+            "_FillValue": _FillValue,
+        }
 
         self.set_global_metadata(ds, meta)
-    
+
         return ds
 
     # ------------------------------------------------------------------
@@ -250,7 +263,7 @@ class EFDAWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     def make_encoding(self, chunks: Dict[str, int]) -> Dict[str, Dict]:
         zchunks = (1, chunks["latitude"], chunks["longitude"])
-    
+
         return {
             "disturbance_occurence": {
                 "chunks": zchunks,
@@ -300,7 +313,7 @@ class EFDAWriter(BaseZarrWriter):
 
         for i, year in enumerate(years):
             print(f"EFDA: processing {year} ({i + 1}/{len(years)})")
-        
+
             ds_year = self.build_year_dataset(
                 mosaic_dir=mosaic_dir,
                 agent_dir=agent_dir,
@@ -311,13 +324,15 @@ class EFDAWriter(BaseZarrWriter):
                 chunks=chunks,
                 dtype=dtype,
             )
-        
+
             # Add human-readable metadata
-            ds_year = self.add_metadata(ds_year, _FillValue=_FillValue, crs=crs, version=version)
-        
+            ds_year = self.add_metadata(
+                ds_year, _FillValue=_FillValue, crs=crs, version=version
+            )
+
             if i > 0:
                 ds_year = self._strip_cf_serialization_attrs(ds_year)
-        
+
             ds_year.to_zarr(
                 store=store,
                 mode="w" if i == 0 else "a",
@@ -325,7 +340,7 @@ class EFDAWriter(BaseZarrWriter):
                 encoding=encoding if i == 0 else None,
                 consolidated=False,
             )
-        
+
             del ds_year
             gc.collect()
 

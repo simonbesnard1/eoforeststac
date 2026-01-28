@@ -5,4 +5,3 @@ S3_HTTP_BASE = "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collec
 # AWS S3 profile and endpoint used with fsspec
 S3_PROFILE = "atlaseo-glm"
 S3_ENDPOINT_URL = "https://s3.gfz-potsdam.de"
-

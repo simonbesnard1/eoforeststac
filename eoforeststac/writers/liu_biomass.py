@@ -135,10 +135,8 @@ class LiuBiomassWriter(BaseZarrWriter):
         # Add reference time coordinate (single epoch)
         # --------------------------------------------------
         if "time" not in ds.coords:
-            ds = ds.assign_coords(
-                time=np.datetime64("2019-01-01")
-            )
-            
+            ds = ds.assign_coords(time=np.datetime64("2019-01-01"))
+
         # --------------------------------------------------
         # Chunking
         # --------------------------------------------------
@@ -170,36 +168,39 @@ class LiuBiomassWriter(BaseZarrWriter):
         # --------------------------------------------------
         # Global metadata
         # --------------------------------------------------
-        self.set_global_metadata(ds, {
-            "title": (
-                "European canopy height, canopy cover and aboveground biomass "
-                "(PlanetScope-derived)"
-            ),
-            "description": (
-                "European canopy cover, canopy height and aboveground biomass maps "
-                "derived from 3 m PlanetScope imagery and airborne LiDAR using deep "
-                "learning. Biomass is estimated at 30 m resolution from canopy "
-                "structure. Dataset accompanies the study "
-                "'The overlooked contribution of trees outside forests to tree cover "
-                "and woody biomass across Europe'.\n\n"
-                "IMPORTANT: Restricted to research and scientific use only. "
-                "Commercial use is prohibited under the Planet Labs Education & "
-                "Research license."
-            ),
-            "version": version,
-            "reference_year": 2019,
-            "institution": "University of Copenhagen",
-            "created_by": "Shan Liu et al.",
-            "spatial_resolution": "30 m",
-            "crs": crs,
-            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "references": "https://zenodo.org/records/8154445",
-            "license": (
-                "Restricted to research use only; Planet Labs Education & "
-                "Research license applies."
-            ),
-            "contact": "sliu@ign.ku.dk; martin.brandt@mailbox.org",
-        })
+        self.set_global_metadata(
+            ds,
+            {
+                "title": (
+                    "European canopy height, canopy cover and aboveground biomass "
+                    "(PlanetScope-derived)"
+                ),
+                "description": (
+                    "European canopy cover, canopy height and aboveground biomass maps "
+                    "derived from 3 m PlanetScope imagery and airborne LiDAR using deep "
+                    "learning. Biomass is estimated at 30 m resolution from canopy "
+                    "structure. Dataset accompanies the study "
+                    "'The overlooked contribution of trees outside forests to tree cover "
+                    "and woody biomass across Europe'.\n\n"
+                    "IMPORTANT: Restricted to research and scientific use only. "
+                    "Commercial use is prohibited under the Planet Labs Education & "
+                    "Research license."
+                ),
+                "version": version,
+                "reference_year": 2019,
+                "institution": "University of Copenhagen",
+                "created_by": "Shan Liu et al.",
+                "spatial_resolution": "30 m",
+                "crs": crs,
+                "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "references": "https://zenodo.org/records/8154445",
+                "license": (
+                    "Restricted to research use only; Planet Labs Education & "
+                    "Research license applies."
+                ),
+                "contact": "sliu@ign.ku.dk; martin.brandt@mailbox.org",
+            },
+        )
 
         return ds
 
@@ -242,6 +243,6 @@ class LiuBiomassWriter(BaseZarrWriter):
             }
             for var in ds.data_vars
         }
-        
+
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)

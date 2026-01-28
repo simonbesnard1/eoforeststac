@@ -151,17 +151,19 @@ class HansenGFCWriter(BaseZarrWriter):
                 fill_value,
             ).astype("int16")
 
-            loss_year.attrs.update({
-                "long_name": "Year of forest cover loss",
-                "description": (
-                    "Calendar year in which forest loss occurred. "
-                    "Derived from Hansen GFC loss encoding "
-                    "(1–24 → 2001–2024)."
-                ),
-                "units": "year",
-                "grid_mapping": "spatial_ref",
-                "_FillValue": fill_value,
-            })
+            loss_year.attrs.update(
+                {
+                    "long_name": "Year of forest cover loss",
+                    "description": (
+                        "Calendar year in which forest loss occurred. "
+                        "Derived from Hansen GFC loss encoding "
+                        "(1–24 → 2001–2024)."
+                    ),
+                    "units": "year",
+                    "grid_mapping": "spatial_ref",
+                    "_FillValue": fill_value,
+                }
+            )
 
             ds = ds.drop_vars("loss")
             ds["loss_year"] = loss_year
@@ -176,12 +178,14 @@ class HansenGFCWriter(BaseZarrWriter):
                 continue
 
             ds[name] = ds[name].astype(meta["dtype"])
-            ds[name].attrs.update({
-                "long_name": meta["long_name"],
-                "description": meta["description"],
-                "grid_mapping": "spatial_ref",
-                "_FillValue": fill_value,
-            })
+            ds[name].attrs.update(
+                {
+                    "long_name": meta["long_name"],
+                    "description": meta["description"],
+                    "grid_mapping": "spatial_ref",
+                    "_FillValue": fill_value,
+                }
+            )
 
             if "units" in meta:
                 ds[name].attrs["units"] = meta["units"]
@@ -193,27 +197,30 @@ class HansenGFCWriter(BaseZarrWriter):
         # --------------------------------------------------
         # Global metadata
         # --------------------------------------------------
-        self.set_global_metadata(ds, {
-            "title": "Global Forest Change (Hansen et al.)",
-            "description": (
-                "Global Forest Change dataset derived from Landsat imagery, "
-                "quantifying tree cover, forest loss, and forest gain from "
-                "2000 to 2024. Loss years are stored as calendar years "
-                "(2001–2024)."
-            ),
-            "product_version": version,
-            "institution": (
-                "University of Maryland, Department of Geographical Sciences"
-            ),
-            "created_by": "Hansen et al.",
-            "spatial_resolution": "30 m",
-            "crs": crs,
-            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            "references": (
-                "https://storage.googleapis.com/earthenginepartners-hansen/"
-                "GFC-2024-v1.12/download.html"
-            ),
-        })
+        self.set_global_metadata(
+            ds,
+            {
+                "title": "Global Forest Change (Hansen et al.)",
+                "description": (
+                    "Global Forest Change dataset derived from Landsat imagery, "
+                    "quantifying tree cover, forest loss, and forest gain from "
+                    "2000 to 2024. Loss years are stored as calendar years "
+                    "(2001–2024)."
+                ),
+                "product_version": version,
+                "institution": (
+                    "University of Maryland, Department of Geographical Sciences"
+                ),
+                "created_by": "Hansen et al.",
+                "spatial_resolution": "30 m",
+                "crs": crs,
+                "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "references": (
+                    "https://storage.googleapis.com/earthenginepartners-hansen/"
+                    "GFC-2024-v1.12/download.html"
+                ),
+            },
+        )
 
         return ds
 

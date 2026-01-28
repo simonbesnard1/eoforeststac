@@ -13,10 +13,7 @@ class CCI_BiomassWriter(BaseZarrWriter):
     Assumes the native input is already delivered as a Zarr store.
     """
 
-    def load_dataset(
-        self,
-        input_zarr: str
-    ) -> xr.Dataset:
+    def load_dataset(self, input_zarr: str) -> xr.Dataset:
         """
         Load ESA CCI Biomass from an existing Zarr store.
         """
@@ -33,44 +30,45 @@ class CCI_BiomassWriter(BaseZarrWriter):
 
         # --- CRS ---
         ds = self.set_crs(ds, crs=crs)
-        
+
         # --- Chunking ---
         if chunks is not None:
             ds = ds.chunk(chunks)
-            
+
         # --- Zero → NaN → fill_value → dtype (SAFE) ---
         for var in ds.data_vars:
-            ds[var] = (
-                ds[var]
-                .where(ds[var] != 0)
-            )
-                    
+            ds[var] = ds[var].where(ds[var] != 0)
+
         # --- Fill values and dtype ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
 
         # --- Variable-level metadata ---
         if "aboveground_biomass" in ds:
-            ds["aboveground_biomass"].attrs.update({
-                "long_name": "Forest aboveground biomass",
-                "units": "Mg/ha",
-                "_FillValue": fill_value,
-                "description": (
-                    "Mass (oven-dry weight) of the woody parts (stem, bark, branches, twigs) "
-                    "of all living trees per unit area, excluding stumps and roots."
-                ),
-                "source": "ESA Climate Change Initiative – Biomass v6, Santoro & Cartus (2025)",
-                "grid_mapping": "crs",
-            })
+            ds["aboveground_biomass"].attrs.update(
+                {
+                    "long_name": "Forest aboveground biomass",
+                    "units": "Mg/ha",
+                    "_FillValue": fill_value,
+                    "description": (
+                        "Mass (oven-dry weight) of the woody parts (stem, bark, branches, twigs) "
+                        "of all living trees per unit area, excluding stumps and roots."
+                    ),
+                    "source": "ESA Climate Change Initiative – Biomass v6, Santoro & Cartus (2025)",
+                    "grid_mapping": "crs",
+                }
+            )
 
         if "aboveground_biomass_std" in ds:
-            ds["aboveground_biomass_std"].attrs.update({
-                "long_name": "Standard deviation of aboveground biomass",
-                "units": "Mg/ha",
-                "_FillValue": fill_value,
-                "description": "Per-pixel estimate of aboveground biomass uncertainty (1-sigma).",
-                "source": "ESA Climate Change Initiative – Biomass v6",
-                "grid_mapping": "crs",
-            })
+            ds["aboveground_biomass_std"].attrs.update(
+                {
+                    "long_name": "Standard deviation of aboveground biomass",
+                    "units": "Mg/ha",
+                    "_FillValue": fill_value,
+                    "description": "Per-pixel estimate of aboveground biomass uncertainty (1-sigma).",
+                    "source": "ESA Climate Change Initiative – Biomass v6",
+                    "grid_mapping": "crs",
+                }
+            )
 
         # --- Global metadata ---
         meta = {
@@ -119,25 +117,20 @@ class CCI_BiomassWriter(BaseZarrWriter):
 
         print("Processing dataset...")
         ds = self.process_dataset(
-            ds,
-            fill_value=fill_value,
-            crs=crs,
-            version=version,
-            chunks = chunks
+            ds, fill_value=fill_value, crs=crs, version=version, chunks=chunks
         )
-        
-        encoding = {
-                var: {
-                    "chunks": (
-                        chunks["latitude"],
-                        chunks["longitude"],
-                        chunks["time"],
-                    ),
-                    "compressor": DEFAULT_COMPRESSOR,
-                }
-                for var in ds.data_vars
-            }
 
+        encoding = {
+            var: {
+                "chunks": (
+                    chunks["latitude"],
+                    chunks["longitude"],
+                    chunks["time"],
+                ),
+                "compressor": DEFAULT_COMPRESSOR,
+            }
+            for var in ds.data_vars
+        }
 
         print("Writing Zarr to Ceph/S3…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
