@@ -58,6 +58,3 @@ dependencies:
       - rioxarray==0.20.0
       - pystac>=1.14.3
       - stactools==0.5.3
-
-      # install the package itself (so tests import your local code)
-      - -e .
