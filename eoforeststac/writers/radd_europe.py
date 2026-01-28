@@ -111,7 +111,6 @@ class RADDEuropeWriter(BaseZarrWriter):
     
         return out
 
-
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
@@ -157,27 +156,29 @@ class RADDEuropeWriter(BaseZarrWriter):
     
         return ds
 
-    def build_static_layers(self, ds: xr.Dataset, fill_value: int = -9999):
+    def build_static_layers(self, ds: xr.Dataset, *, fill_value: int):
         fm_raw = ds["forest_mask_raw"]
+
+        # masked=True often yields NaN outside-domain
         domain_valid = xr.ufuncs.isfinite(fm_raw)
-    
-        forest_mask = fm_raw.where(domain_valid, other=fill_value).astype("int16")
-        forest_mask = forest_mask.where((forest_mask == 0) | (forest_mask == 1), other=fill_value).astype("int16")
-    
-        alert_code_int = (
-            ds["alert_code"]
-            .where(xr.ufuncs.isfinite(ds["alert_code"]), other=0)
-            .astype("int32")
-        )
-    
+
+        forest_mask = xr.where(domain_valid, fm_raw, fill_value).astype("int16")
+        forest_mask = xr.where(
+            domain_valid & ((forest_mask == 0) | (forest_mask == 1)),
+            forest_mask,
+            fill_value,
+        ).astype("int16")
+
         alert_month_index = xr.apply_ufunc(
             self._yydoy_to_month_index,
-            alert_code_int,
+            ds["alert_code"].astype("int32"),
             dask="parallelized",
             output_dtypes=[np.int32],
         )
-    
-        return domain_valid, forest_mask, alert_month_index
+        
+        alert_yydoy = ds["alert_code"].fillna(fill_value).astype("int16")
+
+        return domain_valid, forest_mask, alert_month_index, alert_yydoy
 
     # ------------------------------------------------------------------
     # Metadata (NO _FillValue in attrs!)
@@ -247,7 +248,7 @@ class RADDEuropeWriter(BaseZarrWriter):
         return ds
 
     # ------------------------------------------------------------------
-    # Write (EFDA-style streaming)
+    # Write RADD Data
     # ------------------------------------------------------------------
     def write(
         self,
@@ -271,14 +272,14 @@ class RADDEuropeWriter(BaseZarrWriter):
 
         print("RADD: loading VRTs…")
         ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)
-        
+
         ds_in = self.set_crs(ds_in, crs=crs)
         ds_in = self._rename_xy_to_latlon(ds_in)
         target_chunks = {"latitude": chunks["latitude"], "longitude": chunks["longitude"]}
         ds_in["alert_code"] = ds_in["alert_code"].chunk(target_chunks)
         ds_in["forest_mask_raw"] = ds_in["forest_mask_raw"].chunk(target_chunks)
 
-        domain_valid, forest_mask, alert_month_index = self.build_static_layers(ds_in, fill_value=_FillValue)
+        domain_valid, forest_mask, alert_month_index, alert_yydoy = self.build_static_layers(ds_in, fill_value=_FillValue)
 
         times = pd.date_range(start=start, end=end, freq="MS")
         month_index = times.to_numpy(dtype="datetime64[M]").astype(np.int32)
@@ -299,10 +300,10 @@ class RADDEuropeWriter(BaseZarrWriter):
                     "_FillValue": np.int16(_FillValue),
                 },
                 "alert_yydoy": {
-                    "dtype": "int32",
+                    "dtype": "int16",
                     "chunks": (chunks["latitude"], chunks["longitude"]),
                     "compressor": DEFAULT_COMPRESSOR,
-                    "_FillValue": np.int32(_FillValue),
+                    "_FillValue": np.int16(_FillValue),
                 },
             }
 
@@ -312,9 +313,6 @@ class RADDEuropeWriter(BaseZarrWriter):
             dist2d = (alert_month_index == np.int32(m_idx)).astype("int16")
             dist2d = dist2d.where(domain_valid, other=_FillValue)
             dist2d = dist2d.where(forest_mask != 0, other=0)
-            if i == 0:
-                alert_yydoy = ds_in["alert_code"].where(domain_valid, other=_FillValue)
-                alert_yydoy = alert_yydoy.where(xr.ufuncs.isfinite(alert_yydoy), other=_FillValue).astype("int16")
 
             ds_step = xr.Dataset(
                         {
