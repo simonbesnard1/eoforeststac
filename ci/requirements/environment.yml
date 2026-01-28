@@ -36,3 +36,4 @@ dependencies:
   - retry
   - scipy
   - xarray
+  - s3fs
