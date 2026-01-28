@@ -49,7 +49,7 @@ dependencies:
       - numpy
       - xarray==2025.6.1
       - zarr==2.18.0
-      - numcodecs==0.15.1
+      - numcodecs==0.13.1
       - dask[array]==2025.6.1
       - boto3==1.35
       - botocore==1.35
