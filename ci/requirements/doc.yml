@@ -1,0 +1,36 @@
+name: eoforeststac-docs
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - bottleneck
+  - cfgrib
+  - kerchunk
+  - hypothesis>=6.75.8
+  - matplotlib-base
+  - nbsphinx
+  - packaging>=21.3
+  - pooch
+  - pyarrow
+  - pyproj
+  - psycopg2
+  - setuptools
+  - sparse
+  - breathe
+  - sphinx-autosummary-accessors
+  - sphinx-book-theme<=1.0.1
+  - sphinx-copybutton
+  - sphinx-design
+  - sphinx-inline-tabs
+  - sphinx>=5.0,<7.0
+  - sphinxcontrib-srclinks
+  - sphinx-remove-toctrees
+  - sphinxext-opengraph
+  - sphinxext-rediraffe
+  - sphinx-gallery
+  - pip
+  - pip:
+      - ipython
+      - sphinxcontrib-mermaid
+      - -e ../..
