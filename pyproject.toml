@@ -52,6 +52,20 @@ dependencies = [
     "pyproj>=3.7.2"
 ]
 
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-env>=1.0",
+    "pytest-xdist>=3.3",
+    "pytest-timeout>=2.2",
+    "hypothesis>=6.88",
+    "pre-commit>=3.5",
+    "ruff>=0.3",
+    "mypy>=1.7",
+    "black>=24.3",
+    "isort>=5.12"
+]
+
 [project.urls]
 homepage = "https://github.com/simonbesnard1/eoforeststac"
 documentation = "https://eoforeststac.readthedocs.io/en/latest/"
