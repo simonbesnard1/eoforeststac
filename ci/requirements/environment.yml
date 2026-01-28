@@ -50,7 +50,7 @@ dependencies:
       - xarray==2025.6.1
       - zarr==2.18.0
       - numcodecs==0.13.1
-      - dask[array]==2025.6.1
+      - dask[array]==2026.1.1
       - boto3==1.35
       - botocore==1.35
       - s3fs==2024.12.0
