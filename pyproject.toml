@@ -81,4 +81,17 @@ exclude = ["eoforeststac/tests*", "eoforeststac/tests/*", "eoforeststac/tests/**
 [tool.setuptools_scm]
 fallback_version = "9999"
 
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+
 
