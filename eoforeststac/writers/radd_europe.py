@@ -179,7 +179,7 @@ class RADDEuropeWriter(BaseZarrWriter):
             output_dtypes=[np.int32],
         )
 
-        alert_yydoy = ds["alert_code"]#.fillna(fill_value).astype("int16")
+        alert_yydoy = ds["alert_code"]  # .fillna(fill_value).astype("int16")
 
         return domain_valid, forest_mask, alert_month_index, alert_yydoy
 
