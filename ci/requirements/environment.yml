@@ -1,39 +1,63 @@
-name: eoforeststac-tests
+name: eoforeststac-ci
 channels:
   - conda-forge
   - nodefaults
+
 dependencies:
-  - boto3
-  - bottleneck
-  - cartopy
-  - cftime
+  # ---- Runtime base (keep python explicit for CI matrix control) ----
+  - python>=3.10,<3.14
+  - pip
+
+  # ---- Prefer conda-forge for compiled geo stack (less CI suffering) ----
+  - rasterio
+  - geopandas
+  - pyproj
+
+  # ---- Useful runtime/support deps (conda is fine) ----
+  - fsspec
+  - s3fs
   - dask
   - distributed
-  - flox
-  - fsspec
-  - geopandas
-  - h5netcdf
-  - h5py
-  - hdf5
-  - hypothesis
-  - lxml # Optional dep of pydap
-  - netcdf4
-  - numba
-  - numpy>=2
-  - packaging
-  - pandas
-  - pip
-  - pre-commit
-  - pyarrow # pandas raises a deprecation warning without this, breaking doctests
-  - pydap
-  - pydap-server
+
+  # ---- CI / tests / tooling ----
   - pytest
   - pytest-cov
-  - pytest-env
   - pytest-xdist
   - pytest-timeout
-  - requests
-  - retry
+  - hypothesis
+  - pre-commit
+
+  # ---- Optional but common with xarray/dask workflows ----
+  - pandas
+  - packaging
+  - bottleneck
   - scipy
-  - xarray
-  - s3fs
+  - h5py
+  - h5netcdf
+  - netcdf4
+  - cftime
+  - pyarrow
+
+  # ---- Install your exact project pins via pip to match pyproject.toml ----
+  - pip:
+      # build backend bits (useful in CI packaging steps)
+      - setuptools>=64
+      - wheel
+      - setuptools-scm>=8
+
+      # project deps (match your pyproject pins/constraints)
+      - numpy==2.4.1
+      - xarray==2025.12.0
+      - zarr==2.18.0
+      - numcodecs==0.15.1
+      - dask[array]==2025.12.0
+      - boto3==1.35
+      - botocore==1.35
+      - s3fs==2024.12.0
+      - fsspec==2024.12.0
+      - rioxarray==0.20.0
+      - pystac>=1.14.3
+      - stactools==0.5.3
+
+      # install the package itself (so tests import your local code)
+      - -e .
