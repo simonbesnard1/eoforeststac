@@ -42,13 +42,16 @@ jobs:
       - name: Build STAC Browser
         working-directory: stac-browser
         env:
-          SB_catalogUrl: "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
-          SB_pathPrefix: "/eoforeststac/"
-          SB_historyMode: "hash"
-        run: npm run build
+          CATALOG_URL: "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
+          PATH_PREFIX: "/eoforeststac/"
+        run: |
+          npm run build -- \
+            --catalogUrl="$CATALOG_URL" \
+            --pathPrefix="$PATH_PREFIX" \
+            --historyMode=hash
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
           path: stac-browser/dist
 
@@ -62,3 +65,4 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
