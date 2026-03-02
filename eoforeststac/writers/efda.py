@@ -66,26 +66,6 @@ class EFDAWriter(BaseZarrWriter):
 
         return ds
 
-    @staticmethod
-    def _standardize_xy_names(
-        obj: xr.Dataset | xr.DataArray,
-    ) -> xr.Dataset | xr.DataArray:
-        """
-        Rename projected x/y dimensions to longitude/latitude (projected coords).
-        """
-        rename_dims = {}
-        if "x" in obj.dims:
-            rename_dims["x"] = "longitude"
-        if "y" in obj.dims:
-            rename_dims["y"] = "latitude"
-
-        if rename_dims:
-            obj = obj.rename(rename_dims)
-            for old, new in rename_dims.items():
-                if old in obj.coords:
-                    obj = obj.rename({old: new})
-        return obj
-
     # ------------------------------------------------------------------
     # Low-level IO (single year)
     # ------------------------------------------------------------------
@@ -140,9 +120,6 @@ class EFDAWriter(BaseZarrWriter):
         da_agent = self._open_year_da(
             agent_dir, year, agent_pattern, "disturbance_agent", chunks=chunks
         )
-
-        da_mosaic = self._standardize_xy_names(da_mosaic)
-        da_agent = self._standardize_xy_names(da_agent)
 
         ds = xr.Dataset(
             {
