@@ -69,21 +69,6 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
         # --------------------------------------------------------------
         ds = self.set_crs(ds, crs=crs)
 
-        # --------------------------------------------------------------
-        # Rename raster dimensions (projected!)
-        # --------------------------------------------------------------
-        rename_dims = {}
-        if "x" in ds.dims:
-            rename_dims["x"] = "longitude"
-        if "y" in ds.dims:
-            rename_dims["y"] = "latitude"
-
-        if rename_dims:
-            ds = ds.rename(rename_dims)
-            for old, new in rename_dims.items():
-                if old in ds.coords:
-                    ds = ds.rename({old: new})
-
         # --------------------------------------------------
         # Add reference time coordinate (single epoch)
         # --------------------------------------------------
@@ -108,8 +93,8 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
         # --------------------------------------------------------------
         # Coordinate metadata (projected meters)
         # --------------------------------------------------------------
-        if "longitude" in ds.coords:
-            ds["longitude"].attrs.update(
+        if "x" in ds.coords:
+            ds["x"].attrs.update(
                 {
                     "long_name": "Projected x coordinate (ETRS89 / LAEA Europe)",
                     "standard_name": "projection_x_coordinate",
@@ -118,8 +103,8 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
                 }
             )
 
-        if "latitude" in ds.coords:
-            ds["latitude"].attrs.update(
+        if "y" in ds.coords:
+            ds["y"].attrs.update(
                 {
                     "long_name": "Projected y coordinate (ETRS89 / LAEA Europe)",
                     "standard_name": "projection_y_coordinate",
@@ -203,8 +188,8 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
 
         if chunks is None:
             chunks = {
-                "latitude": 2048,
-                "longitude": 2048,
+                "y": 2048,
+                "x": 2048,
             }
 
         print("Loading dataset…")
@@ -221,7 +206,7 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
 
         encoding = {
             var: {
-                "chunks": (chunks["latitude"], chunks["longitude"]),
+                "chunks": (chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
             for var in ds.data_vars
