@@ -117,21 +117,6 @@ class LiuBiomassWriter(BaseZarrWriter):
         ds = self.set_crs(ds, crs=crs)
 
         # --------------------------------------------------
-        # Rename raster dims to spatial coordinates
-        # --------------------------------------------------
-        rename_dims = {}
-        if "x" in ds.dims:
-            rename_dims["x"] = "longitude"
-        if "y" in ds.dims:
-            rename_dims["y"] = "latitude"
-
-        if rename_dims:
-            ds = ds.rename(rename_dims)
-            for o, n in rename_dims.items():
-                if o in ds.coords:
-                    ds = ds.rename({o: n})
-
-        # --------------------------------------------------
         # Add reference time coordinate (single epoch)
         # --------------------------------------------------
         if "time" not in ds.coords:
@@ -222,7 +207,7 @@ class LiuBiomassWriter(BaseZarrWriter):
         """
 
         if chunks is None:
-            chunks = {"latitude": 2048, "longitude": 2048}
+            chunks = {"y": 2048, "x": 2048}
 
         print("Loading Liu biomass layers…")
         ds = self.load_dataset(data_dir)
@@ -238,7 +223,7 @@ class LiuBiomassWriter(BaseZarrWriter):
 
         encoding = {
             var: {
-                "chunks": (chunks["latitude"], chunks["longitude"]),
+                "chunks": (chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
             }
             for var in ds.data_vars
