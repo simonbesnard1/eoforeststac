@@ -21,12 +21,12 @@ class RADDEuropeWriter(BaseZarrWriter):
 
     Output (Zarr)
     -------------
-    disturbance_occurrence(time, latitude, longitude) int16
+    disturbance_occurrence(time, y, x) int16
       - 1 only in the month of the alert for forest pixels
       - 0 otherwise within valid domain
       - _FillValue outside valid domain
 
-    forest_mask(latitude, longitude) int16
+    forest_mask(y, x) int16
       - 0/1 within valid domain
       - _FillValue outside valid domain
 
@@ -49,10 +49,10 @@ class RADDEuropeWriter(BaseZarrWriter):
         rio_chunks = None
         if chunks:
             rio_chunks = {}
-            if "longitude" in chunks:
-                rio_chunks["x"] = chunks["longitude"]
-            if "latitude" in chunks:
-                rio_chunks["y"] = chunks["latitude"]
+            if "x" in chunks:
+                rio_chunks["x"] = chunks["x"]
+            if "y" in chunks:
+                rio_chunks["y"] = chunks["y"]
 
         da = (
             rioxarray.open_rasterio(
@@ -117,20 +117,6 @@ class RADDEuropeWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Helpers
     # ------------------------------------------------------------------
-    @staticmethod
-    def _rename_xy_to_latlon(ds: xr.Dataset) -> xr.Dataset:
-        rename = {}
-        if "x" in ds.dims:
-            rename["x"] = "longitude"
-        if "y" in ds.dims:
-            rename["y"] = "latitude"
-        if rename:
-            ds = ds.rename(rename)
-            for old, new in rename.items():
-                if old in ds.coords:
-                    ds = ds.rename({old: new})
-        return ds
-
     @staticmethod
     def _drop_fillvalue_attr(ds: xr.Dataset) -> xr.Dataset:
         """
@@ -269,20 +255,19 @@ class RADDEuropeWriter(BaseZarrWriter):
     ) -> str:
         if chunks is None:
             # Consider 4096 if scheduler overhead is high
-            chunks = {"time": 1, "latitude": 2048, "longitude": 2048}
+            chunks = {"time": 1, "y": 2048, "x": 2048}
 
         spatial_chunks = {
-            k: v for k, v in chunks.items() if k in ("latitude", "longitude")
+            k: v for k, v in chunks.items() if k in ("y", "x")
         }
 
         print("RADD: loading VRTs…")
         ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)
 
         ds_in = self.set_crs(ds_in, crs=crs)
-        ds_in = self._rename_xy_to_latlon(ds_in)
         target_chunks = {
-            "latitude": chunks["latitude"],
-            "longitude": chunks["longitude"],
+            "y": chunks["y"],
+            "x": chunks["x"],
         }
         ds_in["alert_code"] = ds_in["alert_code"].chunk(target_chunks)
         ds_in["forest_mask_raw"] = ds_in["forest_mask_raw"].chunk(target_chunks)
@@ -299,19 +284,19 @@ class RADDEuropeWriter(BaseZarrWriter):
         encoding = {
             "disturbance_occurrence": {
                 "dtype": "int16",
-                "chunks": (chunks["time"], chunks["latitude"], chunks["longitude"]),
+                "chunks": (chunks["time"], chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
                 "_FillValue": np.int16(_FillValue),
             },
             "forest_mask": {
                 "dtype": "int16",
-                "chunks": (chunks["latitude"], chunks["longitude"]),
+                "chunks": (chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
                 "_FillValue": np.int16(_FillValue),
             },
             "alert_yydoy": {
                 "dtype": "int16",
-                "chunks": (chunks["latitude"], chunks["longitude"]),
+                "chunks": (chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
                 "_FillValue": np.int16(_FillValue),
             },
@@ -342,8 +327,8 @@ class RADDEuropeWriter(BaseZarrWriter):
             ds_step = ds_step.chunk(
                 {
                     "time": chunks["time"],
-                    "latitude": chunks["latitude"],
-                    "longitude": chunks["longitude"],
+                    "y": chunks["y"],
+                    "x": chunks["x"],
                 }
             )
 
