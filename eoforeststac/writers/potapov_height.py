@@ -153,7 +153,7 @@ class PotapovHeightWriter(BaseZarrWriter):
             "created_by": "Potapov et al.",
             "creation_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
             "spatial_resolution": "30m",
-            "crs": crs,
+            "spatial_ref": crs,
             "_FillValue": fill_value,
         }
         self.set_global_metadata(ds, meta)

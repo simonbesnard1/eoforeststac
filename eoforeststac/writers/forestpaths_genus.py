@@ -160,7 +160,7 @@ class FORESTPATHSGenus2020Writer(BaseZarrWriter):
             "references": "https://doi.org/10.5281/zenodo.13341104",
             "version": version,
             "spatial_resolution": "10 m",
-            "crs": crs,
+            "spatial_ref": crs,
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "_FillValue": fill_value,
         }

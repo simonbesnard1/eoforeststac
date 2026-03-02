@@ -230,7 +230,7 @@ class RADDEuropeWriter(BaseZarrWriter):
                 "institution": "Laboratory of Geo-information Science and Remote Sensing, Wageningen University",
                 "created_by": "van der Woude et al.",
                 "spatial_resolution": "10 m",
-                "crs": crs,
+                "spatial_ref": crs,
                 "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             },
         )

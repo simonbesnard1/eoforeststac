@@ -185,7 +185,7 @@ class JRCTMFWriter(BaseZarrWriter):
                 "institution": "Joint Research Centre (JRC)",
                 "product_version": version,
                 "spatial_resolution": "30 m",
-                "crs": crs,
+                "spatial_ref": crs,
                 "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "references": "https://forobs.jrc.ec.europa.eu/TMF",
             },

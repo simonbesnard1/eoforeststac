@@ -176,7 +176,7 @@ class LiuBiomassWriter(BaseZarrWriter):
                 "institution": "University of Copenhagen",
                 "created_by": "Shan Liu et al.",
                 "spatial_resolution": "30 m",
-                "crs": crs,
+                "spatial_ref": crs,
                 "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "references": "https://zenodo.org/records/8154445",
                 "license": (
