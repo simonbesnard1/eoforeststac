@@ -37,8 +37,8 @@ class EFDAWriter(BaseZarrWriter):
 
     Output:
       - single Zarr store with variables:
-          disturbance_occurence(time, latitude, longitude)
-          disturbance_agent(time, latitude, longitude)
+          disturbance_occurence(time, y, x)
+          disturbance_agent(time, y, x)
 
     Strategy:
       - stream year-by-year and append along time (no concat, no huge lists)
@@ -86,7 +86,7 @@ class EFDAWriter(BaseZarrWriter):
         da = (
             rioxarray.open_rasterio(
                 tif_path,
-                chunks={"y": chunks["latitude"], "x": chunks["longitude"]},
+                chunks={"y": chunks["y"], "x": chunks["x"]},
                 mask_and_scale=False,
             )
             .squeeze(drop=True)
@@ -112,7 +112,7 @@ class EFDAWriter(BaseZarrWriter):
         dtype: str = "uint8",
     ) -> xr.Dataset:
         """
-        Build a 1-year Dataset(time=1, latitude, longitude) containing both vars.
+        Build a 1-year Dataset(time=1, y, x) containing both vars.
         """
         da_mosaic = self._open_year_da(
             mosaic_dir, year, mosaic_pattern, "disturbance_occurence", chunks=chunks
@@ -138,14 +138,14 @@ class EFDAWriter(BaseZarrWriter):
         ds = ds.chunk(
             {
                 "time": 1,
-                "latitude": chunks["latitude"],
-                "longitude": chunks["longitude"],
+                "y": chunks["y"],
+                "x": chunks["x"],
             }
         )
 
         # Coordinate attrs (projected LAEA meters)
-        if "longitude" in ds.coords:
-            ds["longitude"].attrs.update(
+        if "x" in ds.coords:
+            ds["x"].attrs.update(
                 {
                     "long_name": "Projected x coordinate (LAEA Europe)",
                     "standard_name": "projection_x_coordinate",
@@ -153,8 +153,8 @@ class EFDAWriter(BaseZarrWriter):
                     "axis": "X",
                 }
             )
-        if "latitude" in ds.coords:
-            ds["latitude"].attrs.update(
+        if "y" in ds.coords:
+            ds["y"].attrs.update(
                 {
                     "long_name": "Projected y coordinate (LAEA Europe)",
                     "standard_name": "projection_y_coordinate",
@@ -239,7 +239,7 @@ class EFDAWriter(BaseZarrWriter):
     # Zarr encoding
     # ------------------------------------------------------------------
     def make_encoding(self, chunks: Dict[str, int]) -> Dict[str, Dict]:
-        zchunks = (1, chunks["latitude"], chunks["longitude"])
+        zchunks = (1, chunks["y"], chunks["x"])
 
         return {
             "disturbance_occurence": {
@@ -280,7 +280,7 @@ class EFDAWriter(BaseZarrWriter):
         years = [int(y) for y in years]
 
         if chunks is None:
-            chunks = {"latitude": 1000, "longitude": 1000}
+            chunks = {"y": 1000, "x": 1000}
 
         # fixed encoding for initialization
         encoding = self.make_encoding(chunks=chunks)
