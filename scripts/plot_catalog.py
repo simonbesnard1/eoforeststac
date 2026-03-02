@@ -6,7 +6,6 @@ from eoforeststac.providers.zarr import ZarrProvider
 from eoforeststac.providers.subset import subset
 import matplotlib as mpl
 
-
 params = {
     # font
     "font.family": "serif",

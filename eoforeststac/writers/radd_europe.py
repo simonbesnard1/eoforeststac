@@ -257,9 +257,7 @@ class RADDEuropeWriter(BaseZarrWriter):
             # Consider 4096 if scheduler overhead is high
             chunks = {"time": 1, "y": 2048, "x": 2048}
 
-        spatial_chunks = {
-            k: v for k, v in chunks.items() if k in ("y", "x")
-        }
+        spatial_chunks = {k: v for k, v in chunks.items() if k in ("y", "x")}
 
         print("RADD: loading VRTs…")
         ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)

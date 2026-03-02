@@ -13,7 +13,6 @@ import rioxarray  # noqa: F401
 from affine import Affine
 from rasterio.enums import Resampling
 
-
 # -----------------------------------------------------------------------------
 # Resampling registry
 # -----------------------------------------------------------------------------
