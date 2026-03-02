@@ -15,7 +15,6 @@ import zarr
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 from eoforeststac.writers.base import BaseZarrWriter
 
-
 # These frequently come from GeoTIFF/rasterio and collide with xarray's CF encoding on append.
 _CF_SERIALIZATION_ATTRS = {
     "add_offset",

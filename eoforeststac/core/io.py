@@ -6,7 +6,6 @@ import json
 from botocore.config import Config
 from eoforeststac.core.config import S3_ENDPOINT_URL, S3_PROFILE
 
-
 _s3_client = None
 _fs_s3 = None
 
