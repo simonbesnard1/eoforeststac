@@ -213,7 +213,7 @@ class HansenGFCWriter(BaseZarrWriter):
                 ),
                 "created_by": "Hansen et al.",
                 "spatial_resolution": "30 m",
-                "crs": crs,
+                "spatial_ref": crs,
                 "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "references": (
                     "https://storage.googleapis.com/earthenginepartners-hansen/"

@@ -115,7 +115,7 @@ class JRCGFC2020Writer(BaseZarrWriter):
             "institution": "European Commission – Joint Research Centre (JRC)",
             "references": "https://forobs.jrc.ec.europa.eu/GFC",
             "spatial_resolution": "10 m",
-            "crs": crs,
+            "spatial_ref": crs,
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "_FillValue": fill_value,
         }

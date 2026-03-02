@@ -89,7 +89,7 @@ class CCI_BiomassWriter(BaseZarrWriter):
             ),
             "spatial_resolution": "100 m",
             "_FillValue": fill_value,
-            "crs": crs,
+            "spatial_ref": crs,
         }
 
         self.set_global_metadata(ds, meta)

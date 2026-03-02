@@ -169,7 +169,7 @@ class RobinsonCRWriter(BaseZarrWriter):
             "version": version,
             "institution": "CIFOR-ICRAF & The Nature Conservancy",
             "references": "ttps://doi.org/10.1038/s41558-025-02355-5",
-            "crs": crs,
+            "spatial_ref": crs,
             "spatial_resolution": "~1 km",
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "_FillValue": fill_value,

@@ -226,7 +226,7 @@ class EFDAWriter(BaseZarrWriter):
             "contact": "Alba Viana-Soto & Cornelius Senf",
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "spatial_resolution": "30 m",
-            "crs": crs,
+            "spatial_ref": crs,
             "_FillValue": _FillValue,
         }
 

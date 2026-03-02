@@ -119,7 +119,7 @@ class SaatchiBiomassWriter(BaseZarrWriter):
             "references": "https://zenodo.org/records/15858551",
             "product_doi": "10.5281/zenodo.15858551",
             "spatial_resolution": "100 m",
-            "crs": crs,
+            "spatial_ref": crs,
             "contact": "Sassan Saatchi (sassan.saatchi@jpl.nasa.gov)",
             "created_by": "Sassan Saatchi",
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
