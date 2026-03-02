@@ -26,6 +26,7 @@ dependencies:
   - pytest-timeout
   - hypothesis
   - pre-commit
+  - setuptools<82
 
   # ---- Optional but common with xarray/dask workflows ----
   - pandas
