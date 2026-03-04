@@ -22,13 +22,14 @@ storage_options = {
 }
 
 
-paths = ["s3://dog.atlaseo-glm.eo-gridded-data/collections/JRC_GFC2020/JRC_GFC2020_v3.0.zarr",
-         "s3://dog.atlaseo-glm.eo-gridded-data/collections/JRC_TMF/JRC_TMF_v2024.zarr",
-         "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v2.0.zarr",
-         "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v2.1.zarr",
-         "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v3.0.zarr",
-         "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v3.1.zarr"
-         ]
+paths = [
+    "s3://dog.atlaseo-glm.eo-gridded-data/collections/JRC_GFC2020/JRC_GFC2020_v3.0.zarr",
+    "s3://dog.atlaseo-glm.eo-gridded-data/collections/JRC_TMF/JRC_TMF_v2024.zarr",
+    "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v2.0.zarr",
+    "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v2.1.zarr",
+    "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v3.0.zarr",
+    "s3://dog.atlaseo-glm.eo-gridded-data/collections/GAMI/GAMI_v3.1.zarr",
+]
 
 for path in paths:
     mapper = fsspec.get_mapper(path, **storage_options)
@@ -36,11 +37,10 @@ for path in paths:
     if "crs" in zg.attrs:
         zg.attrs["spatial_ref"] = zg.attrs["crs"]
         del zg.attrs["crs"]
-    
+
     # 3) Reconsolidate so consolidated=True reads see the updated attrs
     consolidate_metadata(mapper)
     print("Consolidated metadata updated.")
-
 
 
 # 1) Read with xarray to know what are actual data variables
@@ -58,10 +58,8 @@ zg = zarr.open_group(mapper, mode="r+")  # needs write permission
 #     arr.attrs["grid_mapping"] = "spatial_ref"
 
 
-#zg.attrs["crs"] = "spatial_ref"
+# zg.attrs["crs"] = "spatial_ref"
 
 # 3) Reconsolidate so consolidated=True reads see the updated attrs
-#consolidate_metadata(mapper)
-#print("Consolidated metadata updated.")
-
-
+# consolidate_metadata(mapper)
+# print("Consolidated metadata updated.")
