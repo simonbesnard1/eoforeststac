@@ -139,7 +139,7 @@ LIU_BIOMASS_CFG = {
         },
         # Spatial metadata — only set if you’re confident
         "eo:gsd": [30.0],  # biomass map explicitly at 30 m; cover/height may differ
-        "proj:epsg": [4326],  # uncomment if your Zarr is stored in EPSG:4326
+        "proj:epsg": [3035],
         "product_family": ["Liu et al. (Trees outside forests, Europe)"],
         "data_format": ["zarr"],
         # Critical usage constraints surfaced for clients
