@@ -127,17 +127,17 @@ RADD_EUROPE_CFG = {
     "summaries": {
         "temporal_resolution": ["monthly"],
         "variables": [
-            "disturbance_occurence",
+            "disturbance_occurrence",
             "alert_yydoy",
             "forest_mask",
         ],
         "units_by_variable": {
-            "disturbance_occurence": "binary",
+            "disturbance_occurrence": "binary",
             "alert_yydoy": "YYddd",
             "forest_mask": "binary",
         },
         "variable_descriptions": {
-            "disturbance_occurence": (
+            "disturbance_occurrence": (
                 "Binary monthly indicator of forest disturbance occurrence. "
                 "A value of 1 indicates that a RADD alert was triggered in the corresponding month. "
                 "Values are 0 otherwise within the valid forest mask domain."

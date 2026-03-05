@@ -15,14 +15,6 @@ import zarr
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 from eoforeststac.writers.base import BaseZarrWriter
 
-# These frequently come from GeoTIFF/rasterio and collide with xarray's CF encoding on append.
-_CF_SERIALIZATION_ATTRS = {
-    "add_offset",
-    "scale_factor",
-    "valid_range",
-    "missing_value",
-}
-
 
 class EFDAWriter(BaseZarrWriter):
     """
@@ -36,7 +28,7 @@ class EFDAWriter(BaseZarrWriter):
 
     Output:
       - single Zarr store with variables:
-          disturbance_occurence(time, y, x)
+          disturbance_occurrence(time, y, x)
           disturbance_agent(time, y, x)
 
     Strategy:
@@ -80,6 +72,8 @@ class EFDAWriter(BaseZarrWriter):
         Open one yearly GeoTIFF lazily (dask-chunked) and return DataArray with dims (time, y, x).
         """
         tif_path = Path(input_dir) / pattern.format(year=year)
+        if not tif_path.exists():
+            raise FileNotFoundError(f"EFDA GeoTIFF not found: {tif_path}")
 
         # mask_and_scale=False avoids carrying add_offset/scale_factor semantics into attrs
         da = (
@@ -114,7 +108,7 @@ class EFDAWriter(BaseZarrWriter):
         Build a 1-year Dataset(time=1, y, x) containing both vars.
         """
         da_mosaic = self._open_year_da(
-            mosaic_dir, year, mosaic_pattern, "disturbance_occurence", chunks=chunks
+            mosaic_dir, year, mosaic_pattern, "disturbance_occurrence", chunks=chunks
         )
         da_agent = self._open_year_da(
             agent_dir, year, agent_pattern, "disturbance_agent", chunks=chunks
@@ -122,7 +116,7 @@ class EFDAWriter(BaseZarrWriter):
 
         ds = xr.Dataset(
             {
-                "disturbance_occurence": da_mosaic,
+                "disturbance_occurrence": da_mosaic,
                 "disturbance_agent": da_agent,
             }
         )
@@ -174,8 +168,8 @@ class EFDAWriter(BaseZarrWriter):
         Add variable + global metadata.
         """
 
-        if "disturbance_occurence" in ds:
-            ds["disturbance_occurence"].attrs.update(
+        if "disturbance_occurrence" in ds:
+            ds["disturbance_occurrence"].attrs.update(
                 {
                     "long_name": "EFDA forest disturbance occurrence",
                     "description": "Annual forest disturbance occurrence mosaic from the European Forest Disturbance Atlas (EFDA).",
@@ -196,13 +190,8 @@ class EFDAWriter(BaseZarrWriter):
                     ),
                     "units": "categorical",
                     "flag_values": [1, 2, 3, 4],
-                    "flag_meanings": ["wind_bark_beetle", "fire", "harvest", "mixed"],
-                    "flag_descriptions": [
-                        "Wind and bark beetle disturbance complex",
-                        "Wildfire-related disturbance",
-                        "Planned or salvage logging",
-                        "Mixed agents (more than one disturbance agent occurred)",
-                    ],
+                    "flag_meanings": "wind_bark_beetle fire harvest mixed",
+                    "flag_descriptions": "Wind and bark beetle disturbance complex; Wildfire-related disturbance; Planned or salvage logging; Mixed agents (more than one disturbance agent occurred)",
                     "grid_mapping": "spatial_ref",
                     "_FillValue": _FillValue,
                 }
@@ -227,7 +216,6 @@ class EFDAWriter(BaseZarrWriter):
             "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
             "spatial_resolution": "30 m",
             "spatial_ref": crs,
-            "_FillValue": _FillValue,
         }
 
         self.set_global_metadata(ds, meta)
@@ -241,7 +229,7 @@ class EFDAWriter(BaseZarrWriter):
         zchunks = (1, chunks["y"], chunks["x"])
 
         return {
-            "disturbance_occurence": {
+            "disturbance_occurrence": {
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
             },
@@ -322,6 +310,10 @@ class EFDAWriter(BaseZarrWriter):
 
         if consolidate_at_end:
             zarr.consolidate_metadata(store)
+        else:
+            print(
+                "EFDA: skipping metadata consolidation — call zarr.consolidate_metadata() manually before reading the store."
+            )
 
         print(f"EFDA: done → {output_zarr}")
         return output_zarr
