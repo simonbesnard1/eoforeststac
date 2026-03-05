@@ -129,11 +129,11 @@ EFDA_CFG = {
         "temporal_resolution": ["annual"],
         "variables": [
             "disturbance_agent",
-            "disturbance_occurence",
+            "disturbance_occurrence",
         ],
         "units_by_variable": {
             "disturbance_agent": "categorical",
-            "disturbance_occurence": "binary",
+            "disturbance_occurrence": "binary",
         },
         # spatial metadata
         "eo:gsd": [30.0],
