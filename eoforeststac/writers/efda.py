@@ -102,10 +102,17 @@ class EFDAWriter(BaseZarrWriter):
         agent_pattern: str,
         crs: str,
         chunks: Dict[str, int],
-        dtype: str = "uint8",
+        dtype: str = "int16",
+        forest_mask_path: Optional[str] = None,
+        _FillValue: int = -9999,
     ) -> xr.Dataset:
         """
         Build a 1-year Dataset(time=1, y, x) containing both vars.
+
+        If forest_mask_path is provided, disturbance_occurrence will be:
+          - 1  where disturbed forest (forest_mask == 1 and disturbance == 1)
+          - 0  where undisturbed forest (forest_mask == 1 and disturbance == 0)
+          - _FillValue (NaN sentinel) where not forest (forest_mask != 1)
         """
         da_mosaic = self._open_year_da(
             mosaic_dir, year, mosaic_pattern, "disturbance_occurrence", chunks=chunks
@@ -113,6 +120,16 @@ class EFDAWriter(BaseZarrWriter):
         da_agent = self._open_year_da(
             agent_dir, year, agent_pattern, "disturbance_agent", chunks=chunks
         )
+
+        if forest_mask_path is not None:
+            forest_mask = rioxarray.open_rasterio(
+                Path(forest_mask_path),
+                chunks={"y": chunks["y"], "x": chunks["x"]},
+                mask_and_scale=False,
+            ).squeeze(drop=True)
+            # Within forest: 1=disturbed, 0=undisturbed (NaN→0); outside forest: _FillValue
+            da_mosaic = xr.where(forest_mask == 1, da_mosaic.fillna(0), _FillValue)
+            da_agent = xr.where(forest_mask == 1, da_agent, _FillValue)
 
         ds = xr.Dataset(
             {
@@ -124,7 +141,7 @@ class EFDAWriter(BaseZarrWriter):
         # CRS once
         ds = self.set_crs(ds, crs=crs)
 
-        # dtype (categorical: keep small)
+        # dtype (int16 to support negative fill value)
         ds = ds.astype(np.dtype(dtype))
 
         # enforce chunk alignment (time=1 always)
@@ -225,17 +242,23 @@ class EFDAWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Zarr encoding
     # ------------------------------------------------------------------
-    def make_encoding(self, chunks: Dict[str, int]) -> Dict[str, Dict]:
+    def make_encoding(
+        self, chunks: Dict[str, int], _FillValue: int = -9999
+    ) -> Dict[str, Dict]:
         zchunks = (1, chunks["y"], chunks["x"])
 
         return {
             "disturbance_occurrence": {
+                "dtype": "int16",
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
+                "_FillValue": np.int16(_FillValue),
             },
             "disturbance_agent": {
+                "dtype": "int16",
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
+                "_FillValue": np.int16(_FillValue),
             },
         }
 
@@ -252,17 +275,23 @@ class EFDAWriter(BaseZarrWriter):
         mosaic_pattern: str = "{year}_disturb_mosaic_v211_22_epsg3035.tif",
         agent_pattern: str = "{year}_disturb_agent_v211_reclass_compv211_epsg3035.tif",
         crs: str = "EPSG:3035",
-        _FillValue: int = 0,
+        _FillValue: int = -9999,
+        forest_mask_path: Optional[str] = None,
         chunks: Optional[Dict[str, int]] = None,
-        dtype: str = "uint8",
+        dtype: str = "int16",
         consolidate_at_end: bool = True,
     ) -> str:
         """
         Stream yearly EFDA GeoTIFFs into a single Zarr store along time.
 
-        Practical defaults:
-          - _FillValue=0 (EFDA categories; GeoTIFF nodata is typically 0)
-          - dtype=uint8   (small + categorical)
+        Parameters
+        ----------
+        forest_mask_path : str, optional
+            Path to a forest mask GeoTIFF (1=forest, other=non-forest).
+            When provided, disturbance_occurrence is:
+              1  = disturbed forest
+              0  = undisturbed forest
+              _FillValue = non-forest (treated as NaN by xarray on read)
         """
         years = [int(y) for y in years]
 
@@ -270,7 +299,7 @@ class EFDAWriter(BaseZarrWriter):
             chunks = {"y": 1000, "x": 1000}
 
         # fixed encoding for initialization
-        encoding = self.make_encoding(chunks=chunks)
+        encoding = self.make_encoding(chunks=chunks, _FillValue=_FillValue)
 
         # store
         store = self.make_store(output_zarr)
@@ -287,6 +316,8 @@ class EFDAWriter(BaseZarrWriter):
                 crs=crs,
                 chunks=chunks,
                 dtype=dtype,
+                forest_mask_path=forest_mask_path,
+                _FillValue=_FillValue,
             )
 
             # Add human-readable metadata
