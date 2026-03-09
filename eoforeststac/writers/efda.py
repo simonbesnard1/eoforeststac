@@ -42,7 +42,11 @@ class EFDAWriter(BaseZarrWriter):
     def _strip_cf_serialization_attrs(self, ds: xr.Dataset) -> xr.Dataset:
         """
         Remove CF/Zarr serialization-related attributes that must NOT
-        be present when appending to an existing Zarr store.
+        be present when appending to an existing Zarr store, and that
+        must never live in attrs alongside the encoding dict.
+
+        xarray strictly owns _FillValue, scale_factor, add_offset, and
+        missing_value — they belong in encoding only, not in attrs.
         """
         STRIP_KEYS = {
             "_FillValue",
@@ -183,6 +187,11 @@ class EFDAWriter(BaseZarrWriter):
     ) -> xr.Dataset:
         """
         Add variable + global metadata.
+
+        Note: _FillValue is intentionally NOT written into variable attrs here.
+        It is owned exclusively by the encoding dict and will be serialized
+        correctly by xarray via make_encoding(). Writing it into attrs as well
+        causes xarray's CF encoder to raise a ValueError.
         """
 
         if "disturbance_occurrence" in ds:
@@ -194,7 +203,6 @@ class EFDAWriter(BaseZarrWriter):
                     "flag_values": [0, 1],
                     "flag_meanings": "no_disturbance disturbance",
                     "grid_mapping": "spatial_ref",
-                    "_FillValue": _FillValue,
                 }
             )
 
@@ -210,7 +218,6 @@ class EFDAWriter(BaseZarrWriter):
                     "flag_meanings": "wind_bark_beetle fire harvest mixed",
                     "flag_descriptions": "Wind and bark beetle disturbance complex; Wildfire-related disturbance; Planned or salvage logging; Mixed agents (more than one disturbance agent occurred)",
                     "grid_mapping": "spatial_ref",
-                    "_FillValue": _FillValue,
                 }
             )
 
@@ -325,8 +332,11 @@ class EFDAWriter(BaseZarrWriter):
                 ds_year, _FillValue=_FillValue, crs=crs, version=version
             )
 
-            if i > 0:
-                ds_year = self._strip_cf_serialization_attrs(ds_year)
+            # Strip CF serialization attrs (_FillValue, scale_factor, add_offset,
+            # missing_value) from variable attrs on every year — not just appends.
+            # These keys must live in the encoding dict only; xarray's CF encoder
+            # raises ValueError if it finds them in attrs as well.
+            ds_year = self._strip_cf_serialization_attrs(ds_year)
 
             ds_year.to_zarr(
                 store=store,
