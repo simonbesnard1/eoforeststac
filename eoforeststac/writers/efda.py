@@ -125,15 +125,21 @@ class EFDAWriter(BaseZarrWriter):
             agent_dir, year, agent_pattern, "disturbance_agent", chunks=chunks
         )
 
-        forest_mask_raw = rioxarray.open_rasterio(
-            Path(forest_mask_path),
-            chunks={"y": chunks["y"], "x": chunks["x"]},
-            masked=True,                   # ← nodata → NaN, enabling domain detection
-        ).squeeze(drop=True).astype("int16")
-    
+        forest_mask_raw = (
+            rioxarray.open_rasterio(
+                Path(forest_mask_path),
+                chunks={"y": chunks["y"], "x": chunks["x"]},
+                masked=True,  # ← nodata → NaN, enabling domain detection
+            )
+            .squeeze(drop=True)
+            .astype("int16")
+        )
+
         # 1 = disturbed forest, 0 = undisturbed forest, _FillValue = non-forest OR outside domain
-        da_mosaic = da_mosaic.where(forest_mask_raw == 1, other=_FillValue).astype(dtype)
-        da_agent  = da_agent.where(forest_mask_raw == 1, other=_FillValue).astype(dtype)
+        da_mosaic = da_mosaic.where(forest_mask_raw == 1, other=_FillValue).astype(
+            dtype
+        )
+        da_agent = da_agent.where(forest_mask_raw == 1, other=_FillValue).astype(dtype)
 
         ds = xr.Dataset(
             {
@@ -144,7 +150,7 @@ class EFDAWriter(BaseZarrWriter):
 
         # CRS once
         ds = self.set_crs(ds, crs=crs)
-        
+
         # enforce chunk alignment (time=1 always)
         ds = ds.chunk(
             {
@@ -332,7 +338,7 @@ class EFDAWriter(BaseZarrWriter):
             # Strip CF serialization attrs (_FillValue, scale_factor, add_offset,
             # missing_value) from variable attrs on every year.
             ds_year = self._strip_cf_serialization_attrs(ds_year)
-            
+
             ds_year.to_zarr(
                 store=store,
                 mode="w" if i == 0 else "a",
