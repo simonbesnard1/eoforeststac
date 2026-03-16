@@ -92,7 +92,7 @@ class EFDAWriter(BaseZarrWriter):
 
         # Attach time coordinate and keep it as length-1 dimension
         da = da.assign_coords(time=np.datetime64(f"{year}-01-01")).expand_dims("time")
-        return da
+        return da.astype("int16")
 
     # ------------------------------------------------------------------
     # Build per-year dataset
@@ -125,15 +125,15 @@ class EFDAWriter(BaseZarrWriter):
             agent_dir, year, agent_pattern, "disturbance_agent", chunks=chunks
         )
 
-        if forest_mask_path is not None:
-            forest_mask = rioxarray.open_rasterio(
-                Path(forest_mask_path),
-                chunks={"y": chunks["y"], "x": chunks["x"]},
-                mask_and_scale=False,
-            ).squeeze(drop=True)
-            # Within forest: 1=disturbed, 0=undisturbed (NaN→0); outside forest: _FillValue
-            da_mosaic = xr.where(forest_mask == 1, da_mosaic.fillna(0), _FillValue)
-            da_agent = xr.where(forest_mask == 1, da_agent, _FillValue)
+        forest_mask_raw = rioxarray.open_rasterio(
+            Path(forest_mask_path),
+            chunks={"y": chunks["y"], "x": chunks["x"]},
+            masked=True,                   # ← nodata → NaN, enabling domain detection
+        ).squeeze(drop=True).astype("int16")
+    
+        # 1 = disturbed forest, 0 = undisturbed forest, _FillValue = non-forest OR outside domain
+        da_mosaic = da_mosaic.where(forest_mask_raw == 1, other=_FillValue).astype(dtype)
+        da_agent  = da_agent.where(forest_mask_raw == 1, other=_FillValue).astype(dtype)
 
         ds = xr.Dataset(
             {
@@ -144,10 +144,7 @@ class EFDAWriter(BaseZarrWriter):
 
         # CRS once
         ds = self.set_crs(ds, crs=crs)
-
-        # dtype (int16 to support negative fill value)
-        ds = ds.astype(np.dtype(dtype))
-
+        
         # enforce chunk alignment (time=1 always)
         ds = ds.chunk(
             {
@@ -214,9 +211,9 @@ class EFDAWriter(BaseZarrWriter):
                         "Causal agent of forest disturbance following the EFDA classification."
                     ),
                     "units": "categorical",
-                    "flag_values": [1, 2, 3, 4],
-                    "flag_meanings": "wind_bark_beetle fire harvest mixed",
-                    "flag_descriptions": "Wind and bark beetle disturbance complex; Wildfire-related disturbance; Planned or salvage logging; Mixed agents (more than one disturbance agent occurred)",
+                    "flag_values": [0, 1, 2, 3, 4],
+                    "flag_meanings": "no_disturbance wind_bark_beetle fire harvest mixed",
+                    "flag_descriptions": "No Disturbance, Wind and bark beetle disturbance complex; Wildfire-related disturbance; Planned or salvage logging; Mixed agents (more than one disturbance agent occurred)",
                     "grid_mapping": "spatial_ref",
                 }
             )
@@ -283,8 +280,8 @@ class EFDAWriter(BaseZarrWriter):
         agent_pattern: str = "{year}_disturb_agent_v211_reclass_compv211_epsg3035.tif",
         crs: str = "EPSG:3035",
         _FillValue: int = -9999,
-        forest_mask_path: Optional[str] = None,
-        chunks: Optional[Dict[str, int]] = None,
+        forest_mask_path: str = None,
+        chunks: Dict[str, int] = None,
         dtype: str = "int16",
         consolidate_at_end: bool = True,
     ) -> str:
@@ -333,11 +330,9 @@ class EFDAWriter(BaseZarrWriter):
             )
 
             # Strip CF serialization attrs (_FillValue, scale_factor, add_offset,
-            # missing_value) from variable attrs on every year — not just appends.
-            # These keys must live in the encoding dict only; xarray's CF encoder
-            # raises ValueError if it finds them in attrs as well.
+            # missing_value) from variable attrs on every year.
             ds_year = self._strip_cf_serialization_attrs(ds_year)
-
+            
             ds_year.to_zarr(
                 store=store,
                 mode="w" if i == 0 else "a",
