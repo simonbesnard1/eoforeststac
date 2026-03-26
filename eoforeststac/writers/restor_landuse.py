@@ -219,8 +219,7 @@ class RESTOR_LanduseWriter(BaseZarrWriter):
 
             ds_year = self.add_metadata(ds_year, crs=crs, version=version)
 
-            if i > 0:
-                ds_year = self._strip_cf_serialization_attrs(ds_year)
+            ds_year = self._strip_cf_serialization_attrs(ds_year)
 
             ds_year.to_zarr(
                 store=store,
