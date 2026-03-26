@@ -26,8 +26,7 @@ ds = provider.open_dataset(
     version="6.0",
 )
 
-ds_efda = subset(
-    ds, geometry=geometry).isel(time=0)
+ds_efda = subset(ds, geometry=geometry).isel(time=0)
 
 
 aligner = DatasetAligner(
