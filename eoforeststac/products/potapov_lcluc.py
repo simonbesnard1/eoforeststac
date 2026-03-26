@@ -6,7 +6,7 @@ POTAPOV_LCLUC_CFG = {
     # ------------------------------------------------------------------
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
-    "id": "Potapov LCLUC",
+    "id": "Potapov_LCLUC",
     "title": "Potapov Land Cover and Land Use Change 2000-2020",
     "description": (
         "The GLAD Global Land Cover and Land Use Change dataset quantifies \
