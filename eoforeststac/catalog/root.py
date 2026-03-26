@@ -128,11 +128,7 @@ THEMES: Dict[str, Dict[str, object]] = {
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
         "description": "Land Use, land Cover and associated changes.",
-        "keywords": [
-            "land use",
-            "land cover",
-            "changes"
-        ],
+        "keywords": ["land use", "land cover", "changes"],
         "products": ["RESTOR_LANDUSE"],
     },
 }
@@ -181,9 +177,12 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "RADD_EUROPE", create_radd_europe_collection, create_radd_europe_item
         ),
         ProductSpec(
-            "RESTOR_LANDUSE", create_restor_landuse_collection, create_restor_landuse_item
+            "RESTOR_LANDUSE",
+            create_restor_landuse_collection,
+            create_restor_landuse_item,
         ),
     )
+
 
 def _build_base_tree(
     versions: Mapping[str, List[str]],
@@ -587,8 +586,7 @@ def build_root_catalog(
             "canopy height",
             "forest age",
             "land use",
-            "land cover"
-            "STAC",
+            "land cover" "STAC",
         ]
     internal_root.extra_fields["keywords"] = keywords
 
@@ -687,8 +685,7 @@ def build_browser_catalog(
             "canopy height",
             "forest age",
             "land use",
-            "land cover"
-            "STAC",
+            "land cover" "STAC",
         ]
 
     return _write_browser_variant(
