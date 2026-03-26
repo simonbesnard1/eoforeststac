@@ -67,6 +67,11 @@ from eoforeststac.catalog.restor_landuse import (
     create_restor_landuse_item,
 )
 
+from eoforeststac.catalog.potapov_lcluc import (
+    create_potapov_lcluc_collection,
+    create_potapov_lcluc_item,
+)
+
 # ---------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------
@@ -85,6 +90,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "LIU_BIOMASS": ["0.1"],
     "RADD_EUROPE": ["1.0"],
     "RESTOR_LANDUSE": ["2.0"],
+    "POTAPOV_LCLUC": ["2020"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -129,7 +135,7 @@ THEMES: Dict[str, Dict[str, object]] = {
         "title": "Land Use & Land Cover",
         "description": "Land Use, land Cover and associated changes.",
         "keywords": ["land use", "land cover", "changes"],
-        "products": ["RESTOR_LANDUSE"],
+        "products": ["RESTOR_LANDUSE", "POTAPOV_LCLUC"],
     },
 }
 
@@ -181,6 +187,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             create_restor_landuse_collection,
             create_restor_landuse_item,
         ),
+        ProductSpec(
+            "POTAPOV_LCLUC",
+            create_potapov_lcluc_collection,
+            create_potapov_lcluc_item,
+        )
     )
 
 
@@ -586,7 +597,8 @@ def build_root_catalog(
             "canopy height",
             "forest age",
             "land use",
-            "land cover" "STAC",
+            "land cover",
+            "STAC",
         ]
     internal_root.extra_fields["keywords"] = keywords
 
@@ -685,7 +697,8 @@ def build_browser_catalog(
             "canopy height",
             "forest age",
             "land use",
-            "land cover" "STAC",
+            "land cover", 
+            "STAC",
         ]
 
     return _write_browser_variant(
