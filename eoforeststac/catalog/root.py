@@ -62,6 +62,11 @@ from eoforeststac.catalog.radd_europe import (
     create_radd_europe_item,
 )
 
+from eoforeststac.catalog.restor_landuse import (
+    create_restor_landuse_collection,
+    create_restor_landuse_item,
+)
+
 # ---------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------
@@ -79,6 +84,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "HANSEN_GFC": ["1.12"],
     "LIU_BIOMASS": ["0.1"],
     "RADD_EUROPE": ["1.0"],
+    "RESTOR_LANDUSE": ["2.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -118,6 +124,16 @@ THEMES: Dict[str, Dict[str, object]] = {
             "demography",
         ],
         "products": ["GAMI", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
+    },
+    "land-use-land-cover": {
+        "title": "Land Use & Land Cover",
+        "description": "Land Use, land Cover and associated changes.",
+        "keywords": [
+            "land use",
+            "land cover",
+            "changes"
+        ],
+        "products": ["RESTOR_LANDUSE"],
     },
 }
 
@@ -164,8 +180,10 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
         ProductSpec(
             "RADD_EUROPE", create_radd_europe_collection, create_radd_europe_item
         ),
+        ProductSpec(
+            "RESTOR_LANDUSE", create_restor_landuse_collection, create_restor_landuse_item
+        ),
     )
-
 
 def _build_base_tree(
     versions: Mapping[str, List[str]],
@@ -568,6 +586,8 @@ def build_root_catalog(
             "disturbance",
             "canopy height",
             "forest age",
+            "land use",
+            "land cover"
             "STAC",
         ]
     internal_root.extra_fields["keywords"] = keywords
@@ -666,6 +686,8 @@ def build_browser_catalog(
             "disturbance",
             "canopy height",
             "forest age",
+            "land use",
+            "land cover"
             "STAC",
         ]
 

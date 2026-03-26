@@ -1,7 +1,6 @@
 import geopandas as gpd
 from eoforeststac.providers.zarr import ZarrProvider
 from eoforeststac.providers.subset import subset
-
 from eoforeststac.providers.align import DatasetAligner
 
 provider = ZarrProvider(
@@ -16,8 +15,8 @@ roi = gpd.read_file(
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
-    collection_id="EFDA",
-    version="2.1.1",
+    collection_id="SAATCHI_BIOMASS",
+    version="2.0",
 )
 
 ds_biomass = subset(ds, geometry=geometry)  # optional
@@ -28,8 +27,7 @@ ds = provider.open_dataset(
 )
 
 ds_efda = subset(
-    ds, geometry=geometry, time=("2020-01-01", "2020-12-31")  # geometry in EPSG:4326
-)
+    ds, geometry=geometry).isel(time=0)
 
 
 aligner = DatasetAligner(
@@ -40,6 +38,6 @@ aligner = DatasetAligner(
     },
 )
 
-aligned = aligner.align({"CCI_BIOMASS": ds_biomass, "SAATCHI_BIOMASS": ds_efda})
+aligned = aligner.align({"CCI_BIOMASS": ds_efda, "SAATCHI_BIOMASS": ds_biomass})
 
 aligned
