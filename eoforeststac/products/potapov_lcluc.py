@@ -19,7 +19,6 @@ POTAPOV_LCLUC_CFG = {
         independently using a statistical sampling.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
-
     # ------------------------------------------------------------------
     # Spatial / temporal extent
     # ------------------------------------------------------------------
@@ -38,13 +37,11 @@ POTAPOV_LCLUC_CFG = {
     },
     "start_datetime": datetime.datetime(2000, 1, 1, tzinfo=datetime.timezone.utc),
     "end_datetime": datetime.datetime(2020, 12, 31, tzinfo=datetime.timezone.utc),
-    
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
     "collection_href": f"{BASE_S3_URL}/Potapov_LCLUC/collection.json",
     "base_path": f"{BASE_S3_URL}/Potapov_LCLUC",
-
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
@@ -61,7 +58,6 @@ POTAPOV_LCLUC_CFG = {
             "url": "https://www.gfz.de",
         },
     ],
-
     # ------------------------------------------------------------------
     # Discovery helpers
     # ------------------------------------------------------------------
@@ -72,10 +68,8 @@ POTAPOV_LCLUC_CFG = {
         "land cover",
         "change",
     ],
-
     # Optional but often useful for “atlas” grouping (your own convention)
     "themes": ["landcover", "landuse", "forest"],
-
     # ------------------------------------------------------------------
     # Links (what makes STAC Browser feel curated)
     # ------------------------------------------------------------------
@@ -111,14 +105,21 @@ POTAPOV_LCLUC_CFG = {
         "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
         "https://stac-extensions.github.io/item-assets/v1.0.0/schema.json",  # bands, nodata, etc.
     ],
-
     # ------------------------------------------------------------------
     # Summaries (client-friendly structured metadata)
     # ------------------------------------------------------------------
     "summaries": {
-        "temporal_resolution": ["Land cover/use every 4 years and change over 20 years"],
-        "variables": ["LCLU2000", "LCLU2005", "LCLU2010", "LCLU2015", 
-                      "LCLU2020", "LCLUC2000-2020change"],
+        "temporal_resolution": [
+            "Land cover/use every 4 years and change over 20 years"
+        ],
+        "variables": [
+            "LCLU2000",
+            "LCLU2005",
+            "LCLU2010",
+            "LCLU2015",
+            "LCLU2020",
+            "LCLUC2000-2020change",
+        ],
         "units_by_variable": {
             "LCLU2000": "Categorical",
             "LCLU2005": "Categorical",
@@ -129,7 +130,9 @@ POTAPOV_LCLUC_CFG = {
         },
         "eo:gsd": [30.0],
         "proj:epsg": [4326],
-        "classes": ["See full legend: https://storage.googleapis.com/earthenginepartners-hansen/GLCLU2000-2020/legend.xlsx"],
+        "classes": [
+            "See full legend: https://storage.googleapis.com/earthenginepartners-hansen/GLCLU2000-2020/legend.xlsx"
+        ],
         "product_family": ["GLAD LCLUC"],
         "data_format": ["zarr"],
     },
@@ -140,9 +143,7 @@ POTAPOV_LCLUC_CFG = {
             "roles": ["data"],
             "type": "application/vnd.zarr",
         },
-
     },
-
     # ------------------------------------------------------------------
     # Asset template (add roles + description as you requested)
     # ------------------------------------------------------------------
@@ -159,4 +160,3 @@ POTAPOV_LCLUC_CFG = {
         ),
     },
 }
-

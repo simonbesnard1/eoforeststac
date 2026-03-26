@@ -191,7 +191,7 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "POTAPOV_LCLUC",
             create_potapov_lcluc_collection,
             create_potapov_lcluc_item,
-        )
+        ),
     )
 
 
@@ -697,7 +697,7 @@ def build_browser_catalog(
             "canopy height",
             "forest age",
             "land use",
-            "land cover", 
+            "land cover",
             "STAC",
         ]
 
