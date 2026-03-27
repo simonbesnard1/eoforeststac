@@ -1,5 +1,5 @@
 import datetime
-from eoforeststac.core.config import BASE_S3_URL
+from eoforeststac.core.config import S3_HTTP_BASE
 from eoforeststac.core.assets import create_zarr_asset
 
 LIU_BIOMASS_CFG = {
@@ -38,8 +38,8 @@ LIU_BIOMASS_CFG = {
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
-    "collection_href": f"{BASE_S3_URL}/LIU_BIOMASS/collection.json",
-    "base_path": f"{BASE_S3_URL}/LIU_BIOMASS",
+    "collection_href": f"{S3_HTTP_BASE}/LIU_BIOMASS/collection.json",
+    "base_path": f"{S3_HTTP_BASE}/LIU_BIOMASS",
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------

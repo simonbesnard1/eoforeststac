@@ -1,5 +1,5 @@
 import datetime
-from eoforeststac.core.config import BASE_S3_URL
+from eoforeststac.core.config import S3_HTTP_BASE
 from eoforeststac.core.assets import create_zarr_asset
 
 RESTOR_LANDUSE_CFG = {
@@ -34,8 +34,8 @@ RESTOR_LANDUSE_CFG = {
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
-    "collection_href": f"{BASE_S3_URL}/RESTOR_LANDUSE/collection.json",
-    "base_path": f"{BASE_S3_URL}/RESTOR_LANDUSE",
+    "collection_href": f"{S3_HTTP_BASE}/RESTOR_LANDUSE/collection.json",
+    "base_path": f"{S3_HTTP_BASE}/RESTOR_LANDUSE",
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------

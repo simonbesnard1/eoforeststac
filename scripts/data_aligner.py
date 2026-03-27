@@ -10,12 +10,12 @@ provider = ZarrProvider(
 )
 
 roi = gpd.read_file(
-    "/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/FR-Pue.geojson"
+    "/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/BR-Npw.geojson"
 )
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
-    collection_id="SAATCHI_BIOMASS",
+    collection_id="RESTOR_LANDUSE",
     version="2.0",
 )
 
