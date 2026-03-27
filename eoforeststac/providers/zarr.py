@@ -1,5 +1,6 @@
 # eoforeststac/providers/zarr.py
 
+import fsspec
 import xarray as xr
 from typing import Optional, Sequence
 
@@ -68,7 +69,10 @@ class ZarrProvider(BaseProvider):
             )
 
         href = item.assets[asset_key].href
-        store = self.s3_fs.get_mapper(href)
+        if href.startswith("https://"):
+            store = fsspec.get_mapper(href)
+        else:
+            store = self.s3_fs.get_mapper(href)
 
         # ----------------------------------------------------------
         # 4. Open Zarr
