@@ -45,6 +45,7 @@ jobs:
           SB_catalogUrl: "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
           SB_pathPrefix: "/eoforeststac/"
           SB_historyMode: "hash"
+          SB_allowDownload: "false"
         run: npm run build
 
       - name: Upload artifact
