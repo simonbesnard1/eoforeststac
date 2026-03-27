@@ -1,5 +1,5 @@
 import datetime
-from eoforeststac.core.config import BASE_S3_URL
+from eoforeststac.core.config import S3_HTTP_BASE
 from eoforeststac.core.assets import create_zarr_asset
 
 POTAPOV_HEIGHT_CFG = {
@@ -36,8 +36,8 @@ POTAPOV_HEIGHT_CFG = {
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
-    "collection_href": f"{BASE_S3_URL}/POTAPOV_HEIGHT/collection.json",
-    "base_path": f"{BASE_S3_URL}/POTAPOV_HEIGHT",
+    "collection_href": f"{S3_HTTP_BASE}/POTAPOV_HEIGHT/collection.json",
+    "base_path": f"{S3_HTTP_BASE}/POTAPOV_HEIGHT",
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------

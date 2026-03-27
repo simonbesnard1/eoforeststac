@@ -1,5 +1,5 @@
 import datetime
-from eoforeststac.core.config import BASE_S3_URL
+from eoforeststac.core.config import S3_HTTP_BASE
 from eoforeststac.core.assets import create_zarr_asset
 
 RADD_EUROPE_CFG = {
@@ -40,8 +40,8 @@ RADD_EUROPE_CFG = {
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
-    "collection_href": f"{BASE_S3_URL}/RADD_EUROPE/collection.json",
-    "base_path": f"{BASE_S3_URL}/RADD_EUROPE",
+    "collection_href": f"{S3_HTTP_BASE}/RADD_EUROPE/collection.json",
+    "base_path": f"{S3_HTTP_BASE}/RADD_EUROPE",
     # ------------------------------------------------------------------
     # Governance
     # ------------------------------------------------------------------
