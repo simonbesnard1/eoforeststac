@@ -46,7 +46,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup micromamba
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@v3
         with:
           environment-file: ci/requirements/environment.yml
           environment-name: eoforeststac-ci
@@ -110,7 +110,7 @@ jobs:
           path: pytest.xml
 
       - name: Upload code coverage to Codecov
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v6.0.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
