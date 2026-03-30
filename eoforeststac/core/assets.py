@@ -1,8 +1,10 @@
+from typing import List
+
 import pystac
 
 
 def create_zarr_asset(
-    href: str, title: str, roles: str, description: str
+    href: str, title: str, roles: List[str], description: str
 ) -> pystac.Asset:
     return pystac.Asset(
         href=href,

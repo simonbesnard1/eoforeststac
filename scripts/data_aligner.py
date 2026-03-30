@@ -10,33 +10,33 @@ provider = ZarrProvider(
 )
 
 roi = gpd.read_file(
-    "/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/BR-Npw.geojson"
+    "/home/simon/Documents/science/GFZ/projects/foreststrucflux/data/geojson/DE-Hai.geojson"
 )
 geometry = roi.to_crs("EPSG:4326").geometry.union_all()
 
 ds = provider.open_dataset(
-    collection_id="RESTOR_LANDUSE",
+    collection_id="SAATCHI_BIOMASS",
     version="2.0",
 )
 
 ds_biomass = subset(ds, geometry=geometry)  # optional
 
 ds = provider.open_dataset(
-    collection_id="CCI_BIOMASS",
-    version="6.0",
+    collection_id="EFDA",
+    version="2.1.1",
 )
 
-ds_efda = subset(ds, geometry=geometry).isel(time=0)
+ds_efda = subset(ds, geometry=geometry).sel(time="2020-01-01")
 
 
 aligner = DatasetAligner(
-    target="CCI_BIOMASS",
+    target="EFDA",
     resampling={
-        "CCI_BIOMASS": {"default": "average"},
+        "EFDA": {"default": "average"},
         "SAATCHI_BIOMASS": {"default": "average"},
     },
 )
 
-aligned = aligner.align({"CCI_BIOMASS": ds_efda, "SAATCHI_BIOMASS": ds_biomass})
+aligned = aligner.align({"EFDA": ds_efda, "SAATCHI_BIOMASS": ds_biomass})
 
 aligned

@@ -106,7 +106,7 @@ def _infer_crs(obj: xr.Dataset | xr.DataArray) -> Optional[str]:
             crs = obj.rio.crs
             if crs:
                 return crs.to_string()
-        except Exception:
+        except (AttributeError, TypeError):
             pass
 
     for name in ("spatial_ref", "crs"):
@@ -514,6 +514,9 @@ class DatasetAligner:
                 raise TypeError(
                     f"Expected xr.Dataset for '{key}', got {type(ds).__name__}"
                 )
+
+            if not ds.data_vars:
+                raise ValueError(f"Dataset '{key}' has no data variables to align.")
 
             ds_crs = _require_crs(ds, key)
 
