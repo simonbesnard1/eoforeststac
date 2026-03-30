@@ -116,6 +116,15 @@ class DiscoveryProvider(BaseProvider):
             df = df.sort_values(["collection_id"]).reset_index(drop=True)
         return df
 
+    def list_collection_ids(self) -> List[str]:
+        """
+        Return all collection IDs across all themes.
+        """
+        ids: List[str] = []
+        for theme_id in self.list_themes():
+            ids.extend(self.list_collections(theme=theme_id).keys())
+        return sorted(set(ids))
+
     # ------------------------------------------------------------
     # Versions (unchanged)
     # ------------------------------------------------------------

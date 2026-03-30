@@ -62,7 +62,10 @@ def get_fs(url: str):
 def write_text(url: str, text: str):
     """Write text to S3 or local filesystem."""
     if url.startswith("s3://"):
-        bucket, key = url.replace("s3://", "").split("/", 1)
+        parts = url.replace("s3://", "").split("/", 1)
+        if len(parts) != 2:
+            raise ValueError(f"Invalid S3 URL (missing key path): {url}")
+        bucket, key = parts
         client = get_s3_client()
 
         client.put_object(
