@@ -175,24 +175,11 @@ class PotapovHeightWriter(BaseZarrWriter):
         """
         Build a time stack from VRTs and write to Zarr.
         """
-        # Discover vrt files
         yrs = [2000, 2005, 2010, 2015, 2020]
-        if yrs is None:
-            # auto-discover *.vrt files with year stem
-            vrt_files = {}
-            for fn in os.listdir(vrt_dir):
-                if not fn.endswith(".vrt"):
-                    continue
-                stem = os.path.splitext(fn)[0]
-                if stem.isdigit():
-                    vrt_files[int(stem)] = os.path.join(vrt_dir, fn)
-            if not vrt_files:
-                raise FileNotFoundError(f"No year-named .vrt files found in {vrt_dir}")
-        else:
-            vrt_files = {int(y): os.path.join(vrt_dir, f"{int(y)}.vrt") for y in yrs}
-            missing = [y for y, p in vrt_files.items() if not os.path.exists(p)]
-            if missing:
-                raise FileNotFoundError(f"Missing VRT files for years: {missing}")
+        vrt_files = {int(y): os.path.join(vrt_dir, f"{int(y)}.vrt") for y in yrs}
+        missing = [y for y, p in vrt_files.items() if not os.path.exists(p)]
+        if missing:
+            raise FileNotFoundError(f"Missing VRT files for years: {missing}")
 
         print("Loading and stacking VRTs…")
         ds = self.build_time_stack(vrt_files=vrt_files, crs=crs, chunks=chunks)
