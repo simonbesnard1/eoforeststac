@@ -111,16 +111,6 @@ class RESTOR_LanduseWriter(BaseZarrWriter):
         return ds
 
     # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-    def _strip_cf_serialization_attrs(self, ds: xr.Dataset) -> xr.Dataset:
-        STRIP_KEYS = {"_FillValue", "missing_value", "scale_factor", "add_offset"}
-        for var in ds.data_vars:
-            for key in STRIP_KEYS:
-                ds[var].attrs.pop(key, None)
-        return ds
-
-    # ------------------------------------------------------------------
     # Metadata
     # ------------------------------------------------------------------
     def add_metadata(

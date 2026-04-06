@@ -1,7 +1,8 @@
 import xarray as xr
 import numpy as np
+import rioxarray  # noqa: F401 — required for .rio accessor on all datasets
 import s3fs
-from typing import Dict, Optional
+from typing import Dict, Optional, Set
 
 
 class BaseZarrWriter:
@@ -75,3 +76,28 @@ class BaseZarrWriter:
     def set_global_metadata(ds: xr.Dataset, metadata: Dict) -> xr.Dataset:
         ds.attrs.update(metadata)
         return ds
+
+    _CF_STRIP_KEYS: Set[str] = {
+        "_FillValue",
+        "missing_value",
+        "scale_factor",
+        "add_offset",
+        "valid_range",
+    }
+
+    def _strip_cf_serialization_attrs(
+        self, obj: xr.Dataset | xr.DataArray
+    ) -> xr.Dataset | xr.DataArray:
+        """
+        Remove CF/Zarr serialization fields from variable attrs.
+        These must live only in the encoding dict to avoid xarray conflicts on append.
+        Accepts both Dataset and DataArray.
+        """
+        if isinstance(obj, xr.DataArray):
+            for key in self._CF_STRIP_KEYS:
+                obj.attrs.pop(key, None)
+            return obj
+        for var in obj.data_vars:
+            for key in self._CF_STRIP_KEYS:
+                obj[var].attrs.pop(key, None)
+        return obj

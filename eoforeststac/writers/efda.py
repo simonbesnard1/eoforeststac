@@ -37,31 +37,6 @@ class EFDAWriter(BaseZarrWriter):
     """
 
     # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
-    def _strip_cf_serialization_attrs(self, ds: xr.Dataset) -> xr.Dataset:
-        """
-        Remove CF/Zarr serialization-related attributes that must NOT
-        be present when appending to an existing Zarr store, and that
-        must never live in attrs alongside the encoding dict.
-
-        xarray strictly owns _FillValue, scale_factor, add_offset, and
-        missing_value — they belong in encoding only, not in attrs.
-        """
-        STRIP_KEYS = {
-            "_FillValue",
-            "missing_value",
-            "scale_factor",
-            "add_offset",
-        }
-
-        for var in ds.data_vars:
-            for key in STRIP_KEYS:
-                ds[var].attrs.pop(key, None)
-
-        return ds
-
-    # ------------------------------------------------------------------
     # Low-level IO (single year)
     # ------------------------------------------------------------------
     def _open_year_da(

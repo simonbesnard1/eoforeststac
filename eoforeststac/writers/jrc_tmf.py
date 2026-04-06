@@ -72,32 +72,6 @@ class JRCTMFWriter(BaseZarrWriter):
         },
     }
 
-    _CF_SERIALIZATION_ATTRS = {
-        "_FillValue",
-        "missing_value",
-        "scale_factor",
-        "add_offset",
-        "valid_range",
-    }
-
-    def _strip_cf_serialization_attrs(
-        self,
-        obj: xr.Dataset | xr.DataArray,
-    ) -> xr.Dataset | xr.DataArray:
-        """
-        Remove CF/Zarr serialization-related attributes that must NOT
-        be present when appending to an existing Zarr store.
-        """
-        if isinstance(obj, xr.DataArray):
-            for k in self._CF_SERIALIZATION_ATTRS:
-                obj.attrs.pop(k, None)
-            return obj
-
-        for v in obj.data_vars:
-            for k in self._CF_SERIALIZATION_ATTRS:
-                obj[v].attrs.pop(k, None)
-        return obj
-
     def load_static_dataset(self, vrt_dir: str) -> xr.Dataset:
         vrt_dir = Path(vrt_dir)
         data_vars = {}
