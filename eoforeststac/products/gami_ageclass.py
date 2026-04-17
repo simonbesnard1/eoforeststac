@@ -8,7 +8,7 @@ GAMI_AGECLASS_RESOLUTIONS = {
     "0.5deg": {"gsd": 55660.0, "dir": "AgeClass_0.5deg"},
     "0.25deg": {"gsd": 27830.0, "dir": "AgeClass_0.25deg"},
     "0.1deg": {"gsd": 11132.0, "dir": "AgeClass_0.1deg"},
-    "0.083deg": {"gsd": 9240.0, "dir": "AgeClass_0.083deg"},
+    "0.0833deg": {"gsd": 9260.0, "dir": "AgeClass_0.0833deg"},
 }
 
 GAMI_AGECLASS_CFG = {
@@ -16,15 +16,15 @@ GAMI_AGECLASS_CFG = {
     # Identity
     # ------------------------------------------------------------------
     "id": "GAMI_AGECLASS",
-    "title": "GAMI – Global Forest Age-Class Fractions (multi-resolution)",
+    "title": "GAMI - Global Forest Age-Class Fractions (multi-resolution)",
     "description": (
         "Global gridded forest age-class fraction product derived from the Global Age Mapping "
         "Integration (GAMI) ensemble. Each pixel contains the fractional area of forest "
-        "belonging to 12 age classes (0–20, 20–40, …, >299 years) for reference years "
+        "belonging to 12 age classes (0-20, 20-40, …, >299 years) for reference years "
         "2010 and 2020.\n\n"
         "Uncertainty representation: the 'members' dimension holds 20 ensemble realisations "
         "allowing downstream uncertainty propagation via member statistics (mean/IQR).\n\n"
-        "Available at five spatial resolutions: 1°, 0.5°, 0.25°, 0.1°, and 0.083°. "
+        "Available at five spatial resolutions: 1°, 0.5°, 0.25°, 0.1°, and 0.0833°. "
         "Each resolution is registered as a separate STAC item within this collection.\n\n"
         "This collection provides analysis-ready Zarr packaging for cloud-native access."
     ),

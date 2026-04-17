@@ -33,7 +33,7 @@ class GAMIAgeClassWriter(BaseZarrWriter):
     Native input:
       - Existing Zarr store produced by the age upscaling workflow
       - Dimensions: (members, age_class, latitude, longitude, time)
-      - Variable: forest_age — fraction of forest in each age class (0–1)
+      - Variable: forest_age — fraction of forest in each age class (0-1)
 
     Output:
       - Single rechunked, annotated Zarr on Ceph/S3
@@ -77,7 +77,7 @@ class GAMIAgeClassWriter(BaseZarrWriter):
         if chunks is not None:
             ds = ds.chunk(chunks)
 
-        # forest_age is a fraction (0–1): keep as float32
+        # forest_age is a fraction (0-1): keep as float32
         if "forest_age" in ds:
             ds["forest_age"] = ds["forest_age"].astype("float32")
             ds["forest_age"] = ds["forest_age"].where(
@@ -108,7 +108,7 @@ class GAMIAgeClassWriter(BaseZarrWriter):
                 "version": version,
                 "spatial_resolution": resolution,
                 "institution": (
-                    "Helmholtz Centre Potsdam – GFZ German Research Centre for Geosciences; "
+                    "Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences; "
                     "Max Planck Institute for Biogeochemistry"
                 ),
                 "created_by": "Simon Besnard",
