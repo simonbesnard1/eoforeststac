@@ -17,6 +17,7 @@ class ZarrProvider(BaseProvider):
         collection_id: str,
         version: str,
         asset_key: str = "zarr",
+        resolution: Optional[str] = None,
         variables: Optional[Sequence[str]] = None,
     ) -> xr.Dataset:
 
@@ -62,10 +63,23 @@ class ZarrProvider(BaseProvider):
         # ----------------------------------------------------------
         # 3. Asset existence check
         # ----------------------------------------------------------
+        # If resolution is given, build the resolution-specific key (e.g. zarr_0.25deg)
+        if resolution is not None:
+            asset_key = f"zarr_{resolution}"
+
         if asset_key not in item.assets:
+            available = list(item.assets.keys())
+            # Suggest resolution keys if this looks like a multi-resolution product
+            zarr_keys = [k for k in available if k.startswith("zarr_")]
+            hint = (
+                f" Use resolution='{zarr_keys[0].removeprefix('zarr_')}' or one of: "
+                f"{', '.join(k.removeprefix('zarr_') for k in zarr_keys)}"
+                if zarr_keys
+                else ""
+            )
             raise ValueError(
-                f"Asset '{asset_key}' not found for item '{item_id}'. "
-                f"Available assets: {', '.join(item.assets.keys())}"
+                f"Asset '{asset_key}' not found for item '{item_id}'.{hint} "
+                f"Available assets: {', '.join(available)}"
             )
 
         href = item.assets[asset_key].href
