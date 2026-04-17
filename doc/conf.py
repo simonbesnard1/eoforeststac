@@ -183,9 +183,8 @@ latex_documents = [
     ),
 ]
 
-latex_elements = {}
-
-latex_elements["preamble"] = r"""
+latex_elements = {
+    "preamble": r"""
 \makeatletter
 \@ifpackagelater{sphinxpackagefootnote}{2022/02/12}
     {}%
@@ -204,6 +203,7 @@ latex_elements["preamble"] = r"""
     }%
 \makeatother
 """
+}
 
 latex_use_modindex = False
 
