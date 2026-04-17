@@ -71,6 +71,10 @@ from eoforeststac.catalog.potapov_lcluc import (
     create_potapov_lcluc_collection,
     create_potapov_lcluc_item,
 )
+from eoforeststac.catalog.gami_ageclass import (
+    create_gami_ageclass_collection,
+    create_gami_ageclass_items,
+)
 
 # ---------------------------------------------------------------------
 # Defaults
@@ -83,6 +87,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", "3.0", "3.1"],
+    "GAMI_AGECLASS": ["3.0"],
     "JRC_GFC2020": ["3.0"],
     "ROBINSON_CR": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
@@ -94,6 +99,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
 }
 
 ItemFactory = Callable[[str], pystac.Item]
+MultiItemFactory = Callable[[str], List[pystac.Item]]
 CollectionFactory = Callable[[], pystac.Collection]
 
 # ---------------------------------------------------------------------
@@ -129,7 +135,7 @@ THEMES: Dict[str, Dict[str, object]] = {
             "composition",
             "demography",
         ],
-        "products": ["GAMI", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
+        "products": ["GAMI", "GAMI_AGECLASS", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -191,6 +197,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "POTAPOV_LCLUC",
             create_potapov_lcluc_collection,
             create_potapov_lcluc_item,
+        ),
+        ProductSpec(
+            "GAMI_AGECLASS",
+            create_gami_ageclass_collection,
+            create_gami_ageclass_items,
         ),
     )
 
@@ -267,9 +278,13 @@ def _build_base_tree(
         )
 
     # 4) Create versioned items under each collection
+    # item_factory may return a single Item or a List[Item] (e.g. multi-resolution products)
     for prod_id, (col, item_factory) in collections.items():
         for v in versions.get(prod_id, []):
-            col.add_item(item_factory(v))
+            result = item_factory(v)
+            items = result if isinstance(result, list) else [result]
+            for item in items:
+                col.add_item(item)
 
     return root, collections
 

@@ -135,6 +135,33 @@ def create_item(cfg: dict, version: str) -> pystac.Item:
     return item
 
 
+def create_item_for_resolution(cfg: dict, version: str, resolution: str) -> pystac.Item:
+    """
+    Variant of create_item for products with multiple spatial resolutions.
+    Item ID becomes {id}_{resolution}_v{version}.
+    """
+    res_cfg = {
+        **cfg,
+        "id": f"{cfg['id']}_{resolution}",
+        "summaries": {
+            **cfg.get("summaries", {}),
+            "eo:gsd": [cfg.get("resolutions", {}).get(resolution, {}).get("gsd")],
+            "spatial_resolution": [resolution],
+        },
+    }
+
+    item = create_item(res_cfg, version)
+
+    # Override asset using resolution-aware factory
+    if "asset_template" in cfg:
+        asset_factory = cfg["asset_template"]["factory"]
+        asset_key = cfg["asset_template"].get("key", "data")
+        item.assets.pop(asset_key, None)
+        item.add_asset(asset_key, asset_factory(cfg, version, resolution))
+
+    return item
+
+
 def validate_and_save_collection(collection: pystac.Collection, output_path: str):
     """Validate and save collection with proper normalization."""
     # Normalize hrefs to be absolute
