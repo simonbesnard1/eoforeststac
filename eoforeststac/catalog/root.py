@@ -73,7 +73,7 @@ from eoforeststac.catalog.potapov_lcluc import (
 )
 from eoforeststac.catalog.gami_ageclass import (
     create_gami_ageclass_collection,
-    create_gami_ageclass_items,
+    create_gami_ageclass_item,
 )
 
 # ---------------------------------------------------------------------
@@ -201,7 +201,7 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
         ProductSpec(
             "GAMI_AGECLASS",
             create_gami_ageclass_collection,
-            create_gami_ageclass_items,
+            create_gami_ageclass_item,
         ),
     )
 

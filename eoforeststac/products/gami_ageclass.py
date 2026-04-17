@@ -1,6 +1,5 @@
 import datetime
 from eoforeststac.core.config import S3_HTTP_BASE
-from eoforeststac.core.assets import create_zarr_asset
 
 # Mapping: resolution label -> (GSD in metres at equator, input dir suffix)
 GAMI_AGECLASS_RESOLUTIONS = {
@@ -153,21 +152,6 @@ GAMI_AGECLASS_CFG = {
             "type": "application/vnd.zarr",
         }
     },
-    # ------------------------------------------------------------------
-    # Asset template — resolution injected at item creation time
-    # ------------------------------------------------------------------
-    "asset_template": {
-        "key": "zarr",
-        "factory": lambda cfg, v, resolution="": create_zarr_asset(
-            href=f"{cfg['base_path']}/GAMI_AGECLASS_{resolution}_v{v}.zarr",
-            title=f"GAMI Age-Class Fractions {resolution} v{v} (Zarr)",
-            roles=["data"],
-            description=(
-                f"Cloud-optimized Zarr store of global forest age-class fractions "
-                f"at {resolution} spatial resolution. "
-                "Dimensions: members (20 ensemble members), age_class (12 classes), "
-                "latitude, longitude, time (2010, 2020)."
-            ),
-        ),
-    },
+    # No asset_template — multiple assets (one per resolution) are added
+    # directly in catalog/gami_ageclass.py via create_gami_ageclass_item().
 }
