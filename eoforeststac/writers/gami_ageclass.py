@@ -30,15 +30,13 @@ class GAMIAgeClassWriter(BaseZarrWriter):
     """
     Writer for GAMI age-class fraction product (multi-resolution).
 
-    Native input:
-      - Existing Zarr store produced by the age upscaling workflow
-      - Dimensions: (members, age_class, latitude, longitude, time)
-      - Variable: forest_age — fraction of forest in each age class (0-1)
+    Reads an existing Zarr store produced by the age upscaling workflow
+    (dimensions: members, age_class, latitude, longitude, time; variable:
+    forest_age as fraction 0-1), rechunks it, adds metadata, and writes a
+    single annotated Zarr store to Ceph/S3. Call once per resolution.
 
-    Output:
-      - Single rechunked, annotated Zarr on Ceph/S3
+    Example::
 
-    Usage (one call per resolution):
         writer.write(
             input_zarr="/path/to/AgeClass_0.25deg",
             output_zarr="s3://bucket/collections/GAMI_AGECLASS/GAMI_AGECLASS_0.25deg_v3.0.zarr",
