@@ -21,17 +21,17 @@ Biomass & Carbon (``biomass-carbon``)
      - Title
      - Description
    * - ``CCI_BIOMASS``
-     - ESA CCI Aboveground Biomass
-     - Global aboveground biomass (Mg/ha) at 100 m, multiple epochs. Versions 4.0–6.0.
+     - ESA CCI Biomass – Global annual aboveground biomass
+     - Global aboveground biomass (Mg/ha) at 100 m, multiple epochs.
    * - ``SAATCHI_BIOMASS``
-     - Saatchi Aboveground Biomass
-     - Pan-tropical aboveground biomass from Saatchi et al.
+     - Saatchi & Yu – Global aboveground biomass
+     - Global aboveground biomass at 100 m (Saatchi & Yu 2020).
    * - ``LIU_BIOMASS``
-     - Liu Aboveground Biomass
-     - Global aboveground biomass time-series from Liu et al.
-   * - ``GAMI``
-     - GAMI Aboveground Biomass
-     - Global age-based modelled biomass from the GAMI ensemble.
+     - Liu et al. – Europe aboveground biomass, canopy cover, and canopy height
+     - European aboveground biomass, canopy cover, and canopy height at 30 m.
+   * - ``ROBINSON_CR``
+     - Robinson et al. – Chapman-Richards growth-curve parameters
+     - Secondary-forest aboveground carbon dynamics at 1 km.
 
 Disturbance & Change (``disturbance-change``)
 ----------------------------------------------
@@ -44,23 +44,20 @@ Disturbance & Change (``disturbance-change``)
      - Title
      - Description
    * - ``EFDA``
-     - European Forest Disturbance Atlas
-     - Annual disturbance events across European forests (fire, wind, bark beetle, …).
-   * - ``HANSEN_GFC``
-     - Hansen Global Forest Change
-     - Annual tree cover loss and gain (Hansen et al., 2013+).
-   * - ``RADD_EUROPE``
-     - RADD Europe Alerts
-     - Near-real-time forest disturbance alerts over Europe from Sentinel-1.
+     - European Forest Disturbance Atlas (EFDA)
+     - Annual disturbance maps for European forests (fire, wind, bark beetle, …) at 30 m.
    * - ``JRC_TMF``
-     - JRC Tropical Moist Forest
-     - Annual deforestation and degradation in tropical moist forests.
-   * - ``JRC_GFC``
-     - JRC Global Forest Cover
-     - Annual global forest cover maps from the Joint Research Centre.
-   * - ``ROBINSON_CR``
-     - Robinson Carbon Recovery
-     - Forest carbon recovery trajectories after disturbance.
+     - JRC Tropical Moist Forests (TMF)
+     - Forest change (degradation, deforestation, regrowth) at 30 m.
+   * - ``HANSEN_GFC``
+     - Hansen Global Forest Change (GFC)
+     - Tree cover and annual loss/gain at 30 m.
+   * - ``JRC_GFC2020``
+     - JRC Global Forest Cover 2020 (GFC2020)
+     - Forest presence/absence at 10 m.
+   * - ``RADD_EUROPE``
+     - RADD Europe
+     - Monthly forest disturbance occurrence from Sentinel-1 at 10 m.
 
 Structure & Demography (``structure-demography``)
 --------------------------------------------------
@@ -72,15 +69,21 @@ Structure & Demography (``structure-demography``)
    * - Collection ID
      - Title
      - Description
-   * - ``POTAPOV_HEIGHT``
-     - Potapov Canopy Height
-     - Global forest canopy height at 30 m from Potapov et al.
+   * - ``GAMI``
+     - Global Age Mapping Integration (GAMI)
+     - Global forest age ensemble at 100 m.
    * - ``GAMI_AGECLASS``
-     - GAMI Age-Class Fractions
-     - Global forest age-class fraction product (12 age classes, 20 members, 5 resolutions: 1°–0.0833°). Reference years 2010 and 2020.
+     - GAMI – Global Forest Age-Class Fractions
+     - Forest age-class fractions (12 classes, 20 ensemble members) at 5 resolutions: 1°–0.0833°. Reference years 2010 and 2020.
+   * - ``POTAPOV_HEIGHT``
+     - Global Canopy Height (Potapov et al.)
+     - Global forest canopy height at 30 m.
+   * - ``FORESTPATHS_GENUS``
+     - ForestPaths – European Tree Genus Map 2020
+     - European tree genus classification at 10 m.
 
-Land Use (``land-use``)
-------------------------
+Land Use & Land Cover (``land-use-land-cover``)
+------------------------------------------------
 
 .. list-table::
    :header-rows: 1
@@ -89,15 +92,12 @@ Land Use (``land-use``)
    * - Collection ID
      - Title
      - Description
-   * - ``POTAPOV_LCLUC``
-     - Potapov Land Cover / Land Use Change
-     - Annual global cropland and land use change maps.
    * - ``RESTOR_LANDUSE``
-     - RESTOR Land Use
-     - Annual land use / land cover classification for Brazil at ~9 m resolution.
-   * - ``FORESTPATHS_GENUS``
-     - ForestPaths Genus
-     - Forest genus classification map for Europe.
+     - Annual Land Use and Land Cover maps for the Brazilian Amazon
+     - Annual LULC classification for the Brazilian Amazon (2000–2022) at 30 m.
+   * - ``Potapov_LCLUC``
+     - Potapov Land Cover and Land Use Change 2000–2020
+     - Global cropland and land use change maps at 30 m.
 
 Adding new collections
 -----------------------

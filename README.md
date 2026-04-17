@@ -9,6 +9,7 @@
 
 [![License: EUPL-1.2](https://img.shields.io/badge/License-EUPL--1.2-blue.svg)](https://opensource.org/licenses/EUPL-1.2)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Docs](https://readthedocs.org/projects/eoforeststac/badge/?version=latest)](https://eoforeststac.readthedocs.io/en/latest/)
 [![STAC Browser](https://img.shields.io/badge/STAC-Browser-green)](https://simonbesnard1.github.io/eoforeststac/)
 
 **EOForestSTAC** is an open-source Python package that provides a streamlined interface to discover and load cloud-hosted, analysis-ready forest Earth Observation datasets. All products are stored as Zarr archives on GFZ Ceph object storage and are organised in a STAC (SpatioTemporal Asset Catalog), enabling cloud-native access without downloading data locally.
@@ -30,6 +31,14 @@ The package supports a growing catalog of global forest EO products covering bio
 
 EOForestSTAC removes the friction of working with large-scale forest EO data by combining a curated STAC metadata catalog with cloud-native Zarr storage. Instead of downloading multi-gigabyte files and managing local copies, users can stream exactly the spatial and temporal subset they need directly into an xarray Dataset. The catalog structure makes it straightforward to discover what is available, compare versions, and combine multiple products on a common grid for integrated analyses.
 
+## Explore the Catalog Interactively
+
+The recommended starting point for new users is the interactive **STAC Browser**:
+
+### 👉 [https://simonbesnard1.github.io/eoforeststac/](https://simonbesnard1.github.io/eoforeststac/)
+
+The browser lets you browse all collections and versions by theme, inspect spatial footprints on a map, view dataset metadata and provenance, and copy asset URLs directly for use in Python.
+
 ## Installation
 
 Install directly from GitHub:
@@ -42,102 +51,37 @@ Requires Python >= 3.10.
 
 See the [examples/](https://github.com/simonbesnard1/eoforeststac/tree/main/examples) folder for notebooks demonstrating discovery, loading, subsetting, and multi-product alignment.
 
-## Documentation
-
-### Explore the Catalog
-
-The interactive **STAC Browser** is the recommended starting point for new users:
-
-**https://simonbesnard1.github.io/eoforeststac/**
-
-It allows you to explore all collections and versions, inspect spatial footprints on a map, view dataset metadata and provenance, and check asset details before loading in Python.
-
-For a static overview of all available products see [CATALOG.md](CATALOG.md).
-
-### Discover Available Data
+## Quick Start
 
 ```python
 from eoforeststac.providers.discovery import DiscoveryProvider
-
-disc = DiscoveryProvider(
-    catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
-    endpoint_url="https://s3.gfz-potsdam.de",
-    anon=True,
-)
-
-# List all themes
-disc.list_themes()
-# {'biomass-carbon': 'Biomass & Carbon', 'disturbance-change': 'Disturbance & Change', ...}
-
-# List collections within a theme
-disc.list_collections(theme="disturbance-change")
-
-# Overview table for a theme
-df = disc.collections_table(theme="biomass-carbon")
-```
-
-### Load and Subset Data
-
-```python
-import geopandas as gpd
 from eoforeststac.providers.zarr import ZarrProvider
 from eoforeststac.providers.subset import subset
 
-provider = ZarrProvider(
-    catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
-    endpoint_url="https://s3.gfz-potsdam.de",
-    anon=True,
-)
+CATALOG = "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
 
-# Open a dataset
+# Discover what is available
+disc = DiscoveryProvider(catalog_url=CATALOG, endpoint_url="https://s3.gfz-potsdam.de", anon=True)
+disc.list_themes()
+disc.list_collections(theme="biomass-carbon")
+
+# Stream a dataset (no download needed)
+provider = ZarrProvider(catalog_url=CATALOG, endpoint_url="https://s3.gfz-potsdam.de", anon=True)
 ds = provider.open_dataset(collection_id="CCI_BIOMASS", version="6.0")
-
-# Open a multi-resolution dataset at a specific resolution
-ds_age = provider.open_dataset(
-    collection_id="GAMI_AGECLASS",
-    version="3.0",
-    resolution="0.25deg",
-)
-
-# Subset spatially and temporally (geometries in EPSG:4326)
-roi = gpd.read_file("DE-Hai.geojson")
-geometry = roi.to_crs("EPSG:4326").geometry.union_all()
-
-ds_subset = subset(
-    ds,
-    geometry=geometry,
-    time=("2007-01-01", "2020-12-31"),
-)
+ds_subset = subset(ds, geometry=geometry, time=("2010-01-01", "2020-12-31"))
 ```
 
-### Align Multiple Datasets
+See the [documentation](https://eoforeststac.readthedocs.io/en/latest/) and [examples](https://eoforeststac.readthedocs.io/en/latest/auto_examples/index.html) for full workflows including multi-resolution products, spatial subsetting, and multi-product alignment.
 
-When combining multiple EO products, `DatasetAligner` reprojects and resamples all datasets onto a common grid:
+## Documentation
 
-```python
-from eoforeststac.providers.align import DatasetAligner
+Full documentation is available at **https://eoforeststac.readthedocs.io/en/latest/**.
 
-ds_biomass = provider.open_dataset("CCI_BIOMASS", "6.0")
-ds_biomass = subset(ds_biomass, geometry=geometry, time=("2020-01-01", "2020-12-31"))
-
-ds_saatchi = provider.open_dataset("SAATCHI_BIOMASS", "2.0")
-ds_saatchi = subset(ds_saatchi, geometry=geometry, time=("2020-01-01", "2020-12-31"))
-
-aligner = DatasetAligner(
-    target="CCI_BIOMASS",
-    resampling={
-        "CCI_BIOMASS": {"default": "average"},
-        "SAATCHI_BIOMASS": {"default": "average"},
-    },
-)
-
-aligned = aligner.align({
-    "CCI_BIOMASS": ds_biomass.sel(time="2020-01-01"),
-    "SAATCHI_BIOMASS": ds_saatchi.sel(time="2020-01-01"),
-})
-```
-
-The aligned dataset is guaranteed to share identical CRS, resolution, and grid origin across all products.
+It includes:
+- [User Guide](https://eoforeststac.readthedocs.io/en/latest/user/index.html): catalog structure, loading datasets, subsetting, and alignment
+- [API Reference](https://eoforeststac.readthedocs.io/en/latest/user/api.html): all public classes and functions
+- [Catalog Overview](https://eoforeststac.readthedocs.io/en/latest/user/catalog_overview.html): all available products by theme
+- [Examples](https://eoforeststac.readthedocs.io/en/latest/auto_examples/index.html): gallery of worked examples
 
 ## Contributing
 
@@ -150,7 +94,7 @@ Simon Besnard is a senior researcher in the Global Land Monitoring Group at GFZ 
 ## Contact
 
 For questions or support:
-- **Simon Besnard** — [simon.besnard@gfz.de](mailto:simon.besnard@gfz.de)
+- **Simon Besnard**: [simon.besnard@gfz.de](mailto:simon.besnard@gfz.de)
 
 ## Acknowledgments
 
@@ -158,7 +102,7 @@ The development of EOForestSTAC was supported by the European Union through the 
 
 ## License
 
-This project is licensed under the European Union Public Licence v1.2 — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the European Union Public Licence v1.2 (see the [LICENSE](LICENSE) file for details).
 
 ## Citation
 
