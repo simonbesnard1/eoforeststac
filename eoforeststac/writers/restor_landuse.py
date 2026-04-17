@@ -16,7 +16,7 @@ from eoforeststac.writers.base import BaseZarrWriter
 NATIVE_CRS = "+proj=aea +lat_0=-12 +lon_0=-54 +lat_1=-2 +lat_2=-22 +x_0=5000000 +y_0=10000000 +ellps=GRS80 +units=m +no_defs"
 
 
-class RESTOR_LanduseWriter(BaseZarrWriter):
+class RestorLanduseWriter(BaseZarrWriter):
     """
     Writer for Annual Land Use and Land Cover maps for the Brazilian Amazon (2000–2022).
 

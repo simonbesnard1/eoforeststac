@@ -68,6 +68,7 @@ Factory functions
    eoforeststac.catalog.factory.create_collection
    eoforeststac.catalog.factory.create_item
    eoforeststac.catalog.root.build_catalog
+   eoforeststac.catalog.root.build_browser_catalog
 
 Writers
 =======
@@ -101,7 +102,7 @@ Product writers
    eoforeststac.writers.radd_europe.RADDEuropeWriter
    eoforeststac.writers.restor_landuse.RestorLanduseWriter
    eoforeststac.writers.robinson_cr.RobinsonCRWriter
-   eoforeststac.writers.saatchi_biomass.SaatchiWriter
+   eoforeststac.writers.saatchi_biomass.SaatchiBiomassWriter
    eoforeststac.writers.forestpaths_genus.ForestPathsGenusWriter
 
 Core utilities

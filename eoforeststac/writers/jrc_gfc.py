@@ -8,7 +8,7 @@ from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 
-class JRCGFC2020Writer(BaseZarrWriter):
+class JRCGFCWriter(BaseZarrWriter):
     """
     Writer for JRC Global Forest Cover 2020 (v3).
 

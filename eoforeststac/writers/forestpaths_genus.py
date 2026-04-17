@@ -8,7 +8,7 @@ from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 
-class FORESTPATHSGenus2020Writer(BaseZarrWriter):
+class ForestPathsGenusWriter(BaseZarrWriter):
     """
     Writer for the European Tree Genus Map (10 m, 2020).
 

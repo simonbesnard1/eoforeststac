@@ -541,7 +541,7 @@ def _write_browser_variant(
     return pub_root
 
 
-def build_root_catalog(
+def build_catalog(
     versions: Optional[Mapping[str, List[str]]] = None,
     *,
     write: bool = True,

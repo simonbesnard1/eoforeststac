@@ -30,7 +30,7 @@ from eoforeststac import (
 # Writers (high-level, stable API)
 # -----------------------------------------------------------------------------
 from eoforeststac.writers.base import BaseZarrWriter
-from eoforeststac.writers.CCI_biomass import CCI_BiomassWriter
+from eoforeststac.writers.CCI_biomass import CCIBiomassWriter
 from eoforeststac.writers.gami import GAMIWriter
 from eoforeststac.writers.saatchi_biomass import SaatchiBiomassWriter
 from eoforeststac.writers.efda import EFDAWriter
@@ -40,7 +40,7 @@ from eoforeststac.writers.potapov_height import PotapovHeightWriter
 # -----------------------------------------------------------------------------
 # Catalog builders (collections + items)
 # -----------------------------------------------------------------------------
-from eoforeststac.catalog.root import build_root_catalog
+from eoforeststac.catalog.root import build_catalog
 from eoforeststac.catalog.factory import (
     create_collection,
     create_item,
@@ -68,14 +68,14 @@ __all__ = [
     "core",
     # writers
     "BaseZarrWriter",
-    "CCI_BiomassWriter",
+    "CCIBiomassWriter",
     "GAMIWriter",
     "SaatchiBiomassWriter",
     "EFDAWriter",
     "JRCTMFWriter",
     "PotapovHeightWriter",
     # catalog builders
-    "build_root_catalog",
+    "build_catalog",
     "create_collection",
     "create_item",
     # config

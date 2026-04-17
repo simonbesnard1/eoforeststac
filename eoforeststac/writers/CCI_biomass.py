@@ -6,7 +6,7 @@ from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
 
-class CCI_BiomassWriter(BaseZarrWriter):
+class CCIBiomassWriter(BaseZarrWriter):
     """
     Writer for the ESA CCI Biomass product (v6+).
 
