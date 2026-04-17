@@ -12,9 +12,6 @@ from unittest.mock import MagicMock
 
 # Pre-mock heavy optional imports so conf.py can be loaded without the full
 # environment (e.g. on ReadTheDocs).  Must happen before `import eoforeststac`.
-for _mod in ["tiledb", "pdal"]:
-    sys.modules.setdefault(_mod, MagicMock())
-
 from docutils import nodes
 from docutils.parsers.rst import Directive
 
@@ -183,7 +180,9 @@ latex_documents = [
     ),
 ]
 
-latex_elements = {"preamble": r"""
+latex_elements = {}
+
+latex_elements["preamble"] = r"""
 \makeatletter
 \@ifpackagelater{sphinxpackagefootnote}{2022/02/12}
     {}%
@@ -201,7 +200,7 @@ latex_elements = {"preamble": r"""
 }
     }%
 \makeatother
-"""}
+"""
 
 latex_use_modindex = False
 
