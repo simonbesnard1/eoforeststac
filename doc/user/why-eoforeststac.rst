@@ -96,6 +96,18 @@ EOForestSTAC's primary objective is to provide a reproducible, interoperable pla
 
 ---
 
+Acknowledgments
+---------------
+
+The development of EOForestSTAC was supported by the European Union through the
+`FORWARDS <https://forwards-project.eu/>`_ project.
+
+The author thanks **Konstantin Ntokas** (`Brockmann Consult <https://www.brockmann-consult.de/>`_)
+for technical assistance, and the `EO-LINCS <https://www.eo-lincs.org/>`_ project for
+valuable feedback on data structure and improvements to the STAC catalog design.
+
+---
+
 A project from GFZ Potsdam
 ===========================
 

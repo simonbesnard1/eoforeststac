@@ -100,6 +100,8 @@ For questions or support:
 
 The development of EOForestSTAC was supported by the European Union through the [FORWARDS](https://forwards-project.eu/) project.
 
+The author thanks **Konstantin Ntokas** ([Brockmann Consult](https://www.brockmann-consult.de/)) for technical assistance, and the [EO-LINCS](https://www.eo-lincs.org/) project for valuable feedback on data structure and improvements to the STAC catalog design.
+
 ## License
 
 This project is licensed under the European Union Public Licence v1.2 (see the [LICENSE](LICENSE) file for details).
