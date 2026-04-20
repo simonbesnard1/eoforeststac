@@ -99,6 +99,112 @@ Land Use & Land Cover (``land-use-land-cover``)
      - Potapov Land Cover and Land Use Change 2000–2020
      - Global cropland and land use change maps at 30 m.
 
+Direct access without installing eoforeststac
+----------------------------------------------
+
+All datasets are publicly accessible via HTTPS (i.e, no Python package or credentials
+required).  Browse the `STAC Browser <https://simonbesnard1.github.io/eoforeststac/>`_
+to find the Zarr asset URL for any collection/version, then stream it directly with
+``xarray`` (Python) or ``Rarr`` / ``rstac`` (R).
+
+.. tab:: Python
+
+   Install dependencies::
+
+      pip install xarray zarr
+
+   Open and subset a Zarr store over HTTPS:
+
+   .. code-block:: python
+
+      import xarray as xr
+
+      s3_path = (
+          "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data"
+          "/collections/CCI_BIOMASS/CCI_BIOMASS_v6.0.zarr"
+      )
+
+      # Open lazily — no data is downloaded yet
+      ds = xr.open_zarr(s3_path)
+      print(ds)
+
+      # Spatial + temporal slice
+      agb = ds.sel(
+          time="2010-01-01",
+          latitude=slice(-3, -6),
+          longitude=slice(-68, -62),
+      ).aboveground_biomass
+
+      agb.compute()   # triggers the actual S3 read
+
+      # Optional: export to GeoTIFF
+      import rioxarray
+      agb.rio.set_spatial_dims(x_dim="longitude", y_dim="latitude")
+      agb.rio.write_crs("EPSG:4326", inplace=True)
+      agb.compute().rio.to_raster("agb_2010_subset.tif")
+
+.. tab:: R
+
+   Install dependencies:
+
+   .. code-block:: r
+
+      install.packages("rstac")
+      BiocManager::install("Rarr")   # Bioconductor
+      install.packages("terra")
+
+   Browse the catalog with ``rstac``:
+
+   .. code-block:: r
+
+      library(rstac)
+
+      s    <- stac("https://simonbesnard1.github.io/eoforeststac")
+      cols <- s |> collections() |> get_request()
+      print(cols)
+
+      # Extract the Zarr href for a specific item
+      items     <- s |> collections("CCI_BIOMASS") |> items() |> get_request()
+      zarr_href <- items$features[[1]]$assets$zarr$href
+
+   Read and export with ``Rarr`` over HTTPS (no credentials needed):
+
+   .. code-block:: r
+
+      library(Rarr)
+      library(terra)
+
+      zarr_path <- zarr_href   # from rstac above, or paste directly
+
+      # Read coordinate arrays first (small/fast)
+      lat  <- read_zarr_array(file.path(zarr_path, "latitude"))
+      lon  <- read_zarr_array(file.path(zarr_path, "longitude"))
+      time <- read_zarr_array(file.path(zarr_path, "time"))
+
+      time_dates <- as.Date(time, origin = "2007-01-01")
+      time_idx   <- which(time_dates == as.Date("2010-01-01"))
+      lat_idx    <- which(lat >= -6  & lat <= -3)
+      lon_idx    <- which(lon >= -68 & lon <= -62)
+
+      # Read only the slice you need
+      agb_subset <- read_zarr_array(
+        file.path(zarr_path, "aboveground_biomass"),
+        index = list(lat_idx, lon_idx, time_idx)
+      )
+
+      # Convert to SpatRaster and export
+      agb_2d <- drop(agb_subset)
+      r      <- rast(agb_2d)
+      ext(r) <- c(min(lon[lon_idx]), max(lon[lon_idx]),
+                  min(lat[lat_idx]), max(lat[lat_idx]))
+      crs(r) <- "EPSG:4326"
+      writeRaster(r, "agb_2010_subset.tif", overwrite = TRUE)
+
+.. note::
+
+   ``Rarr`` supports HTTPS endpoints directly — pass the full URL as ``zarr_path``.
+   No Python bridge or S3 credentials are needed for public datasets.
+
 Adding new collections
 -----------------------
 
