@@ -36,7 +36,7 @@ RADD_EUROPE_CFG = {
         ],
     },
     "start_datetime": datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc),
-    "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
+    "end_datetime": datetime.datetime(2025, 12, 31, tzinfo=datetime.timezone.utc),
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------

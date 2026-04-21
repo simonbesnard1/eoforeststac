@@ -57,7 +57,7 @@ Disturbance & Change (``disturbance-change``)
      - Forest presence/absence at 10 m.
    * - ``RADD_EUROPE``
      - RADD Europe
-     - Monthly forest disturbance occurrence from Sentinel-1 at 10 m.
+     - Monthly forest disturbance occurrence from Sentinel-1 at 10 m (2020–2025).
 
 Structure & Demography (``structure-demography``)
 --------------------------------------------------
