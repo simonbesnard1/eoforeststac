@@ -79,6 +79,10 @@ from eoforeststac.catalog.gedi_l4d import (
     create_gedi_l4d_collection,
     create_gedi_l4d_item,
 )
+from eoforeststac.catalog.wang_forestage import (
+    create_wang_forestage_collection,
+    create_wang_forestage_item,
+)
 
 # ---------------------------------------------------------------------
 # Defaults
@@ -101,6 +105,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "RESTOR_LANDUSE": ["2.0"],
     "POTAPOV_LCLUC": ["2020"],
     "GEDI_L4D": ["2.0"],
+    "WANG_FORESTAGE": ["2.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -146,6 +151,7 @@ THEMES: Dict[str, Dict[str, object]] = {
             "POTAPOV_HEIGHT",
             "FORESTPATHS_GENUS",
             "GEDI_L4D",
+            "WANG_FORESTAGE",
         ],
     },
     "land-use-land-cover": {
@@ -218,6 +224,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "GEDI_L4D",
             create_gedi_l4d_collection,
             create_gedi_l4d_item,
+        ),
+        ProductSpec(
+            "WANG_FORESTAGE",
+            create_wang_forestage_collection,
+            create_wang_forestage_item,
         ),
     )
 
