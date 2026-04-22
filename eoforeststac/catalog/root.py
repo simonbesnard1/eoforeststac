@@ -75,6 +75,10 @@ from eoforeststac.catalog.gami_ageclass import (
     create_gami_ageclass_collection,
     create_gami_ageclass_item,
 )
+from eoforeststac.catalog.gedi_l4d import (
+    create_gedi_l4d_collection,
+    create_gedi_l4d_item,
+)
 
 # ---------------------------------------------------------------------
 # Defaults
@@ -96,6 +100,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "RADD_EUROPE": ["1.0"],
     "RESTOR_LANDUSE": ["2.0"],
     "POTAPOV_LCLUC": ["2020"],
+    "GEDI_L4D": ["2.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -135,7 +140,13 @@ THEMES: Dict[str, Dict[str, object]] = {
             "composition",
             "demography",
         ],
-        "products": ["GAMI", "GAMI_AGECLASS", "POTAPOV_HEIGHT", "FORESTPATHS_GENUS"],
+        "products": [
+            "GAMI",
+            "GAMI_AGECLASS",
+            "POTAPOV_HEIGHT",
+            "FORESTPATHS_GENUS",
+            "GEDI_L4D",
+        ],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -202,6 +213,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "GAMI_AGECLASS",
             create_gami_ageclass_collection,
             create_gami_ageclass_item,
+        ),
+        ProductSpec(
+            "GEDI_L4D",
+            create_gedi_l4d_collection,
+            create_gedi_l4d_item,
         ),
     )
 
