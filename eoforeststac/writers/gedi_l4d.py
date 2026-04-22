@@ -44,12 +44,26 @@ class GEDIL4DWriter(BaseZarrWriter):
     # ------------------------------------------------------------------
     # Load
     # ------------------------------------------------------------------
-    def load_variable(self, vrt_path: str, var_name: str) -> xr.DataArray:
+    def load_variable(
+        self,
+        vrt_path: str,
+        var_name: str,
+        chunks: Optional[Dict[str, int]] = None,
+    ) -> xr.DataArray:
         """Load one VRT as a named DataArray with dims (latitude, longitude)."""
+        # Map caller's lat/lon chunk keys to rioxarray's native x/y keys so
+        # chunks are applied at read time and no rechunking is needed later.
+        rio_chunks: Optional[Dict[str, int]] = None
+        if chunks is not None:
+            rio_chunks = {
+                "x": chunks.get("longitude", chunks.get("x", "auto")),
+                "y": chunks.get("latitude", chunks.get("y", "auto")),
+            }
+
         da = rioxarray.open_rasterio(
             vrt_path,
             masked=True,
-            chunks="auto",
+            chunks=rio_chunks if rio_chunks is not None else "auto",
             cache=False,
         )
         if "band" in da.dims and da.sizes.get("band", 1) == 1:
@@ -74,13 +88,9 @@ class GEDIL4DWriter(BaseZarrWriter):
                 raise FileNotFoundError(
                     f"Expected VRT not found for variable '{var_name}': {vrt_path}"
                 )
-            arrays[var_name] = self.load_variable(vrt_path, var_name)
+            arrays[var_name] = self.load_variable(vrt_path, var_name, chunks=chunks)
 
         ds = xr.Dataset(arrays)
-
-        if chunks is not None:
-            ds = ds.chunk(chunks)
-
         ds = self.set_crs(ds, crs=crs)
         return ds
 
