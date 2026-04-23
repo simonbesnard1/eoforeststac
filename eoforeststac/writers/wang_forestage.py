@@ -71,6 +71,8 @@ class WangForestAgeWriter(BaseZarrWriter):
         )
         if "band" in da.dims and da.sizes.get("band", 1) == 1:
             da = da.isel(band=0, drop=True)
+
+        # Tiles may be in mixed UTM projections — reproject to EPSG:4326
         da = da.rename({"y": "latitude", "x": "longitude"})
         return da.rename(var_name)
 
