@@ -4,6 +4,7 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, Optional, Union
 
+import numpy as np
 import xarray as xr
 import rioxarray  # noqa: F401
 
@@ -15,12 +16,15 @@ WANG_VARIABLES = [
     (
         "natural_forest_age",
         "natural",
-        "Age of natural forests derived from Landsat CCDC change detection",
+        "Age of natural forests as of 2024, defined as years since the last disturbance "
+        "detected in the Landsat CCDC time series (1985-2024). Forests undisturbed since "
+        "before 1985 are assigned the maximum observable age (~39 years).",
     ),
     (
         "planted_forest_age",
         "planted",
-        "Age of planted forests derived from Landsat CCDC change detection",
+        "Age of planted forests as of 2024, defined as years since the last disturbance "
+        "detected in the Landsat CCDC time series (1985-2024).",
     ),
 ]
 
@@ -96,6 +100,10 @@ class WangForestAgeWriter(BaseZarrWriter):
             arrays[var_name] = self.load_variable(vrt_path, var_name, chunks=chunks)
 
         ds = xr.Dataset(arrays)
+
+        # Add time dimension — age is as of 2024
+        ds = ds.expand_dims(time=[np.datetime64("2024-01-01", "ns")])
+
         ds = self.set_crs(ds, crs=crs)
         return ds
 
@@ -190,11 +198,11 @@ class WangForestAgeWriter(BaseZarrWriter):
 
         encoding = {
             var: {
-                "chunks": (chunks["latitude"], chunks["longitude"]),
+                "chunks": (1, chunks["latitude"], chunks["longitude"]),
                 "compressor": DEFAULT_COMPRESSOR,
+                "_FillValue": fill_value,
             }
             for var in ds.data_vars
         }
 
-        print("Writing Zarr…")
         return self.write_to_zarr(ds, output_zarr, encoding=encoding)
