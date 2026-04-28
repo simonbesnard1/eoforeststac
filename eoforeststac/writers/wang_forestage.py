@@ -199,7 +199,7 @@ class WangForestAgeWriter(BaseZarrWriter):
         encoding = {
             var: {
                 "chunks": (1, chunks["latitude"], chunks["longitude"]),
-                "compressor": DEFAULT_COMPRESSOR
+                "compressor": DEFAULT_COMPRESSOR,
             }
             for var in ds.data_vars
         }
