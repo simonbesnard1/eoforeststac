@@ -138,17 +138,17 @@ class WangForestAgeWriter(BaseZarrWriter):
                 )
 
         meta = {
-            "title": f"Global 30m Forest Age Map v{version} – Wang et al.",
+            "title": f"Global 30m Forest Age Map v{version} - Wang et al.",
             "version": version,
             "institution": "China Agricultural University",
             "created_by": "Wang et al.",
             "creation_date": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
             "description": (
                 "Global 30m forest age for natural and planted forests derived from "
-                "Landsat time-series CCDC change detection (1985–2024)."
+                "Landsat time-series CCDC change detection (1985-2024)."
             ),
             "spatial_resolution": "30 m",
-            "temporal_coverage": "1985–2024 (static product)",
+            "temporal_coverage": "1985-2024 (static product)",
             "citation": CITATION,
             "spatial_ref": crs,
             "_FillValue": fill_value,
@@ -199,8 +199,7 @@ class WangForestAgeWriter(BaseZarrWriter):
         encoding = {
             var: {
                 "chunks": (1, chunks["latitude"], chunks["longitude"]),
-                "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": fill_value,
+                "compressor": DEFAULT_COMPRESSOR
             }
             for var in ds.data_vars
         }
