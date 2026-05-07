@@ -67,18 +67,19 @@ from eoforeststac.catalog.restor_landuse import (
     create_restor_landuse_item,
 )
 
-from eoforeststac.catalog.potapov_lcluc import (
-    create_potapov_lcluc_collection,
-    create_potapov_lcluc_item,
-)
+# from eoforeststac.catalog.potapov_lcluc import (
+#     create_potapov_lcluc_collection,
+#     create_potapov_lcluc_item,
+# )
 from eoforeststac.catalog.gami_ageclass import (
     create_gami_ageclass_collection,
     create_gami_ageclass_item,
 )
-from eoforeststac.catalog.gedi_l4d import (
-    create_gedi_l4d_collection,
-    create_gedi_l4d_item,
-)
+
+# from eoforeststac.catalog.gedi_l4d import (
+#     create_gedi_l4d_collection,
+#     create_gedi_l4d_item,
+# )
 from eoforeststac.catalog.wang_forestage import (
     create_wang_forestage_collection,
     create_wang_forestage_item,
@@ -95,7 +96,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "EFDA": ["2.1.1"],
     "POTAPOV_HEIGHT": ["1.0"],
     "GAMI": ["2.0", "2.1", "3.0", "3.1"],
-    "GAMI_AGECLASS": ["2.1", "3.0"],
+    "GAMI_AGECLASS": ["2.1", "3.0", "3.1"],
     "JRC_GFC2020": ["3.0"],
     "ROBINSON_CR": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
@@ -103,8 +104,8 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "LIU_BIOMASS": ["0.1"],
     "RADD_EUROPE": ["1.0"],
     "RESTOR_LANDUSE": ["2.0"],
-    "POTAPOV_LCLUC": ["2020"],
-    "GEDI_L4D": ["2.0"],
+    # "POTAPOV_LCLUC": ["2020"],
+    # "GEDI_L4D": ["2.0"],
     "WANG_FORESTAGE": ["2.0"],
 }
 
@@ -150,7 +151,7 @@ THEMES: Dict[str, Dict[str, object]] = {
             "GAMI_AGECLASS",
             "POTAPOV_HEIGHT",
             "FORESTPATHS_GENUS",
-            "GEDI_L4D",
+            # "GEDI_L4D",
             "WANG_FORESTAGE",
         ],
     },
@@ -158,7 +159,9 @@ THEMES: Dict[str, Dict[str, object]] = {
         "title": "Land Use & Land Cover",
         "description": "Land Use, land Cover and associated changes.",
         "keywords": ["land use", "land cover", "changes"],
-        "products": ["RESTOR_LANDUSE", "POTAPOV_LCLUC"],
+        "products": [
+            "RESTOR_LANDUSE"
+        ],  # "POTAPOV_LCLUC" commented out until data is ready
     },
 }
 
@@ -210,21 +213,21 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             create_restor_landuse_collection,
             create_restor_landuse_item,
         ),
-        ProductSpec(
-            "POTAPOV_LCLUC",
-            create_potapov_lcluc_collection,
-            create_potapov_lcluc_item,
-        ),
+        # ProductSpec(
+        #     "POTAPOV_LCLUC",
+        #     create_potapov_lcluc_collection,
+        #     create_potapov_lcluc_item,
+        # ),
         ProductSpec(
             "GAMI_AGECLASS",
             create_gami_ageclass_collection,
             create_gami_ageclass_item,
         ),
-        ProductSpec(
-            "GEDI_L4D",
-            create_gedi_l4d_collection,
-            create_gedi_l4d_item,
-        ),
+        # ProductSpec(
+        #     "GEDI_L4D",
+        #     create_gedi_l4d_collection,
+        #     create_gedi_l4d_item,
+        # ),
         ProductSpec(
             "WANG_FORESTAGE",
             create_wang_forestage_collection,
