@@ -7,7 +7,7 @@ EFDA_CFG = {
     # Identity / narrative (atlas-friendly)
     # ------------------------------------------------------------------
     "id": "EFDA",
-    "title": "European Forest Disturbance Atlas (EFDA) – Annual disturbance maps for Europe (30 m)",
+    "title": "European Forest Disturbance Atlas (EFDA) - Annual disturbance maps for Europe (30 m)",
     "description": (
         "Annual forest disturbance maps for continental Europe derived from Landsat time series. "
         "The dataset includes annual layers describing disturbance occurrence and causal "
@@ -44,7 +44,7 @@ EFDA_CFG = {
     "license": " Creative Commons Attribution",
     "providers": [
         {
-            "name": "Technical University of Munich (TUM) – Earth Observation for Ecosystem Management",
+            "name": "Technical University of Munich (TUM) - Earth Observation for Ecosystem Management",
             "roles": ["producer"],
             "url": "https://www.lss.ls.tum.de/en/eoem/",
         },
@@ -156,11 +156,6 @@ EFDA_CFG = {
                 "label": "harvest",
                 "description": "Planned or salvage logging",
             },
-            {
-                "value": 4,
-                "label": "mixed",
-                "description": "Mixed agents (more than one disturbance agent occurred)",
-            },
         ],
     },
     # ------------------------------------------------------------------
@@ -193,8 +188,8 @@ EFDA_CFG = {
     # Version notes (UI / provenance helper)
     # ------------------------------------------------------------------
     "version_notes": {
-        "2.0.0": "Initial version covering 1985–2021.",
-        "2.1.0": "Updated to 1985–2023; added forest land-use layer and annual stacks including probabilities and agents.",
+        "2.0.0": "Initial version covering 1985-2021.",
+        "2.1.0": "Updated to 1985-2023; added forest land-use layer and annual stacks including probabilities and agents.",
         "2.1.1": "Improvements to disturbance maps and added a disturbance severity layer.",
     },
 }

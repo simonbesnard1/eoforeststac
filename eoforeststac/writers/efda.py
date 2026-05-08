@@ -192,9 +192,9 @@ class EFDAWriter(BaseZarrWriter):
                         "Causal agent of forest disturbance following the EFDA classification."
                     ),
                     "units": "categorical",
-                    "flag_values": [0, 1, 2, 3, 4],
-                    "flag_meanings": "no_disturbance wind_bark_beetle fire harvest mixed",
-                    "flag_descriptions": "No Disturbance, Wind and bark beetle disturbance complex; Wildfire-related disturbance; Planned or salvage logging; Mixed agents (more than one disturbance agent occurred)",
+                    "flag_values": [0, 1, 2, 3],
+                    "flag_meanings": "no_disturbance wind_bark_beetle fire harvest",
+                    "flag_descriptions": "No Disturbance, Wind and bark beetle disturbance complex; Wildfire-related disturbance; Planned or salvage logging",
                     "grid_mapping": "spatial_ref",
                 }
             )

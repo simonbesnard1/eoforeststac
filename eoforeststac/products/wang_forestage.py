@@ -7,7 +7,7 @@ WANG_FORESTAGE_CFG = {
     # Identity
     # ------------------------------------------------------------------
     "id": "WANG_FORESTAGE",
-    "title": "Global 30m Forest Age Map – Natural and Planted Forests (Wang et al.)",
+    "title": "Global 30m Forest Age Map - Natural and Planted Forests (Wang et al.)",
     "description": (
         "Global 30-metre resolution maps of forest age for natural and planted forests, "
         "derived from Landsat time-series data using the CCDC (Continuous Change Detection "
@@ -114,7 +114,7 @@ WANG_FORESTAGE_CFG = {
     # Summaries
     # ------------------------------------------------------------------
     "summaries": {
-        "temporal_resolution": ["static (Landsat time series 1985–2024)"],
+        "temporal_resolution": ["static (Landsat time series 1985-2024)"],
         "variables": ["natural_forest_age", "planted_forest_age"],
         "units_by_variable": {
             "natural_forest_age": "years",
