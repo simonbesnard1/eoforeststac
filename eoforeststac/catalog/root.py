@@ -84,6 +84,10 @@ from eoforeststac.catalog.wang_forestage import (
     create_wang_forestage_collection,
     create_wang_forestage_item,
 )
+from eoforeststac.catalog.als_products import (
+    create_als_products_collection,
+    create_als_products_item,
+)
 
 # ---------------------------------------------------------------------
 # Defaults
@@ -107,6 +111,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     # "POTAPOV_LCLUC": ["2020"],
     # "GEDI_L4D": ["2.0"],
     "WANG_FORESTAGE": ["2.0"],
+    "ALS_PRODUCTS": ["1.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -154,6 +159,17 @@ THEMES: Dict[str, Dict[str, object]] = {
             # "GEDI_L4D",
             "WANG_FORESTAGE",
         ],
+    },
+    "als-lidar": {
+        "title": "ALS / LiDAR",
+        "description": "Gridded products derived from airborne laser scanning point clouds.",
+        "keywords": [
+            "airborne laser scanning",
+            "lidar",
+            "canopy height",
+            "forest structure",
+        ],
+        "products": ["ALS_PRODUCTS"],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -232,6 +248,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "WANG_FORESTAGE",
             create_wang_forestage_collection,
             create_wang_forestage_item,
+        ),
+        ProductSpec(
+            "ALS_PRODUCTS",
+            create_als_products_collection,
+            create_als_products_item,
         ),
     )
 
