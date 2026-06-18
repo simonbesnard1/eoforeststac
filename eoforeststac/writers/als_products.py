@@ -88,19 +88,19 @@ class ALSProductsWriter(BaseZarrWriter):
             ds[var] = ds[var].where(np.isfinite(ds[var]), fill_value)
 
             attrs = VARIABLE_ATTRS.get(var, {}).copy()
-            attrs.update({
-                "grid_mapping": "spatial_ref",
-                "_FillValue": fill_value,
-            })
+            attrs.update(
+                {
+                    "grid_mapping": "spatial_ref",
+                    "_FillValue": fill_value,
+                }
+            )
             ds[var].attrs.update(attrs)
 
         expected = set(res_meta["variables"])
         present = {v for v in ds.data_vars if v != "spatial_ref"}
         missing = expected - present
         if missing:
-            print(
-                f"Warning: expected variables missing from input: {sorted(missing)}"
-            )
+            print(f"Warning: expected variables missing from input: {sorted(missing)}")
 
         self.set_global_metadata(
             ds,
@@ -154,9 +154,7 @@ class ALSProductsWriter(BaseZarrWriter):
             Key in ALS_RESOLUTIONS, e.g. "10m".
         """
         if region not in REGIONS:
-            raise ValueError(
-                f"Unknown region '{region}'. Available: {list(REGIONS)}"
-            )
+            raise ValueError(f"Unknown region '{region}'. Available: {list(REGIONS)}")
         if resolution not in ALS_RESOLUTIONS:
             raise ValueError(
                 f"Unknown resolution '{resolution}'. Available: {list(ALS_RESOLUTIONS)}"
@@ -184,9 +182,7 @@ class ALSProductsWriter(BaseZarrWriter):
         for var in ds.data_vars:
             if var == "spatial_ref":
                 continue
-            var_chunks = tuple(
-                chunks.get(dim, ds.sizes[dim]) for dim in ds[var].dims
-            )
+            var_chunks = tuple(chunks.get(dim, ds.sizes[dim]) for dim in ds[var].dims)
             encoding[var] = {
                 "dtype": "float32",
                 "chunks": var_chunks,

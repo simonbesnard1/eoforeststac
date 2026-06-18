@@ -2,7 +2,11 @@ import pystac
 
 from eoforeststac.catalog.factory import create_collection
 from eoforeststac.core.assets import create_zarr_asset
-from eoforeststac.products.als_products import ALS_PRODUCTS_CFG, ALS_RESOLUTIONS, REGIONS
+from eoforeststac.products.als_products import (
+    ALS_PRODUCTS_CFG,
+    ALS_RESOLUTIONS,
+    REGIONS,
+)
 
 
 def create_als_products_collection():
@@ -55,12 +59,14 @@ def create_als_products_item(version: str) -> list[pystac.Item]:
 
         for link_cfg in cfg.get("links", []):
             if link_cfg["rel"] in ["cite-as", "about", "license"]:
-                item.add_link(pystac.Link(
-                    rel=link_cfg["rel"],
-                    target=link_cfg["href"],
-                    media_type=link_cfg.get("type"),
-                    title=link_cfg.get("title"),
-                ))
+                item.add_link(
+                    pystac.Link(
+                        rel=link_cfg["rel"],
+                        target=link_cfg["href"],
+                        media_type=link_cfg.get("type"),
+                        title=link_cfg.get("title"),
+                    )
+                )
 
         items.append(item)
 
