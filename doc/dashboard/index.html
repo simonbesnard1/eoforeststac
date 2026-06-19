@@ -342,11 +342,16 @@ function parseIssue(issue) {
     priority,
     labels,
     product: fields["Product / Dataset Name"] || "",
-    productType: fields["Product Type"] || "",
+    productType: fields["Product Type / Theme"] || "",
     region: fields["Geographic Region"] || "",
-    resolution: fields["Spatial Resolution"] || "",
+    bbox: fields["Bounding Box"] || "",
+    crs: fields["Coordinate Reference System"] || "",
+    resolution: fields["Resolutions and Variables per Resolution"] || "",
     temporal: fields["Temporal Coverage"] || "",
     format: fields["Input Data Format"] || "",
+    license: fields["License"] || "",
+    provider: fields["Data Provider"] || "",
+    citation: fields["Citation / DOI"] || "",
     assignees: issue.assignees || [],
     comments: issue.comments,
     created: issue.created_at,
@@ -423,12 +428,15 @@ function renderCard(r) {
       <div class="request-meta">
         ${r.productType ? `<span class="badge badge-type">${escapeHtml(r.productType)}</span>` : ""}
         ${r.region ? `<span class="badge badge-default">${escapeHtml(r.region)}</span>` : ""}
-        ${r.resolution ? `<span class="badge badge-default">${escapeHtml(r.resolution)}</span>` : ""}
         ${r.format ? `<span class="badge badge-default">${escapeHtml(r.format)}</span>` : ""}
       </div>
       <div class="request-details">
         ${r.product ? `<div class="detail-item"><strong>Product:</strong> ${escapeHtml(r.product)}</div>` : ""}
         ${r.temporal ? `<div class="detail-item"><strong>Temporal:</strong> ${escapeHtml(r.temporal)}</div>` : ""}
+        ${r.bbox ? `<div class="detail-item"><strong>BBox:</strong> ${escapeHtml(r.bbox)}</div>` : ""}
+        ${r.crs ? `<div class="detail-item"><strong>CRS:</strong> ${escapeHtml(r.crs)}</div>` : ""}
+        ${r.license ? `<div class="detail-item"><strong>License:</strong> ${escapeHtml(r.license)}</div>` : ""}
+        ${r.provider ? `<div class="detail-item"><strong>Provider:</strong> ${escapeHtml(r.provider)}</div>` : ""}
       </div>
       <div class="request-footer">
         <div>${assigneeHtml}</div>
@@ -457,7 +465,7 @@ function applyFilters() {
     if (status !== "all" && r.status !== status) return false;
     if (priority !== "all" && r.priority !== priority) return false;
     if (search) {
-      const hay = `${r.title} ${r.product} ${r.region} ${r.productType} ${r.resolution}`.toLowerCase();
+      const hay = `${r.title} ${r.product} ${r.region} ${r.productType} ${r.resolution} ${r.provider} ${r.crs}`.toLowerCase();
       if (!hay.includes(search)) return false;
     }
     return true;

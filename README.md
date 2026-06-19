@@ -83,6 +83,15 @@ It includes:
 - [Catalog Overview](https://eoforeststac.readthedocs.io/en/latest/user/catalog_overview.html): all available products by theme
 - [Examples](https://eoforeststac.readthedocs.io/en/latest/auto_examples/index.html): gallery of worked examples
 
+## Data Ingestion Requests
+
+Want a new dataset, region, or resolution added to the catalog? Use the **Ingestion Queue**:
+
+- **Submit a request**: [Open a data ingestion request](https://github.com/simonbesnard1/eoforeststac/issues/new?template=data-ingestion-request.yml) on GitHub
+- **Track progress**: View all requests and their status on the [Ingestion Dashboard](https://doidata.gfz.de/simon/dashboard/)
+
+Requests are tracked via GitHub Issues with status labels (`queued`, `processing`, `done`, `blocked`). Processors and requesters can discuss details directly in the issue thread.
+
 ## Contributing
 
 Contributions are welcome. Please open an issue or pull request on [GitHub](https://github.com/simonbesnard1/eoforeststac).
