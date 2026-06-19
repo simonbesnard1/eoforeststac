@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EOForestSTAC - Ingestion Queue</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border: #dee2e6;
+      --text: #212529;
+      --text-muted: #6c757d;
+      --primary: #2563eb;
+      --primary-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --yellow: #ca8a04;
+      --yellow-light: #fef9c3;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --gray: #6b7280;
+      --gray-light: #f3f4f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    header p {
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toolbar select,
+    .toolbar input {
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.875rem;
+      background: var(--bg);
+    }
+
+    .toolbar input { flex: 1; min-width: 200px; }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 2rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.5rem;
+      flex: 1;
+      min-width: 140px;
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-card .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .container { padding: 0 2rem 2rem; }
+
+    .request-list { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+
+    .request-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      transition: box-shadow 0.15s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .request-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+    .request-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .request-title {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .request-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-queued     { background: var(--yellow-light); color: var(--yellow); }
+    .badge-processing { background: var(--primary-light); color: var(--primary); }
+    .badge-done       { background: var(--green-light); color: var(--green); }
+    .badge-blocked    { background: var(--red-light); color: var(--red); }
+    .badge-default    { background: var(--gray-light); color: var(--gray); }
+
+    .badge-priority-high   { background: var(--red-light); color: var(--red); }
+    .badge-priority-medium { background: var(--yellow-light); color: var(--yellow); }
+    .badge-priority-low    { background: var(--gray-light); color: var(--gray); }
+
+    .badge-type { background: var(--purple-light); color: var(--purple); }
+
+    .request-details {
+      margin-top: 0.75rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .detail-item { color: var(--text-muted); }
+    .detail-item strong { color: var(--text); font-weight: 500; }
+
+    .request-footer {
+      margin-top: 0.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .assignee {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .assignee img {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+    }
+
+    .comments-count { display: flex; align-items: center; gap: 0.25rem; }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 0.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .new-request-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .new-request-btn:hover { opacity: 0.9; }
+
+    .error {
+      background: var(--red-light);
+      color: var(--red);
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      header, .toolbar, .stats, .container { padding-left: 1rem; padding-right: 1rem; }
+      .request-header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+    <div>
+      <h1>EOForestSTAC Ingestion Queue</h1>
+      <p>Data ingestion requests and processing status</p>
+    </div>
+    <a class="new-request-btn"
+       href="https://github.com/simonbesnard1/eoforeststac/issues/new?template=data-ingestion-request.yml"
+       target="_blank" rel="noopener">
+      + New Request
+    </a>
+  </div>
+</header>
+
+<div class="toolbar">
+  <select id="filter-status">
+    <option value="all">All statuses</option>
+    <option value="queued">Queued</option>
+    <option value="processing">Processing</option>
+    <option value="done">Done</option>
+    <option value="blocked">Blocked</option>
+  </select>
+  <select id="filter-priority">
+    <option value="all">All priorities</option>
+    <option value="high">High</option>
+    <option value="medium">Medium</option>
+    <option value="low">Low</option>
+  </select>
+  <input type="text" id="search" placeholder="Search by product, region...">
+</div>
+
+<div class="stats" id="stats"></div>
+
+<div class="container">
+  <div id="content">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading requests from GitHub...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO = "simonbesnard1/eoforeststac";
+const LABEL = "ingestion-request";
+
+const STATUS_LABELS = {
+  "status: queued": "queued",
+  "status: processing": "processing",
+  "status: done": "done",
+  "status: blocked": "blocked",
+};
+
+const PRIORITY_LABELS = {
+  "priority: high": "high",
+  "priority: medium": "medium",
+  "priority: low": "low",
+};
+
+let allRequests = [];
+
+async function fetchIssues() {
+  const url = `https://api.github.com/repos/${REPO}/issues?labels=${LABEL}&state=all&per_page=100&sort=created&direction=desc`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`GitHub API error: ${resp.status}`);
+  return resp.json();
+}
+
+function parseIssue(issue) {
+  const labels = issue.labels.map(l => l.name.toLowerCase());
+
+  let status = "queued";
+  for (const [label, s] of Object.entries(STATUS_LABELS)) {
+    if (labels.includes(label)) { status = s; break; }
+  }
+  if (issue.state === "closed" && status !== "done") status = "done";
+
+  let priority = "medium";
+  for (const [label, p] of Object.entries(PRIORITY_LABELS)) {
+    if (labels.includes(label)) { priority = p; break; }
+  }
+
+  const fields = parseBody(issue.body || "");
+
+  return {
+    id: issue.number,
+    title: issue.title,
+    url: issue.html_url,
+    status,
+    priority,
+    labels,
+    product: fields["Product / Dataset Name"] || "",
+    productType: fields["Product Type"] || "",
+    region: fields["Geographic Region"] || "",
+    resolution: fields["Spatial Resolution"] || "",
+    temporal: fields["Temporal Coverage"] || "",
+    format: fields["Input Data Format"] || "",
+    assignees: issue.assignees || [],
+    comments: issue.comments,
+    created: issue.created_at,
+    updated: issue.updated_at,
+  };
+}
+
+function parseBody(body) {
+  const fields = {};
+  const lines = body.split("\n");
+  let currentLabel = null;
+  let currentValue = [];
+
+  for (const line of lines) {
+    if (line.startsWith("### ")) {
+      if (currentLabel) {
+        fields[currentLabel] = currentValue.join("\n").trim();
+      }
+      currentLabel = line.replace("### ", "").trim();
+      currentValue = [];
+    } else if (currentLabel) {
+      if (line.trim() !== "_No response_") {
+        currentValue.push(line);
+      }
+    }
+  }
+  if (currentLabel) {
+    fields[currentLabel] = currentValue.join("\n").trim();
+  }
+  return fields;
+}
+
+function renderStats(requests) {
+  const counts = { total: requests.length, queued: 0, processing: 0, done: 0, blocked: 0 };
+  requests.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+
+  document.getElementById("stats").innerHTML = `
+    <div class="stat-card"><div class="number">${counts.total}</div><div class="label">Total</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--yellow)">${counts.queued}</div><div class="label">Queued</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--primary)">${counts.processing}</div><div class="label">Processing</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--green)">${counts.done}</div><div class="label">Done</div></div>
+    <div class="stat-card"><div class="number" style="color:var(--red)">${counts.blocked}</div><div class="label">Blocked</div></div>
+  `;
+}
+
+function renderRequests(requests) {
+  const container = document.getElementById("content");
+
+  if (requests.length === 0) {
+    container.innerHTML = `<div class="empty-state"><p>No requests found.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="request-list">${requests.map(renderCard).join("")}</div>`;
+}
+
+function renderCard(r) {
+  const date = new Date(r.created).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  const updated = new Date(r.updated).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+  const assigneeHtml = r.assignees.length
+    ? r.assignees.map(a => `<span class="assignee"><img src="${a.avatar_url}" alt="${a.login}"> ${a.login}</span>`).join(" ")
+    : `<span class="assignee">Unassigned</span>`;
+
+  return `
+    <a class="request-card" href="${r.url}" target="_blank" rel="noopener">
+      <div class="request-header">
+        <span class="request-title">#${r.id} ${escapeHtml(r.title)}</span>
+        <div style="display:flex; gap:0.4rem; flex-shrink:0;">
+          <span class="badge badge-${r.status}">${r.status}</span>
+          <span class="badge badge-priority-${r.priority}">${r.priority}</span>
+        </div>
+      </div>
+      <div class="request-meta">
+        ${r.productType ? `<span class="badge badge-type">${escapeHtml(r.productType)}</span>` : ""}
+        ${r.region ? `<span class="badge badge-default">${escapeHtml(r.region)}</span>` : ""}
+        ${r.resolution ? `<span class="badge badge-default">${escapeHtml(r.resolution)}</span>` : ""}
+        ${r.format ? `<span class="badge badge-default">${escapeHtml(r.format)}</span>` : ""}
+      </div>
+      <div class="request-details">
+        ${r.product ? `<div class="detail-item"><strong>Product:</strong> ${escapeHtml(r.product)}</div>` : ""}
+        ${r.temporal ? `<div class="detail-item"><strong>Temporal:</strong> ${escapeHtml(r.temporal)}</div>` : ""}
+      </div>
+      <div class="request-footer">
+        <div>${assigneeHtml}</div>
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <span class="comments-count">${r.comments} comment${r.comments !== 1 ? "s" : ""}</span>
+          <span>Created ${date}</span>
+          <span>Updated ${updated}</span>
+        </div>
+      </div>
+    </a>
+  `;
+}
+
+function escapeHtml(str) {
+  const el = document.createElement("span");
+  el.textContent = str;
+  return el.innerHTML;
+}
+
+function applyFilters() {
+  const status = document.getElementById("filter-status").value;
+  const priority = document.getElementById("filter-priority").value;
+  const search = document.getElementById("search").value.toLowerCase();
+
+  const filtered = allRequests.filter(r => {
+    if (status !== "all" && r.status !== status) return false;
+    if (priority !== "all" && r.priority !== priority) return false;
+    if (search) {
+      const hay = `${r.title} ${r.product} ${r.region} ${r.productType} ${r.resolution}`.toLowerCase();
+      if (!hay.includes(search)) return false;
+    }
+    return true;
+  });
+
+  renderRequests(filtered);
+}
+
+async function init() {
+  try {
+    const issues = await fetchIssues();
+    allRequests = issues.filter(i => !i.pull_request).map(parseIssue);
+    renderStats(allRequests);
+    renderRequests(allRequests);
+
+    document.getElementById("filter-status").addEventListener("change", applyFilters);
+    document.getElementById("filter-priority").addEventListener("change", applyFilters);
+    document.getElementById("search").addEventListener("input", applyFilters);
+  } catch (err) {
+    document.getElementById("content").innerHTML = `
+      <div class="error">
+        <strong>Failed to load requests.</strong>
+        <p>${escapeHtml(err.message)}</p>
+        <p style="margin-top:0.5rem;">The GitHub API has a rate limit of 60 requests/hour for unauthenticated users. Try again later.</p>
+      </div>
+    `;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

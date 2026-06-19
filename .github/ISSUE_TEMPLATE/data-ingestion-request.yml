@@ -1,0 +1,124 @@
+name: Data Ingestion Request
+description: Request a new dataset or region to be ingested into the STAC catalog
+labels: [ingestion-request]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Data Ingestion Request
+        Use this form to request a new dataset, region, or resolution to be added to the EOForestSTAC catalog.
+
+  - type: input
+    id: product-name
+    attributes:
+      label: Product / Dataset Name
+      description: Name of the dataset or product to ingest.
+      placeholder: e.g. ALS Spain PNOA, GEDI L4D, CCI Biomass
+    validations:
+      required: true
+
+  - type: dropdown
+    id: product-type
+    attributes:
+      label: Product Type
+      description: What kind of product is this?
+      options:
+        - ALS / LiDAR
+        - Biomass
+        - Forest Age / Demography
+        - Disturbance / Change
+        - Canopy Height / Structure
+        - Land Use / Land Cover
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: region
+    attributes:
+      label: Geographic Region
+      description: Country or region covered by the dataset.
+      placeholder: e.g. Spain, Brazil, Global
+    validations:
+      required: true
+
+  - type: input
+    id: spatial-resolution
+    attributes:
+      label: Spatial Resolution
+      description: Resolution(s) of the data.
+      placeholder: e.g. 1m, 10m, 100m, 0.25deg
+    validations:
+      required: true
+
+  - type: input
+    id: temporal-coverage
+    attributes:
+      label: Temporal Coverage
+      description: Time period covered by the data.
+      placeholder: e.g. 2015-2023, static (2020)
+    validations:
+      required: true
+
+  - type: textarea
+    id: data-source
+    attributes:
+      label: Data Source / Location
+      description: Where is the raw data currently stored? Include paths, URLs, or DOIs.
+      placeholder: |
+        e.g.
+        - Local path: /data/als/spain_pnoa/
+        - DOI: https://doi.org/10.xxxx
+        - S3: s3://bucket/path/
+    validations:
+      required: true
+
+  - type: dropdown
+    id: input-format
+    attributes:
+      label: Input Data Format
+      options:
+        - Zarr
+        - GeoTIFF / VRT
+        - NetCDF
+        - Point Cloud (LAS/LAZ)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Low
+        - Medium
+        - High
+    validations:
+      required: true
+
+  - type: textarea
+    id: variables
+    attributes:
+      label: Variables
+      description: List the variables to include, if known.
+      placeholder: e.g. chm, dtm, dsm, biomass, gap fraction
+    validations:
+      required: false
+
+  - type: input
+    id: target-crs
+    attributes:
+      label: Target CRS
+      description: Coordinate reference system (EPSG code).
+      placeholder: e.g. EPSG:4326, EPSG:25830
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant information (license, citation, processing notes, etc.).
+    validations:
+      required: false

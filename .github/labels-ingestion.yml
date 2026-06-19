@@ -1,0 +1,35 @@
+# Labels for the ingestion queue workflow.
+# Apply with: gh label create "label name" --color "hex" --description "desc"
+# Or run: scripts/setup_labels.sh
+
+- name: ingestion-request
+  color: "1d76db"
+  description: Data ingestion request
+
+- name: "status: queued"
+  color: "fbca04"
+  description: Request received, waiting to be picked up
+
+- name: "status: processing"
+  color: "0075ca"
+  description: Currently being processed
+
+- name: "status: done"
+  color: "0e8a16"
+  description: Ingestion complete
+
+- name: "status: blocked"
+  color: "d93f0b"
+  description: Blocked by external dependency or issue
+
+- name: "priority: high"
+  color: "b60205"
+  description: High priority request
+
+- name: "priority: medium"
+  color: "fbca04"
+  description: Medium priority request
+
+- name: "priority: low"
+  color: "c2e0c6"
+  description: Low priority request
