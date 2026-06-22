@@ -90,19 +90,6 @@ def create_collection(cfg: dict) -> pystac.Collection:
                 ),
             )
 
-    # Auto-add thumbnail as a preview link (not a geo-referenced asset)
-    has_preview = any(link.rel == "preview" for link in collection.links)
-    if not has_preview:
-        thumb_href = f"{cfg['base_path']}/{cfg['id']}_thumbnail.png"
-        collection.add_link(
-            pystac.Link(
-                rel="preview",
-                target=thumb_href,
-                media_type="image/png",
-                title=f"{cfg.get('title', cfg['id'])} – preview",
-            )
-        )
-
     return collection
 
 
