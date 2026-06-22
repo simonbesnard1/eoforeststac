@@ -159,6 +159,12 @@ ALS_PRODUCTS_CFG = {
             "type": "text/html",
             "title": "alsdb processing pipeline",
         },
+        {
+            "rel": "cite-as",
+            "href": "https://github.com/simonbesnard1/alsdb",
+            "type": "text/html",
+            "title": "alsdb – ALS gridded products pipeline (cite repository until DOI is available)",
+        },
     ],
     "stac_extensions": [
         "https://stac-extensions.github.io/eo/v1.1.0/schema.json",

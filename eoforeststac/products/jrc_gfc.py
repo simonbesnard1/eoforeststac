@@ -105,6 +105,12 @@ JRC_GFC_CFG = {
             "type": "text/html",
             "title": "EU Open Data Portal entry (GFC2020 v3 metadata)",
         },
+        {
+            "rel": "cite-as",
+            "href": "https://doi.org/10.2760/262532",
+            "type": "text/html",
+            "title": "JRC technical report DOI",
+        },
     ],
     # ------------------------------------------------------------------
     # Extensions (signal what fields might exist in items/assets)
