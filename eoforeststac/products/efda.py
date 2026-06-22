@@ -41,7 +41,7 @@ EFDA_CFG = {
     # Governance
     # ------------------------------------------------------------------
     # If Zenodo specifies a single license, replace "various" with it.
-    "license": " Creative Commons Attribution",
+    "license": "CC-BY-4.0",
     "providers": [
         {
             "name": "Technical University of Munich (TUM) - Earth Observation for Ecosystem Management",
