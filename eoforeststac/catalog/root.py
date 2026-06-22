@@ -88,6 +88,10 @@ from eoforeststac.catalog.als_products import (
     create_als_products_collection,
     create_als_products_item,
 )
+from eoforeststac.catalog.uls_products import (
+    create_uls_products_collection,
+    create_uls_products_item,
+)
 
 # ---------------------------------------------------------------------
 # Defaults
@@ -112,6 +116,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     # "GEDI_L4D": ["2.0"],
     "WANG_FORESTAGE": ["2.0"],
     "ALS_PRODUCTS": ["1.0"],
+    "ULS_PRODUCTS": ["1.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -161,15 +166,17 @@ THEMES: Dict[str, Dict[str, object]] = {
         ],
     },
     "als-lidar": {
-        "title": "ALS / LiDAR",
-        "description": "Gridded products derived from airborne laser scanning point clouds.",
+        "title": "ALS / ULS / LiDAR",
+        "description": "Gridded products derived from airborne and unmanned laser scanning point clouds.",
         "keywords": [
             "airborne laser scanning",
+            "unmanned laser scanning",
+            "UAV",
             "lidar",
             "canopy height",
             "forest structure",
         ],
-        "products": ["ALS_PRODUCTS"],
+        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS"],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -253,6 +260,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "ALS_PRODUCTS",
             create_als_products_collection,
             create_als_products_item,
+        ),
+        ProductSpec(
+            "ULS_PRODUCTS",
+            create_uls_products_collection,
+            create_uls_products_item,
         ),
     )
 
