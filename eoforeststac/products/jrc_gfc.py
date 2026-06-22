@@ -134,6 +134,9 @@ JRC_GFC_CFG = {
             {"value": 1, "name": "forest"},
         ],
     },
+    "raster_bands": {
+        "forest": {"data_type": "uint8", "nodata": 255},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

@@ -156,6 +156,14 @@ JRC_TMF_CFG = {
             "TMF dataset contains multiple layers including annual change and transition products (see user guide)."
         ],
     },
+    "raster_bands": {
+        "AnnualChange": {"data_type": "int16", "nodata": -9999},
+        "DeforestationYear": {"data_type": "int16", "nodata": -9999},
+        "DegradationYear": {"data_type": "int16", "nodata": -9999},
+        "TransitionMap_MainClasses": {"data_type": "uint8", "nodata": 0},
+        "TransitionMap_Subtypes": {"data_type": "uint8", "nodata": 0},
+        "UndisturbedDegradedForest": {"data_type": "uint8", "nodata": 0},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

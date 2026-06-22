@@ -139,7 +139,6 @@ EFDA_CFG = {
         "eo:gsd": [30.0],
         "proj:epsg": [3035],
         "data_format": ["zarr"],
-        # Dataset-specific legend
         "disturbance_agent_legend": [
             {
                 "value": 1,
@@ -157,6 +156,10 @@ EFDA_CFG = {
                 "description": "Planned or salvage logging",
             },
         ],
+    },
+    "raster_bands": {
+        "disturbance_agent": {"data_type": "int16", "nodata": -9999},
+        "disturbance_occurrence": {"data_type": "int16", "nodata": -9999},
     },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)

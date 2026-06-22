@@ -138,6 +138,9 @@ GAMI_AGECLASS_CFG = {
         "product_family": ["GAMI"],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "forest_age": {"data_type": "float32", "nodata": -9999.0},
+    },
     # ------------------------------------------------------------------
     # Item assets template
     # ------------------------------------------------------------------

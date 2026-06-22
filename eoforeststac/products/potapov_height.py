@@ -105,6 +105,9 @@ POTAPOV_HEIGHT_CFG = {
         "proj:epsg": [4326],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "canopy_height": {"data_type": "float32", "nodata": -9999},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

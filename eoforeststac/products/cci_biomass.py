@@ -120,6 +120,10 @@ CCI_BIOMASS_CFG = {
         "product_family": ["ESA CCI Biomass"],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "aboveground_biomass": {"data_type": "int32", "nodata": -9999},
+        "aboveground_biomass_std": {"data_type": "int32", "nodata": -9999},
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

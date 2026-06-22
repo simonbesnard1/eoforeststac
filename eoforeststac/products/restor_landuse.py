@@ -120,6 +120,9 @@ RESTOR_LANDUSE_CFG = {
         "product_family": ["RESTOR LAND USE"],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "lulc": {"data_type": "uint8", "nodata": 255},
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

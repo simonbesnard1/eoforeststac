@@ -161,6 +161,17 @@ ROBINSON_CR_CFG = {
             "Parameter names and units follow the Zenodo README; see record for full definitions and the growth equation."
         ],
     },
+    "raster_bands": {
+        "cr_a": {"data_type": "float32", "nodata": -9999.0},
+        "cr_b": {"data_type": "float32", "nodata": -9999.0},
+        "cr_k": {"data_type": "float32", "nodata": -9999.0},
+        "cr_a_error": {"data_type": "float32", "nodata": -9999.0},
+        "cr_b_error": {"data_type": "float32", "nodata": -9999.0},
+        "cr_k_error": {"data_type": "float32", "nodata": -9999.0},
+        "max_rate": {"data_type": "float32", "nodata": -9999.0},
+        "age_at_max_rate": {"data_type": "float32", "nodata": -9999.0},
+        "max_removal_potential_benefit_25": {"data_type": "float32", "nodata": -9999.0},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

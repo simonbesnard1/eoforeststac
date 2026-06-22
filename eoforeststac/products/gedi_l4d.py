@@ -137,6 +137,19 @@ GEDI_L4D_CFG = {
         "proj:epsg": [4326],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "rh10": {"data_type": "float32", "nodata": -9999},
+        "rh20": {"data_type": "float32", "nodata": -9999},
+        "rh30": {"data_type": "float32", "nodata": -9999},
+        "rh40": {"data_type": "float32", "nodata": -9999},
+        "rh50": {"data_type": "float32", "nodata": -9999},
+        "rh60": {"data_type": "float32", "nodata": -9999},
+        "rh70": {"data_type": "float32", "nodata": -9999},
+        "rh80": {"data_type": "float32", "nodata": -9999},
+        "rh90": {"data_type": "float32", "nodata": -9999},
+        "rh95": {"data_type": "float32", "nodata": -9999},
+        "rh98": {"data_type": "float32", "nodata": -9999},
+    },
     # ------------------------------------------------------------------
     # Item assets
     # ------------------------------------------------------------------

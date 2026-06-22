@@ -1,4 +1,29 @@
+from typing import List
+
 import pystac
+
+
+def _build_raster_bands(cfg: dict) -> List[dict]:
+    """Build raster:bands metadata from the product config."""
+    summaries = cfg.get("summaries", {})
+    variables = summaries.get("variables", [])
+    units = summaries.get("units_by_variable", {})
+    raster_cfg = cfg.get("raster_bands", {})
+
+    bands = []
+    for var in variables:
+        band = {"name": var}
+        if var in units:
+            band["unit"] = units[var]
+        overrides = raster_cfg.get(var, {})
+        if "data_type" in overrides:
+            band["data_type"] = overrides["data_type"]
+        if "nodata" in overrides:
+            band["nodata"] = overrides["nodata"]
+        if "statistics" in overrides:
+            band["statistics"] = overrides["statistics"]
+        bands.append(band)
+    return bands
 
 
 def create_collection(cfg: dict) -> pystac.Collection:
@@ -116,7 +141,11 @@ def create_item(cfg: dict, version: str) -> pystac.Item:
     if "asset_template" in cfg:
         asset_factory = cfg["asset_template"]["factory"]
         asset_key = cfg["asset_template"].get("key", "data")
-        item.add_asset(asset_key, asset_factory(cfg, version))
+        asset = asset_factory(cfg, version)
+        raster_bands = _build_raster_bands(cfg)
+        if raster_bands:
+            asset.extra_fields["raster:bands"] = raster_bands
+        item.add_asset(asset_key, asset)
 
     # Add links to item (e.g., documentation, DOI)
     if "links" in cfg:

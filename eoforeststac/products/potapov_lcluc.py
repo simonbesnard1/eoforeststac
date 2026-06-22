@@ -136,6 +136,14 @@ POTAPOV_LCLUC_CFG = {
         "product_family": ["GLAD LCLUC"],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "LCLU2000": {"data_type": "float32", "nodata": -9999},
+        "LCLU2005": {"data_type": "float32", "nodata": -9999},
+        "LCLU2010": {"data_type": "float32", "nodata": -9999},
+        "LCLU2015": {"data_type": "float32", "nodata": -9999},
+        "LCLU2020": {"data_type": "float32", "nodata": -9999},
+        "LCLUC2000-2020change": {"data_type": "float32", "nodata": -9999},
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

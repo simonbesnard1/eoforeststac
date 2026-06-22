@@ -146,6 +146,13 @@ HANSEN_GFC_CFG = {
         "gain_period": ["2000–2012"],
         "loss_period": ["2001–2024"],
     },
+    "raster_bands": {
+        "treecover2000": {"data_type": "uint8", "nodata": 0},
+        "loss": {"data_type": "uint8", "nodata": 0},
+        "lossyear": {"data_type": "uint8", "nodata": 0},
+        "gain": {"data_type": "uint8", "nodata": 0},
+        "datamask": {"data_type": "uint8", "nodata": 0},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

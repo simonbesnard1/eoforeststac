@@ -156,6 +156,11 @@ RADD_EUROPE_CFG = {
         "proj:epsg": [3035],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "disturbance_occurrence": {"data_type": "int32", "nodata": -1},
+        "alert_yydoy": {"data_type": "int32", "nodata": -1},
+        "forest_mask": {"data_type": "int32", "nodata": -1},
+    },
     # ------------------------------------------------------------------
     # Item assets (how a client should interpret the asset)
     # ------------------------------------------------------------------

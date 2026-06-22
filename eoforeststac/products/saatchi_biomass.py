@@ -123,6 +123,9 @@ SAATCHI_BIOMASS_CFG = {
         "product_family": ["Saatchi & Yu global AGB"],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "aboveground_biomass": {"data_type": "int32", "nodata": -9999},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

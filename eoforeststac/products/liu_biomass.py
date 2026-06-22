@@ -148,6 +148,11 @@ LIU_BIOMASS_CFG = {
             "Derived from PlanetScope imagery under research licensing; non-commercial use only."
         ],
     },
+    "raster_bands": {
+        "canopy_cover": {"data_type": "uint8", "nodata": 0},
+        "canopy_height": {"data_type": "float32", "nodata": 0},
+        "aboveground_biomass": {"data_type": "float32", "nodata": 0},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

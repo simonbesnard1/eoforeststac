@@ -136,6 +136,9 @@ FORESTPATHS_GENUS_CFG = {
             {"value": 7, "name": "No trees"},
         ],
     },
+    "raster_bands": {
+        "genus": {"data_type": "uint16", "nodata": 255},
+    },
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------

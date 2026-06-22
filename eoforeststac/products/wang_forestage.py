@@ -124,6 +124,10 @@ WANG_FORESTAGE_CFG = {
         "proj:epsg": [4326],
         "data_format": ["zarr"],
     },
+    "raster_bands": {
+        "natural_forest_age": {"data_type": "int16", "nodata": -9999},
+        "planted_forest_age": {"data_type": "int16", "nodata": -9999},
+    },
     # ------------------------------------------------------------------
     # Item assets
     # ------------------------------------------------------------------

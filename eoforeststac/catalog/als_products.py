@@ -1,6 +1,6 @@
 import pystac
 
-from eoforeststac.catalog.factory import create_collection
+from eoforeststac.catalog.factory import _build_raster_bands, create_collection
 from eoforeststac.core.assets import create_zarr_asset
 from eoforeststac.products.als_products import (
     ALS_PRODUCTS_CFG,
@@ -42,20 +42,23 @@ def create_als_products_item(version: str) -> list[pystac.Item]:
             stac_extensions=cfg.get("stac_extensions", []),
         )
 
+        all_bands = _build_raster_bands(cfg)
         for res, res_meta in ALS_RESOLUTIONS.items():
-            item.add_asset(
-                f"zarr_{res}",
-                create_zarr_asset(
-                    href=f"{cfg['base_path']}/{reg['zarr_name']}_{res}_v{version}.zarr",
-                    title=f"{res}",
-                    roles=["data"],
-                    description=(
-                        f"Cloud-optimized Zarr store at {res} resolution for "
-                        f"{reg['label']} (EPSG:{reg['proj_epsg']}). "
-                        f"Variables: {', '.join(res_meta['variables'])}."
-                    ),
+            res_vars = set(res_meta["variables"])
+            res_bands = [b for b in all_bands if b["name"] in res_vars]
+            asset = create_zarr_asset(
+                href=f"{cfg['base_path']}/{reg['zarr_name']}_{res}_v{version}.zarr",
+                title=f"{res}",
+                roles=["data"],
+                description=(
+                    f"Cloud-optimized Zarr store at {res} resolution for "
+                    f"{reg['label']} (EPSG:{reg['proj_epsg']}). "
+                    f"Variables: {', '.join(res_meta['variables'])}."
                 ),
             )
+            if res_bands:
+                asset.extra_fields["raster:bands"] = res_bands
+            item.add_asset(f"zarr_{res}", asset)
 
         for link_cfg in cfg.get("links", []):
             if link_cfg["rel"] in ["cite-as", "about", "license"]:
