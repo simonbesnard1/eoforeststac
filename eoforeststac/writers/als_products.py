@@ -88,13 +88,9 @@ class ALSProductsWriter(BaseZarrWriter):
             ds[var] = ds[var].where(np.isfinite(ds[var]), fill_value)
 
             attrs = VARIABLE_ATTRS.get(var, {}).copy()
-            attrs.update(
-                {
-                    "grid_mapping": "spatial_ref",
-                    "_FillValue": fill_value,
-                }
-            )
+            attrs["grid_mapping"] = "spatial_ref"
             ds[var].attrs.update(attrs)
+            ds = self._strip_cf_serialization_attrs(ds)
 
         expected = set(res_meta["variables"])
         present = {v for v in ds.data_vars if v != "spatial_ref"}
