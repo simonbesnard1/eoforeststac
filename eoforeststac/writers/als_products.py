@@ -209,8 +209,8 @@ class ALSProductsWriter(BaseZarrWriter):
         Parameters
         ----------
         input_dir : str
-            Directory containing one sub-directory per resolution,
-            e.g. "/data/als/spain_pnoa/" with children 1m/, 10m/, 100m/.
+            Directory containing one Zarr v2 store per resolution,
+            e.g. "/data/als/spain_pnoa/" with children 1m.zarr, 10m.zarr, 100m.zarr.
         output_prefix : str, optional
             S3 prefix for output.  Defaults to
             ``s3://{bucket}/collections/ALS_PRODUCTS``.
@@ -221,7 +221,7 @@ class ALSProductsWriter(BaseZarrWriter):
         reg = REGIONS[region]
         results = []
         for resolution in ALS_RESOLUTIONS:
-            input_zarr = f"{input_dir.rstrip('/')}/{resolution}"
+            input_zarr = f"{input_dir.rstrip('/')}/{resolution}.zarr"
             output_zarr = (
                 f"{output_prefix}/{reg['zarr_name']}_{resolution}_v{version}.zarr"
             )
