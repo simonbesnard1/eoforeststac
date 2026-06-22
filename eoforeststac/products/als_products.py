@@ -83,16 +83,31 @@ REGIONS = {
         "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
         "zarr_name": "ALS_SPAIN_PNOA",
     },
-    # "brazil": {
-    #     "label": "Brazil",
-    #     "description": "...",
-    #     "bbox": [...],
-    #     "geometry": {...},
-    #     "proj_epsg": 31983,
-    #     "start_datetime": datetime.datetime(2018, 1, 1, tzinfo=datetime.timezone.utc),
-    #     "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
-    #     "zarr_name": "ALS_BRAZIL",
-    # },
+    "brazil_eba": {
+        "label": "Brazil EBA",
+        "description": (
+            "Airborne laser scanning point cloud products derived from the Brazilian "
+            "Estimativa de Biomassa na Amazônia (EBA) LiDAR campaign, processed "
+            "with alsdb and stored as analysis-ready Zarr."
+        ),
+        "bbox": [-73.0, -15.0, -44.0, 5.0],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-73.0, -15.0],
+                    [-73.0, 5.0],
+                    [-44.0, 5.0],
+                    [-44.0, -15.0],
+                    [-73.0, -15.0],
+                ]
+            ],
+        },
+        "proj_epsg": 31983,
+        "start_datetime": datetime.datetime(2016, 1, 1, tzinfo=datetime.timezone.utc),
+        "end_datetime": datetime.datetime(2018, 12, 31, tzinfo=datetime.timezone.utc),
+        "zarr_name": "ALS_BRAZIL_EBA",
+    },
 }
 
 # ------------------------------------------------------------------
