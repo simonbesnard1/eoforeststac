@@ -320,6 +320,31 @@ class TestRasterBands:
 # ------------------------------------------------------------------
 
 
+class TestLinks:
+    def test_collections_have_cite_as_link(self, all_collections):
+        for col in all_collections:
+            links = col.get_links("cite-as")
+            assert links, (
+                f"Collection '{col.id}' has no 'cite-as' link. "
+                f"Add a DOI or citation link."
+            )
+
+    def test_items_have_cite_as_link(self, all_items):
+        for item in all_items:
+            links = item.get_links("cite-as")
+            assert links, (
+                f"Item '{item.id}' has no 'cite-as' link. "
+                f"Add a DOI or citation link."
+            )
+
+    def test_cite_as_links_have_href(self, all_collections):
+        for col in all_collections:
+            for link in col.get_links("cite-as"):
+                assert link.href, (
+                    f"Collection '{col.id}' has a 'cite-as' link with no href"
+                )
+
+
 class TestExtensions:
     def test_collections_declare_extensions(self, all_collections):
         for col in all_collections:
@@ -374,4 +399,74 @@ class TestConsistency:
             items = list(col.get_items())
             assert items, (
                 f"Collection '{col.id}' has no items despite being in DEFAULT_VERSIONS"
+            )
+
+
+# ------------------------------------------------------------------
+# Pydantic config schema validation
+# ------------------------------------------------------------------
+
+
+class TestConfigSchema:
+    """Validate every product config dict against the pydantic schema."""
+
+    @staticmethod
+    def _all_product_configs():
+        from eoforeststac.products.als_products import ALS_PRODUCTS_CFG
+        from eoforeststac.products.cci_biomass import CCI_BIOMASS_CFG
+        from eoforeststac.products.efda import EFDA_CFG
+        from eoforeststac.products.forestpaths_genus import FORESTPATHS_GENUS_CFG
+        from eoforeststac.products.gami import GAMI_CFG
+        from eoforeststac.products.gami_ageclass import GAMI_AGECLASS_CFG
+        from eoforeststac.products.gedi_l4d import GEDI_L4D_CFG
+        from eoforeststac.products.hansen_gfc import HANSEN_GFC_CFG
+        from eoforeststac.products.jrc_gfc import JRC_GFC_CFG
+        from eoforeststac.products.jrc_tmf import JRC_TMF_CFG
+        from eoforeststac.products.liu_biomass import LIU_BIOMASS_CFG
+        from eoforeststac.products.potapov_height import POTAPOV_HEIGHT_CFG
+        from eoforeststac.products.potapov_lcluc import POTAPOV_LCLUC_CFG
+        from eoforeststac.products.radd_europe import RADD_EUROPE_CFG
+        from eoforeststac.products.restor_landuse import RESTOR_LANDUSE_CFG
+        from eoforeststac.products.robinson_cr import ROBINSON_CR_CFG
+        from eoforeststac.products.saatchi_biomass import SAATCHI_BIOMASS_CFG
+        from eoforeststac.products.wang_forestage import WANG_FORESTAGE_CFG
+
+        return {
+            "ALS_PRODUCTS": ALS_PRODUCTS_CFG,
+            "CCI_BIOMASS": CCI_BIOMASS_CFG,
+            "EFDA": EFDA_CFG,
+            "FORESTPATHS_GENUS": FORESTPATHS_GENUS_CFG,
+            "GAMI": GAMI_CFG,
+            "GAMI_AGECLASS": GAMI_AGECLASS_CFG,
+            "GEDI_L4D": GEDI_L4D_CFG,
+            "HANSEN_GFC": HANSEN_GFC_CFG,
+            "JRC_GFC2020": JRC_GFC_CFG,
+            "JRC_TMF": JRC_TMF_CFG,
+            "LIU_BIOMASS": LIU_BIOMASS_CFG,
+            "POTAPOV_HEIGHT": POTAPOV_HEIGHT_CFG,
+            "POTAPOV_LCLUC": POTAPOV_LCLUC_CFG,
+            "RADD_EUROPE": RADD_EUROPE_CFG,
+            "RESTOR_LANDUSE": RESTOR_LANDUSE_CFG,
+            "ROBINSON_CR": ROBINSON_CR_CFG,
+            "SAATCHI_BIOMASS": SAATCHI_BIOMASS_CFG,
+            "WANG_FORESTAGE": WANG_FORESTAGE_CFG,
+        }
+
+    def test_all_configs_validate(self):
+        from pydantic import ValidationError
+
+        from eoforeststac.core.schema import validate_product_config
+
+        configs = self._all_product_configs()
+        errors = []
+        for name, cfg in configs.items():
+            try:
+                validate_product_config(cfg)
+            except ValidationError as e:
+                errors.append(f"{name}: {e}")
+
+        if errors:
+            pytest.fail(
+                f"{len(errors)} product config(s) failed validation:\n\n"
+                + "\n\n".join(errors)
             )
