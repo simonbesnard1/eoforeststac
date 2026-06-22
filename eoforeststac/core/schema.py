@@ -12,7 +12,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, field_validator, model_validator
 
-
 SPDX_PATTERN = re.compile(r"^[\w\-\.+]+$")
 
 
@@ -132,9 +131,7 @@ class ProductConfig(BaseModel, extra="allow"):
     @model_validator(mode="after")
     def temporal_order(self) -> "ProductConfig":
         if self.start_datetime > self.end_datetime:
-            raise ValueError(
-                f"Product '{self.id}': start_datetime > end_datetime"
-            )
+            raise ValueError(f"Product '{self.id}': start_datetime > end_datetime")
         return self
 
 

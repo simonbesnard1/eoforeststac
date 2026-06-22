@@ -14,7 +14,6 @@ from eoforeststac.catalog.root import (
     _product_specs,
 )
 
-
 # ------------------------------------------------------------------
 # Fixtures
 # ------------------------------------------------------------------
@@ -84,17 +83,17 @@ class TestCatalogStructure:
         seen = {}
         for theme_id, meta in THEMES.items():
             for prod in meta["products"]:
-                assert prod not in seen, (
-                    f"Product '{prod}' in both '{seen[prod]}' and '{theme_id}'"
-                )
+                assert (
+                    prod not in seen
+                ), f"Product '{prod}' in both '{seen[prod]}' and '{theme_id}'"
                 seen[prod] = theme_id
 
     def test_all_default_versions_have_specs(self):
         spec_ids = {s.product_id for s in _product_specs()}
         for prod_id in DEFAULT_VERSIONS:
-            assert prod_id in spec_ids, (
-                f"DEFAULT_VERSIONS references '{prod_id}' but no ProductSpec exists"
-            )
+            assert (
+                prod_id in spec_ids
+            ), f"DEFAULT_VERSIONS references '{prod_id}' but no ProductSpec exists"
 
 
 # ------------------------------------------------------------------
@@ -129,18 +128,18 @@ class TestCollections:
             intervals = col.extent.temporal.intervals
             assert intervals, f"Collection '{col.id}' has no temporal intervals"
             start, end = intervals[0]
-            assert start is not None or end is not None, (
-                f"Collection '{col.id}' has empty temporal interval"
-            )
+            assert (
+                start is not None or end is not None
+            ), f"Collection '{col.id}' has empty temporal interval"
 
     def test_collection_has_spatial_extent(self, all_collections):
         for col in all_collections:
             bboxes = col.extent.spatial.bboxes
             assert bboxes, f"Collection '{col.id}' has no bounding boxes"
             bbox = bboxes[0]
-            assert len(bbox) == 4, (
-                f"Collection '{col.id}' bbox has {len(bbox)} elements, expected 4"
-            )
+            assert (
+                len(bbox) == 4
+            ), f"Collection '{col.id}' bbox has {len(bbox)} elements, expected 4"
             west, south, east, north = bbox
             assert west <= east, f"Collection '{col.id}': west > east"
             assert south <= north, f"Collection '{col.id}': south > north"
@@ -155,9 +154,7 @@ class TestCollections:
 
     def test_collection_has_summaries(self, all_collections):
         for col in all_collections:
-            assert col.summaries is not None, (
-                f"Collection '{col.id}' has no summaries"
-            )
+            assert col.summaries is not None, f"Collection '{col.id}' has no summaries"
 
     def test_collection_has_item_assets(self, all_collections):
         for col in all_collections:
@@ -199,16 +196,16 @@ class TestItems:
             assert item.id, "Item missing id"
             assert item.geometry, f"Item '{item.id}' missing geometry"
             assert item.bbox, f"Item '{item.id}' missing bbox"
-            assert item.datetime or item.common_metadata.start_datetime, (
-                f"Item '{item.id}' missing datetime"
-            )
+            assert (
+                item.datetime or item.common_metadata.start_datetime
+            ), f"Item '{item.id}' missing datetime"
 
     def test_item_bbox_valid(self, all_items):
         for item in all_items:
             bbox = item.bbox
-            assert len(bbox) == 4, (
-                f"Item '{item.id}' bbox has {len(bbox)} elements, expected 4"
-            )
+            assert (
+                len(bbox) == 4
+            ), f"Item '{item.id}' bbox has {len(bbox)} elements, expected 4"
             west, south, east, north = bbox
             assert west <= east, f"Item '{item.id}': west > east"
             assert south <= north, f"Item '{item.id}': south > north"
@@ -217,9 +214,9 @@ class TestItems:
         for item in all_items:
             geom = item.geometry
             assert "type" in geom, f"Item '{item.id}' geometry missing type"
-            assert "coordinates" in geom, (
-                f"Item '{item.id}' geometry missing coordinates"
-            )
+            assert (
+                "coordinates" in geom
+            ), f"Item '{item.id}' geometry missing coordinates"
 
     def test_item_has_assets(self, all_items):
         for item in all_items:
@@ -228,12 +225,12 @@ class TestItems:
     def test_item_has_properties(self, all_items):
         for item in all_items:
             assert item.properties, f"Item '{item.id}' has no properties"
-            assert "product_name" in item.properties, (
-                f"Item '{item.id}' missing 'product_name' property"
-            )
-            assert "version" in item.properties, (
-                f"Item '{item.id}' missing 'version' property"
-            )
+            assert (
+                "product_name" in item.properties
+            ), f"Item '{item.id}' missing 'product_name' property"
+            assert (
+                "version" in item.properties
+            ), f"Item '{item.id}' missing 'version' property"
 
 
 # ------------------------------------------------------------------
@@ -254,23 +251,17 @@ class TestAssets:
     def test_assets_have_href(self, all_items):
         for item in all_items:
             for key, asset in item.assets.items():
-                assert asset.href, (
-                    f"Item '{item.id}' asset '{key}' has no href"
-                )
+                assert asset.href, f"Item '{item.id}' asset '{key}' has no href"
 
     def test_assets_have_roles(self, all_items):
         for item in all_items:
             for key, asset in item.assets.items():
-                assert asset.roles, (
-                    f"Item '{item.id}' asset '{key}' has no roles"
-                )
+                assert asset.roles, f"Item '{item.id}' asset '{key}' has no roles"
 
     def test_assets_have_title(self, all_items):
         for item in all_items:
             for key, asset in item.assets.items():
-                assert asset.title, (
-                    f"Item '{item.id}' asset '{key}' has no title"
-                )
+                assert asset.title, f"Item '{item.id}' asset '{key}' has no title"
 
 
 # ------------------------------------------------------------------
@@ -284,17 +275,15 @@ class TestRasterBands:
             for key, asset in item.assets.items():
                 if "zarr" in key:
                     bands = asset.extra_fields.get("raster:bands", [])
-                    assert bands, (
-                        f"Item '{item.id}' asset '{key}' missing raster:bands"
-                    )
+                    assert bands, f"Item '{item.id}' asset '{key}' missing raster:bands"
 
     def test_raster_bands_have_name(self, all_items):
         for item in all_items:
             for key, asset in item.assets.items():
                 for band in asset.extra_fields.get("raster:bands", []):
-                    assert "name" in band, (
-                        f"Item '{item.id}' asset '{key}': band missing 'name'"
-                    )
+                    assert (
+                        "name" in band
+                    ), f"Item '{item.id}' asset '{key}': band missing 'name'"
 
     def test_raster_bands_have_data_type(self, all_items):
         for item in all_items:
@@ -340,24 +329,23 @@ class TestLinks:
     def test_cite_as_links_have_href(self, all_collections):
         for col in all_collections:
             for link in col.get_links("cite-as"):
-                assert link.href, (
-                    f"Collection '{col.id}' has a 'cite-as' link with no href"
-                )
+                assert (
+                    link.href
+                ), f"Collection '{col.id}' has a 'cite-as' link with no href"
 
 
 class TestExtensions:
     def test_collections_declare_extensions(self, all_collections):
         for col in all_collections:
-            assert col.stac_extensions, (
-                f"Collection '{col.id}' declares no STAC extensions"
-            )
+            assert (
+                col.stac_extensions
+            ), f"Collection '{col.id}' declares no STAC extensions"
 
     def test_raster_extension_declared_when_bands_present(self, all_items):
         raster_ext = "https://stac-extensions.github.io/raster/v1.1.0/schema.json"
         for item in all_items:
             has_bands = any(
-                asset.extra_fields.get("raster:bands")
-                for asset in item.assets.values()
+                asset.extra_fields.get("raster:bands") for asset in item.assets.values()
             )
             if has_bands:
                 assert raster_ext in (item.stac_extensions or []), (
@@ -397,9 +385,9 @@ class TestConsistency:
     def test_default_versions_produce_items(self, all_collections):
         for col in all_collections:
             items = list(col.get_items())
-            assert items, (
-                f"Collection '{col.id}' has no items despite being in DEFAULT_VERSIONS"
-            )
+            assert (
+                items
+            ), f"Collection '{col.id}' has no items despite being in DEFAULT_VERSIONS"
 
 
 # ------------------------------------------------------------------

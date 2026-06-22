@@ -1,7 +1,11 @@
 # eoforeststac/catalog/gami_ageclass.py
 import pystac
 
-from eoforeststac.catalog.factory import _build_raster_bands, create_collection, create_item
+from eoforeststac.catalog.factory import (
+    _build_raster_bands,
+    create_collection,
+    create_item,
+)
 from eoforeststac.core.assets import create_zarr_asset
 from eoforeststac.products.gami_ageclass import (
     GAMI_AGECLASS_CFG,

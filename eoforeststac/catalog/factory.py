@@ -90,6 +90,19 @@ def create_collection(cfg: dict) -> pystac.Collection:
                 ),
             )
 
+    # Auto-add thumbnail if not already present
+    if "thumbnail" not in collection.assets:
+        thumb_href = f"{cfg['base_path']}/{cfg['id']}_thumbnail.png"
+        collection.add_asset(
+            "thumbnail",
+            pystac.Asset(
+                href=thumb_href,
+                media_type="image/png",
+                title=f"{cfg.get('title', cfg['id'])} – preview",
+                roles=["thumbnail"],
+            ),
+        )
+
     return collection
 
 
