@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALS / ULS Data Ingestion Guide — EOForestSTAC</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --bg2: #131614;
+    --bg3: #1a1d1b;
+    --border: #252926;
+    --text: #d8dbd8;
+    --text-dim: #5a6058;
+    --text-mid: #8a9088;
+    --accent-green: #7eba6a;
+    --accent-amber: #d4a84b;
+    --accent-blue: #6aacba;
+    --accent-purple: #9b8ac4;
+    --accent-python: #4b9cd3;
+    --syn-keyword: #c792ea;
+    --syn-string: #c3e88d;
+    --syn-comment: #4a6045;
+    --syn-function: #82aaff;
+    --syn-number: #f78c6c;
+    --syn-operator: #89ddff;
+    --syn-var: #d8dbd8;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  header {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-meta::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--accent-green);
+  }
+  h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(38px, 5vw, 62px);
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: #eaede9;
+    margin-bottom: 16px;
+  }
+  h1 em { font-style: italic; color: var(--accent-green); }
+  .header-sub {
+    font-size: 15px;
+    color: var(--text-mid);
+    max-width: 650px;
+    margin-top: 12px;
+    line-height: 1.7;
+  }
+  .header-sub code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    background: rgba(255,255,255,0.05);
+    padding: 1px 7px;
+    border-radius: 2px;
+    color: var(--accent-amber);
+  }
+  .header-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 28px;
+  }
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .badge-als    { color: var(--accent-green);  border-color: rgba(126,186,106,0.3); background: rgba(126,186,106,0.07); }
+  .badge-uls    { color: var(--accent-blue);   border-color: rgba(106,172,186,0.3); background: rgba(106,172,186,0.07); }
+  .badge-stac   { color: var(--accent-amber);  border-color: rgba(212,168,75,0.3);  background: rgba(212,168,75,0.07); }
+  .badge-python { color: var(--accent-python); border-color: rgba(75,156,211,0.3);  background: rgba(75,156,211,0.07); }
+  .badge-zarr   { color: var(--accent-purple); border-color: rgba(155,138,196,0.3); background: rgba(155,138,196,0.07); }
+
+  .content {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+  .sidebar {
+    position: sticky;
+    top: 0;
+    padding: 48px 32px 48px 0;
+    border-right: 1px solid var(--border);
+    min-height: 100vh;
+  }
+  .sidebar-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 28px;
+  }
+  .nav-link {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    padding: 7px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.15s;
+  }
+  .nav-link:hover { color: var(--text); }
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  .info-row {
+    padding: 9px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .info-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+  .info-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--text);
+  }
+
+  .main { padding: 48px 0 48px 48px; }
+
+  .section {
+    margin-bottom: 56px;
+    padding-bottom: 56px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateY(16px);
+    animation: fadeUp 0.5s forwards;
+  }
+  .section:nth-child(1) { animation-delay: 0.05s; }
+  .section:nth-child(2) { animation-delay: 0.12s; }
+  .section:nth-child(3) { animation-delay: 0.19s; }
+  .section:nth-child(4) { animation-delay: 0.26s; }
+  .section:nth-child(5) { animation-delay: 0.33s; }
+  .section:nth-child(6) { animation-delay: 0.40s; }
+  .section:nth-child(7) { animation-delay: 0.47s; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+  .section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 96px; }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding-top: 6px;
+    min-width: 28px;
+  }
+  .section-subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .section-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.2;
+    color: #eaede9;
+    letter-spacing: -0.01em;
+  }
+  .color-green  { color: var(--accent-green); }
+  .color-amber  { color: var(--accent-amber); }
+  .color-blue   { color: var(--accent-blue); }
+  .color-purple { color: var(--accent-purple); }
+  .color-python { color: var(--accent-python); }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+  .step:hover { border-color: #2e3330; }
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding-top: 2px;
+    text-align: right;
+  }
+  .step-body { font-size: 13.5px; line-height: 1.6; }
+  .step-body strong { color: #eaede9; font-weight: 500; }
+  .step-body code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(255,255,255,0.05);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--accent-amber);
+  }
+
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 28px 0;
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+  .flow-node {
+    flex: 1;
+    min-width: 110px;
+    padding: 14px 16px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    text-align: center;
+  }
+  .flow-node-icon { font-size: 20px; margin-bottom: 4px; }
+  .flow-node-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    margin-bottom: 2px;
+  }
+  .flow-node-name { font-size: 13px; color: #eaede9; font-weight: 500; }
+  .flow-arrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    color: var(--border);
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+
+  .code-wrap {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .code-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+  .code-bar-left { display: flex; align-items: center; gap: 10px; }
+  .code-dots { display: flex; gap: 5px; }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .cd-red    { background: #ff5f57; }
+  .cd-yellow { background: #febc2e; }
+  .cd-green  { background: #28c840; }
+  .code-filename {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .code-lang-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+  pre {
+    margin: 0;
+    padding: 22px 20px;
+    background: #0a0c0b;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    tab-size: 2;
+  }
+  .kw  { color: var(--syn-keyword); }
+  .fn  { color: var(--syn-function); }
+  .str { color: var(--syn-string); }
+  .cm  { color: var(--syn-comment); font-style: italic; }
+  .num { color: var(--syn-number); }
+  .op  { color: var(--syn-operator); }
+  .var { color: var(--syn-var); }
+
+  .callout {
+    margin-top: 20px;
+    padding: 14px 18px;
+    border-left: 3px solid;
+    background: rgba(255,255,255,0.02);
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    color: var(--text-mid);
+    line-height: 1.65;
+  }
+  .callout code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(255,255,255,0.05);
+    padding: 1px 6px;
+    border-radius: 2px;
+    color: var(--accent-amber);
+  }
+  .callout-green  { border-color: var(--accent-green); }
+  .callout-amber  { border-color: var(--accent-amber); }
+  .callout-blue   { border-color: var(--accent-blue); }
+  .callout-purple { border-color: var(--accent-purple); }
+
+  .file-tree {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    padding: 18px 20px;
+    background: #0a0c0b;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 16px;
+    color: var(--text-mid);
+  }
+  .file-tree .highlight { color: var(--accent-green); }
+  .file-tree .dim { color: var(--text-dim); }
+
+  .link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-amber);
+    border: 1px solid rgba(212,168,75,0.3);
+    background: rgba(212,168,75,0.06);
+    padding: 8px 14px;
+    border-radius: 3px;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+    margin-top: 16px;
+    width: fit-content;
+  }
+  .link-btn:hover {
+    background: rgba(212,168,75,0.12);
+    border-color: rgba(212,168,75,0.5);
+  }
+
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .content { grid-template-columns: 1fr; }
+    .sidebar { position: static; border-right: none; border-bottom: 1px solid var(--border); min-height: auto; padding: 32px 0; }
+    .main { padding: 32px 0; }
+    .wrapper { padding: 0 20px; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="header-meta">EOForestSTAC — Developer Guide</div>
+    <h1>Ingesting <em>ALS &amp; ULS</em><br>Data into the Catalog</h1>
+    <p class="header-sub">
+      Step-by-step guide for adding new airborne (ALS) and UAV (ULS) laser scanning
+      campaigns to the EOForestSTAC STAC catalog. Covers the full pipeline from
+      raw Zarr stores to live data on S3.
+    </p>
+    <div class="header-badges">
+      <span class="badge badge-als">ALS</span>
+      <span class="badge badge-uls">ULS</span>
+      <span class="badge badge-stac">STAC</span>
+      <span class="badge badge-zarr">Zarr</span>
+      <span class="badge badge-python">Python</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <aside class="sidebar">
+
+      <div class="sidebar-title">Key files</div>
+      <div class="info-block">
+        <div class="info-row">
+          <div class="info-label">ALS Config</div>
+          <div class="info-val">products/als_products.py</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">ULS Config</div>
+          <div class="info-val">products/uls_products.py</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">ALS Writer</div>
+          <div class="info-val">writers/als_products.py</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">ULS Writer</div>
+          <div class="info-val">writers/uls_products.py</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Catalog Builder</div>
+          <div class="info-val">scripts/create_catalog.py</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Converter</div>
+          <div class="info-val">scripts/convert_alsdb_to_zarr2.py</div>
+        </div>
+      </div>
+
+      <div class="sidebar-title">Sections</div>
+      <nav class="nav-links">
+        <a href="#overview"  class="nav-link"><span class="nav-dot" style="background:var(--accent-amber)"></span>Architecture overview</a>
+        <a href="#structure"  class="nav-link"><span class="nav-dot" style="background:var(--accent-purple)"></span>Project structure</a>
+        <a href="#add-region" class="nav-link"><span class="nav-dot" style="background:var(--accent-green)"></span>Add a new region</a>
+        <a href="#convert"   class="nav-link"><span class="nav-dot" style="background:var(--accent-blue)"></span>Convert Zarr v3 to v2</a>
+        <a href="#ingest"    class="nav-link"><span class="nav-dot" style="background:var(--accent-python)"></span>Push data to S3</a>
+        <a href="#catalog"   class="nav-link"><span class="nav-dot" style="background:var(--accent-amber)"></span>Rebuild the catalog</a>
+        <a href="#verify"    class="nav-link"><span class="nav-dot" style="background:var(--accent-green)"></span>Verify &amp; test</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+
+      <!-- 00 OVERVIEW -->
+      <section class="section" id="overview">
+        <div class="section-header">
+          <span class="section-num">00</span>
+          <div>
+            <div class="section-subtitle color-amber">Pipeline Overview</div>
+            <div class="section-title">How ingestion works</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">01</span>
+            <div class="step-body">
+              <strong>alsdb / ULS R pipeline</strong> produces a Zarr v3 store with resolution groups
+              (<code>1m/</code>, <code>10m/</code>, <code>100m/</code>) containing gridded LiDAR products.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">02</span>
+            <div class="step-body">
+              <strong>Convert</strong> the Zarr v3 store to Zarr v2 using the conversion script.
+              This produces one standalone <code>.zarr</code> per resolution.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">03</span>
+            <div class="step-body">
+              <strong>Register the region</strong> in the product config (<code>REGIONS</code> dict)
+              with bbox, CRS, time period, and a Zarr name prefix.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">04</span>
+            <div class="step-body">
+              <strong>Run the writer</strong> to process the Zarr v2 stores (rechunk, add metadata,
+              set CRS) and upload them to S3.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">05</span>
+            <div class="step-body">
+              <strong>Rebuild the catalog</strong> to update the STAC JSON on S3.
+              The new items appear in the STAC Browser automatically.
+            </div>
+          </div>
+        </div>
+
+        <div class="flow">
+          <div class="flow-node">
+            <div class="flow-node-icon">&#9881;</div>
+            <div class="flow-node-label">Process</div>
+            <div class="flow-node-name">alsdb / R pipeline</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node">
+            <div class="flow-node-icon">&#128260;</div>
+            <div class="flow-node-label">Convert</div>
+            <div class="flow-node-name">Zarr v3 &rarr; v2</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node">
+            <div class="flow-node-icon">&#128221;</div>
+            <div class="flow-node-label">Register</div>
+            <div class="flow-node-name">REGIONS config</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node">
+            <div class="flow-node-icon">&#9729;</div>
+            <div class="flow-node-label">Upload</div>
+            <div class="flow-node-name">Writer &rarr; S3</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node">
+            <div class="flow-node-icon">&#128218;</div>
+            <div class="flow-node-label">Publish</div>
+            <div class="flow-node-name">STAC Catalog</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 01 STRUCTURE -->
+      <section class="section" id="structure">
+        <div class="section-header">
+          <span class="section-num">01</span>
+          <div>
+            <div class="section-subtitle color-purple">Repository Layout</div>
+            <div class="section-title">Project structure</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#128194;</span>
+            <div class="step-body">
+              Each product type (ALS, ULS) has <strong>three modules</strong>: a product config
+              (variables, regions, metadata), a catalog module (STAC collection + items),
+              and a writer (load, process, write to S3).
+            </div>
+          </div>
+        </div>
+
+        <div class="file-tree">
+eoforeststac/<br>
+&nbsp;&nbsp;<span class="highlight">products/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;als_products.py &nbsp;&nbsp;<span class="dim"># ALS_RESOLUTIONS, REGIONS, ALS_PRODUCTS_CFG</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;uls_products.py &nbsp;&nbsp;<span class="dim"># ULS_RESOLUTIONS, REGIONS, ULS_PRODUCTS_CFG</span><br>
+&nbsp;&nbsp;<span class="highlight">catalog/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;als_products.py &nbsp;&nbsp;<span class="dim"># create_als_products_collection(), create_als_products_item()</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;uls_products.py &nbsp;&nbsp;<span class="dim"># create_uls_products_collection(), create_uls_products_item()</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;root.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim"># DEFAULT_VERSIONS, THEMES, _product_specs()</span><br>
+&nbsp;&nbsp;<span class="highlight">writers/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;als_products.py &nbsp;&nbsp;<span class="dim"># ALSProductsWriter</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;uls_products.py &nbsp;&nbsp;<span class="dim"># ULSProductsWriter</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;base.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim"># BaseZarrWriter (S3 connection, write_to_zarr)</span><br>
+<span class="highlight">scripts/</span><br>
+&nbsp;&nbsp;convert_alsdb_to_zarr2.py &nbsp;<span class="dim"># Zarr v3 &rarr; v2 conversion</span><br>
+&nbsp;&nbsp;create_catalog.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dim"># Build &amp; publish STAC catalog</span><br>
+        </div>
+      </section>
+
+      <!-- 02 ADD REGION -->
+      <section class="section" id="add-region">
+        <div class="section-header">
+          <span class="section-num">02</span>
+          <div>
+            <div class="section-subtitle color-green">Product Config</div>
+            <div class="section-title">Add a new region / campaign</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9312;</span>
+            <div class="step-body">
+              Open the product config: <code>products/als_products.py</code> for ALS
+              or <code>products/uls_products.py</code> for ULS.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">&#9313;</span>
+            <div class="step-body">
+              Add a new entry to the <code>REGIONS</code> dict. You need: a unique key,
+              a human label, a scientific description, the bounding box in decimal degrees
+              <code>[west, south, east, north]</code>, a GeoJSON polygon geometry,
+              the EPSG code, start/end dates, and a Zarr name prefix.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">&#9314;</span>
+            <div class="step-body">
+              That's it. The catalog module automatically creates a STAC item with
+              assets for every resolution (1m, 10m, 100m).
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">products/als_products.py</span>
+            </div>
+            <span class="code-lang-tag">Adding a region</span>
+          </div>
+          <pre><span class="var">REGIONS</span> <span class="op">=</span> <span class="op">{</span>
+    <span class="str">"spain_pnoa"</span><span class="op">:</span> <span class="op">{</span> ... <span class="op">},</span>  <span class="cm"># existing</span>
+
+    <span class="cm"># Add your new region here:</span>
+    <span class="str">"my_new_campaign"</span><span class="op">:</span> <span class="op">{</span>
+        <span class="str">"label"</span><span class="op">:</span> <span class="str">"My Campaign Name"</span><span class="op">,</span>
+        <span class="str">"description"</span><span class="op">:</span> <span class="op">(</span>
+            <span class="str">"ALS point cloud products derived from ..."</span>
+        <span class="op">),</span>
+        <span class="str">"bbox"</span><span class="op">:</span> <span class="op">[</span><span class="num">10.4</span><span class="op">,</span> <span class="num">51.0</span><span class="op">,</span> <span class="num">10.5</span><span class="op">,</span> <span class="num">51.1</span><span class="op">],</span>  <span class="cm"># [W, S, E, N] in degrees</span>
+        <span class="str">"geometry"</span><span class="op">:</span> <span class="op">{</span>
+            <span class="str">"type"</span><span class="op">:</span> <span class="str">"Polygon"</span><span class="op">,</span>
+            <span class="str">"coordinates"</span><span class="op">:</span> <span class="op">[[</span>
+                <span class="op">[</span><span class="num">10.4</span><span class="op">,</span> <span class="num">51.0</span><span class="op">],</span> <span class="op">[</span><span class="num">10.4</span><span class="op">,</span> <span class="num">51.1</span><span class="op">],</span>
+                <span class="op">[</span><span class="num">10.5</span><span class="op">,</span> <span class="num">51.1</span><span class="op">],</span> <span class="op">[</span><span class="num">10.5</span><span class="op">,</span> <span class="num">51.0</span><span class="op">],</span>
+                <span class="op">[</span><span class="num">10.4</span><span class="op">,</span> <span class="num">51.0</span><span class="op">],</span>
+            <span class="op">]],</span>
+        <span class="op">},</span>
+        <span class="str">"proj_epsg"</span><span class="op">:</span> <span class="num">32632</span><span class="op">,</span>         <span class="cm"># native CRS of the data</span>
+        <span class="str">"start_datetime"</span><span class="op">:</span> <span class="var">datetime</span><span class="op">.</span><span class="fn">datetime</span><span class="op">(</span><span class="num">2022</span><span class="op">,</span> <span class="num">1</span><span class="op">,</span> <span class="num">1</span><span class="op">,</span> <span class="var">tzinfo</span><span class="op">=</span><span class="var">datetime</span><span class="op">.</span><span class="var">timezone</span><span class="op">.</span><span class="var">utc</span><span class="op">),</span>
+        <span class="str">"end_datetime"</span><span class="op">:</span> <span class="var">datetime</span><span class="op">.</span><span class="fn">datetime</span><span class="op">(</span><span class="num">2022</span><span class="op">,</span> <span class="num">12</span><span class="op">,</span> <span class="num">31</span><span class="op">,</span> <span class="var">tzinfo</span><span class="op">=</span><span class="var">datetime</span><span class="op">.</span><span class="var">timezone</span><span class="op">.</span><span class="var">utc</span><span class="op">),</span>
+        <span class="str">"zarr_name"</span><span class="op">:</span> <span class="str">"ALS_MY_CAMPAIGN"</span><span class="op">,</span>  <span class="cm"># prefix for S3 Zarr filenames</span>
+    <span class="op">},</span>
+<span class="op">}</span></pre>
+        </div>
+
+        <div class="callout callout-green">
+          The same pattern works for ULS &mdash; just edit <code>products/uls_products.py</code> instead.
+          The variables and resolutions are shared; only the region metadata differs.
+        </div>
+      </section>
+
+      <!-- 03 CONVERT -->
+      <section class="section" id="convert">
+        <div class="section-header">
+          <span class="section-num">03</span>
+          <div>
+            <div class="section-subtitle color-blue">Zarr Conversion</div>
+            <div class="section-title">Convert Zarr v3 to v2</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9888;</span>
+            <div class="step-body">
+              The alsdb pipeline produces <strong>Zarr v3</strong> stores, but eoforeststac
+              uses <strong>Zarr v2</strong>. You must convert before ingesting.
+              Run the conversion in the <strong>alsdb environment</strong> (which has zarr v3).
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">terminal</span>
+            </div>
+            <span class="code-lang-tag">Shell</span>
+          </div>
+          <pre><span class="cm"># Activate the alsdb environment (has zarr v3)</span>
+<span class="fn">mamba</span> <span class="var">run</span> <span class="op">-</span><span class="var">n</span> <span class="var">alsdb</span> <span class="var">python</span> <span class="var">scripts/convert_alsdb_to_zarr2.py</span> <span class="op">\</span>
+    <span class="str">/path/to/alsdb/output/my_campaign/products.zarr</span> <span class="op">\</span>
+    <span class="str">/path/to/output/my_campaign/</span></pre>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#128193;</span>
+            <div class="step-body">
+              This produces three Zarr v2 stores:
+              <code>1m.zarr</code>, <code>10m.zarr</code>, <code>100m.zarr</code>
+              &mdash; each a standalone xarray-readable dataset.
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-blue">
+          For ULS data produced by Linda's R pipeline: if the output is already Zarr v2,
+          skip this step and point the writer directly at the Zarr stores.
+          If it's Zarr v3, use the same conversion script.
+        </div>
+      </section>
+
+      <!-- 04 INGEST -->
+      <section class="section" id="ingest">
+        <div class="section-header">
+          <span class="section-num">04</span>
+          <div>
+            <div class="section-subtitle color-python">Writer</div>
+            <div class="section-title">Push data to S3</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9312;</span>
+            <div class="step-body">
+              The writer reads each Zarr v2 store, applies metadata (CRS, variable attributes,
+              fill values), rechunks for cloud-optimal access, and writes to the GFZ S3 bucket.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">&#9313;</span>
+            <div class="step-body">
+              Use the <code>write_region()</code> method to process all three resolutions at once.
+              The S3 credential profile is <code>atlaseo-glm</code>.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">ingest_als.py</span>
+            </div>
+            <span class="code-lang-tag">Python &middot; ALS</span>
+          </div>
+          <pre><span class="kw">from</span> <span class="var">eoforeststac.writers.als_products</span> <span class="kw">import</span> <span class="var">ALSProductsWriter</span>
+
+<span class="var">writer</span> <span class="op">=</span> <span class="fn">ALSProductsWriter</span><span class="op">(</span>
+    <span class="var">endpoint_url</span><span class="op">=</span><span class="str">"https://s3.gfz-potsdam.de"</span><span class="op">,</span>
+    <span class="var">bucket</span><span class="op">=</span><span class="str">"dog.atlaseo-glm.eo-gridded-data"</span><span class="op">,</span>
+    <span class="var">profile</span><span class="op">=</span><span class="str">"atlaseo-glm"</span><span class="op">,</span>
+<span class="op">)</span>
+
+<span class="cm"># All three resolutions at once:</span>
+<span class="var">writer</span><span class="op">.</span><span class="fn">write_region</span><span class="op">(</span>
+    <span class="str">"/path/to/output/my_campaign/"</span><span class="op">,</span>
+    <span class="var">region</span><span class="op">=</span><span class="str">"my_new_campaign"</span><span class="op">,</span>  <span class="cm"># must match REGIONS key</span>
+    <span class="var">version</span><span class="op">=</span><span class="str">"1.0"</span><span class="op">,</span>
+<span class="op">)</span></pre>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">ingest_uls.py</span>
+            </div>
+            <span class="code-lang-tag">Python &middot; ULS</span>
+          </div>
+          <pre><span class="kw">from</span> <span class="var">eoforeststac.writers.uls_products</span> <span class="kw">import</span> <span class="var">ULSProductsWriter</span>
+
+<span class="var">writer</span> <span class="op">=</span> <span class="fn">ULSProductsWriter</span><span class="op">(</span>
+    <span class="var">endpoint_url</span><span class="op">=</span><span class="str">"https://s3.gfz-potsdam.de"</span><span class="op">,</span>
+    <span class="var">bucket</span><span class="op">=</span><span class="str">"dog.atlaseo-glm.eo-gridded-data"</span><span class="op">,</span>
+    <span class="var">profile</span><span class="op">=</span><span class="str">"atlaseo-glm"</span><span class="op">,</span>
+<span class="op">)</span>
+
+<span class="var">writer</span><span class="op">.</span><span class="fn">write_region</span><span class="op">(</span>
+    <span class="str">"/path/to/uls/hainich/"</span><span class="op">,</span>
+    <span class="var">region</span><span class="op">=</span><span class="str">"hainich"</span><span class="op">,</span>
+    <span class="var">version</span><span class="op">=</span><span class="str">"1.0"</span><span class="op">,</span>
+<span class="op">)</span></pre>
+        </div>
+
+        <div class="callout callout-amber">
+          The <code>region</code> parameter must exactly match a key in the <code>REGIONS</code> dict.
+          The writer expects the input directory to contain <code>1m.zarr</code>, <code>10m.zarr</code>,
+          and <code>100m.zarr</code>.
+        </div>
+      </section>
+
+      <!-- 05 CATALOG -->
+      <section class="section" id="catalog">
+        <div class="section-header">
+          <span class="section-num">05</span>
+          <div>
+            <div class="section-subtitle color-amber">STAC Catalog</div>
+            <div class="section-title">Rebuild the catalog</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9312;</span>
+            <div class="step-body">
+              After uploading data to S3, rebuild the STAC catalog so the new items
+              appear in the browser. This writes updated JSON to both the internal
+              and public S3 paths.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">terminal</span>
+            </div>
+            <span class="code-lang-tag">Shell</span>
+          </div>
+          <pre><span class="fn">mamba</span> <span class="var">run</span> <span class="op">-</span><span class="var">n</span> <span class="var">eoforeststac</span> <span class="var">python</span> <span class="var">scripts/create_catalog.py</span></pre>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#128270;</span>
+            <div class="step-body">
+              Check the result in the <strong>STAC Browser</strong>. Your new item should appear
+              under the "ALS / ULS / LiDAR" theme with all resolution assets listed.
+            </div>
+          </div>
+        </div>
+
+        <a class="link-btn" href="https://simonbesnard1.github.io/eoforeststac/#/" target="_blank">
+          &rarr; Open STAC Browser
+        </a>
+      </section>
+
+      <!-- 06 VERIFY -->
+      <section class="section" id="verify">
+        <div class="section-header">
+          <span class="section-num">06</span>
+          <div>
+            <div class="section-subtitle color-green">Validation</div>
+            <div class="section-title">Verify and test</div>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9312;</span>
+            <div class="step-body">
+              <strong>Run the test suite</strong> to verify your new region passes all
+              STAC validation checks, pydantic config validation, and consistency tests.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">terminal</span>
+            </div>
+            <span class="code-lang-tag">Shell</span>
+          </div>
+          <pre><span class="fn">mamba</span> <span class="var">run</span> <span class="op">-</span><span class="var">n</span> <span class="var">eoforeststac</span> <span class="var">python</span> <span class="op">-</span><span class="var">m</span> <span class="var">pytest</span> <span class="var">eoforeststac/tests/test_stac_validation.py</span> <span class="op">-</span><span class="var">v</span></pre>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9313;</span>
+            <div class="step-body">
+              <strong>Verify the data is readable</strong> from S3 by opening it with xarray.
+              Use anonymous access &mdash; no credentials needed for reading.
+            </div>
+          </div>
+        </div>
+
+        <div class="code-wrap">
+          <div class="code-bar">
+            <div class="code-bar-left">
+              <div class="code-dots">
+                <div class="code-dot cd-red"></div>
+                <div class="code-dot cd-yellow"></div>
+                <div class="code-dot cd-green"></div>
+              </div>
+              <span class="code-filename">verify_read.py</span>
+            </div>
+            <span class="code-lang-tag">Python &middot; Verify</span>
+          </div>
+          <pre><span class="kw">import</span> <span class="var">xarray</span> <span class="kw">as</span> <span class="var">xr</span>
+<span class="kw">import</span> <span class="var">s3fs</span>
+
+<span class="var">fs</span> <span class="op">=</span> <span class="fn">s3fs.S3FileSystem</span><span class="op">(</span>
+    <span class="var">client_kwargs</span><span class="op">={</span><span class="str">"endpoint_url"</span><span class="op">:</span> <span class="str">"https://s3.gfz-potsdam.de"</span><span class="op">},</span>
+    <span class="var">anon</span><span class="op">=</span><span class="kw">True</span><span class="op">,</span>
+<span class="op">)</span>
+
+<span class="var">store</span> <span class="op">=</span> <span class="fn">s3fs.S3Map</span><span class="op">(</span>
+    <span class="var">root</span><span class="op">=</span><span class="str">"dog.atlaseo-glm.eo-gridded-data/collections/ALS_PRODUCTS/ALS_MY_CAMPAIGN_10m_v1.0.zarr"</span><span class="op">,</span>
+    <span class="var">s3</span><span class="op">=</span><span class="var">fs</span><span class="op">,</span> <span class="var">check</span><span class="op">=</span><span class="kw">False</span><span class="op">,</span>
+<span class="op">)</span>
+<span class="var">ds</span> <span class="op">=</span> <span class="fn">xr.open_zarr</span><span class="op">(</span><span class="var">store</span><span class="op">)</span>
+<span class="fn">print</span><span class="op">(</span><span class="var">ds</span><span class="op">)</span></pre>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step-num">&#9314;</span>
+            <div class="step-body">
+              <strong>Apply black formatting</strong> before committing:
+              <code>mamba run -n eoforeststac python -m black eoforeststac/</code>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">&#9315;</span>
+            <div class="step-body">
+              <strong>Commit and push.</strong> The CI workflow on GitHub will run the test suite automatically.
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-green">
+          <strong>Checklist for a new campaign:</strong><br>
+          1. Region added to <code>REGIONS</code> in product config<br>
+          2. Zarr v3 converted to v2<br>
+          3. Writer pushed data to S3<br>
+          4. Catalog rebuilt (<code>scripts/create_catalog.py</code>)<br>
+          5. Tests pass<br>
+          6. Data readable from S3 with anonymous access<br>
+          7. Item visible in STAC Browser<br>
+          8. Code formatted with black and committed
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <span class="footer-text">EOForestSTAC &middot; ALS / ULS Ingestion Guide</span>
+    <span class="footer-text">v1.0 &middot; 2026</span>
+  </footer>
+
+</div>
+</body>
+</html>
