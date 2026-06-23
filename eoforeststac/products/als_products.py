@@ -265,7 +265,7 @@ ALS_PRODUCTS_CFG = {
         "zarr": {
             "title": "Zarr dataset",
             "description": (
-                "Cloud-optimized Zarr store with resolution groups (1m, 10m) "
+                "Cloud-optimized Zarr store with resolution groups (1m, 10m, 100m) "
                 "containing gridded ALS products."
             ),
             "roles": ["data"],
