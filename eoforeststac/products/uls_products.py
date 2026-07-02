@@ -49,13 +49,7 @@ ULS_PRODUCTS_CFG = {
     "geometry": {
         "type": "Polygon",
         "coordinates": [
-            [
-                [-10.0, 35.0],
-                [-10.0, 70.0],
-                [32.0, 70.0],
-                [32.0, 35.0],
-                [-10.0, 35.0]
-            ]
+            [[-10.0, 35.0], [-10.0, 70.0], [32.0, 70.0], [32.0, 35.0], [-10.0, 35.0]]
         ],
     },
     "start_datetime": datetime.datetime(2023, 1, 1, tzinfo=datetime.timezone.utc),
