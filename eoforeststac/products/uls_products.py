@@ -5,6 +5,8 @@ from eoforeststac.products.als_products import ALS_RESOLUTIONS
 
 ULS_RESOLUTIONS = ALS_RESOLUTIONS
 
+REGIONS = { }
+
 ULS_PRODUCTS_CFG = {
     "id": "ULS_PRODUCTS",
     "title": "ULS Products – UAV laser scanning gridded products",
