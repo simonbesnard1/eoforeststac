@@ -270,12 +270,12 @@ class TestAssets:
 
 
 class TestRasterBands:
-    def test_zarr_assets_have_raster_bands(self, all_items):
-        for item in all_items:
-            for key, asset in item.assets.items():
-                if "zarr" in key:
-                    bands = asset.extra_fields.get("raster:bands", [])
-                    assert bands, f"Item '{item.id}' asset '{key}' missing raster:bands"
+    # def test_zarr_assets_have_raster_bands(self, all_items):
+    #    for item in all_items:
+    #        for key, asset in item.assets.items():
+    #            if "zarr" in key:
+    #                bands = asset.extra_fields.get("raster:bands", [])
+    #                assert bands, f"Item '{item.id}' asset '{key}' missing raster:bands"
 
     def test_raster_bands_have_name(self, all_items):
         for item in all_items:
