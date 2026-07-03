@@ -5,7 +5,33 @@ from eoforeststac.products.als_products import ALS_RESOLUTIONS
 
 ULS_RESOLUTIONS = ALS_RESOLUTIONS
 
-REGIONS = { }
+REGIONS = {
+    "hainich": {
+        "label": "Hainich (Germany)",
+        "description": (
+            "Unmanned laser scanning products derived from UAV-based LiDAR surveys "
+            "over the Hainich ICOS flux tower site in Thuringia, Germany. Processed "
+            "with the ULS R pipeline and stored as analysis-ready Zarr."
+        ),
+        "bbox": [10.408, 51.034, 10.498, 51.124],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [10.408, 51.034],
+                    [10.408, 51.124],
+                    [10.498, 51.124],
+                    [10.498, 51.034],
+                    [10.408, 51.034],
+                ]
+            ],
+        },
+        "proj_epsg": 32632,
+        "start_datetime": datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc),
+        "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
+        "zarr_name": "ULS_HAINICH",
+    },
+}
 
 ULS_PRODUCTS_CFG = {
     "id": "ULS_PRODUCTS",
