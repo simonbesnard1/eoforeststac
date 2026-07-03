@@ -26,6 +26,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: radiantearth/stac-browser
+          ref: fd5e263
           path: stac-browser
 
       - name: Setup Node
