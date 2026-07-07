@@ -115,8 +115,10 @@ REGIONS = {
 # ------------------------------------------------------------------
 ALS_PRODUCTS_CFG = {
     "id": "ALS_PRODUCTS",
-    "title": "ALS Products – Airborne laser scanning gridded products",
+    "title": "ALS Products – Airborne laser scanning gridded products [Experimental]",
     "description": (
+        "⚠️ This collection is under active development. Data coverage, variables, "
+        "and metadata are subject to change without notice.\n\n"
         "Gridded products derived from airborne laser scanning (ALS) point clouds "
         "using the alsdb processing pipeline. Products include canopy height model (CHM), "
         "digital terrain model (DTM), digital surface model (DSM), gap fraction, effective LAI, "
@@ -165,6 +167,7 @@ ALS_PRODUCTS_CFG = {
         "point cloud",
         "zarr",
         "stac",
+        "experimental",
     ],
     "themes": ["lidar", "forest structure", "canopy height"],
     "links": [

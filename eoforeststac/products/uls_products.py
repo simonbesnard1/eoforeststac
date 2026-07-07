@@ -135,8 +135,10 @@ REGIONS = {
 
 ULS_PRODUCTS_CFG = {
     "id": "ULS_PRODUCTS",
-    "title": "ULS Products – UAV laser scanning gridded products",
+    "title": "ULS Products – UAV laser scanning gridded products [Experimental]",
     "description": (
+        "⚠️ This collection is under active development. Data coverage, variables, "
+        "and metadata are subject to change without notice.\n\n"
         "Gridded products derived from unmanned laser scanning (ULS) point clouds "
         "collected by UAV-based LiDAR sensors. Products include canopy height model (CHM), "
         "digital terrain model (DTM), digital surface model (DSM), gap fraction, effective LAI, "
@@ -172,6 +174,7 @@ ULS_PRODUCTS_CFG = {
         "LiDAR",
         "zarr",
         "stac",
+        "experimental",
     ],
     "themes": ["lidar", "forest structure", "canopy height"],
     "links": [
