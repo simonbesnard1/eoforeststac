@@ -131,6 +131,32 @@ REGIONS = {
         "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
         "zarr_name": "ULS_HAINICH",
     },
+    "test_region": {
+        "label": "Test (Germany)",
+        "description": (
+            "Unmanned laser scanning products derived from UAV-based LiDAR surveys "
+            "over the Test ICOS flux tower site in Thuringia, Germany. Processed "
+            "with the ULS R pipeline and stored as analysis-ready Zarr."
+        ),
+        "bbox": [10.408, 51.034, 10.498, 51.124],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [10.408, 51.034],
+                    [10.408, 51.124],
+                    [10.498, 51.124],
+                    [10.498, 51.034],
+                    [10.408, 51.034],
+                ]
+            ],
+        },
+        "proj_epsg": 32632,
+        "start_datetime": datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc),
+        "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
+        "zarr_name": "ULS_TEST_REGION",
+    },
+
 }
 
 ULS_PRODUCTS_CFG = {
