@@ -27,10 +27,17 @@ class CCIBiomassWriter(BaseZarrWriter):
         <vrt_dir>/AGB_<year>.vrt
         <vrt_dir>/AGB_SD_<year>.vrt
 
-    e.g.:
+    Within a shipped tile, 0 is a real AGB value (bare soil, cropland, inland
+    water, urban, permanent ice, etc. all legitimately have ~0 Mg/ha) — the
+    source GeoTIFFs carry no NoData flag at all (100% valid pixels). Only
+    ~299 of the ~504 possible 10x10 degree cells are shipped per year (pure
+    ocean cells simply have no file), so "no data" only exists *outside* a
+    tile's footprint, once mosaicked. Build the VRTs with an explicit
+    -vrtnodata sentinel outside the plausible data range so gaps between
+    tiles are distinguishable from genuine zero-AGB land pixels, e.g.:
 
-        gdalbuildvrt AGB_2020.vrt    /downloads/2020/*_ESACCI-BIOMASS-L4-AGB-MERGED-*.tif
-        gdalbuildvrt AGB_SD_2020.vrt /downloads/2020/*_ESACCI-BIOMASS-L4-AGB_SD-MERGED-*.tif
+        gdalbuildvrt -vrtnodata 65535 AGB_2020.vrt    /downloads/2020/*_ESACCI-BIOMASS-L4-AGB-MERGED-*.tif
+        gdalbuildvrt -vrtnodata 65535 AGB_SD_2020.vrt /downloads/2020/*_ESACCI-BIOMASS-L4-AGB_SD-MERGED-*.tif
 
     Years are written and appended to Zarr one at a time (CF-safe streaming)
     to avoid ever materializing the full global, multi-decade stack in memory.
@@ -126,9 +133,9 @@ class CCIBiomassWriter(BaseZarrWriter):
                 }
             )
 
-        # --- Zero -> NaN -> fill_value -> dtype (SAFE) ---
-        for var in ds.data_vars:
-            ds[var] = ds[var].where(ds[var] != 0)
+        # --- NaN (from the VRT's -vrtnodata sentinel, i.e. no tile coverage)
+        #     -> fill_value -> dtype. 0 is left untouched: it is a genuine
+        #     "zero AGB" data value on non-woody land, not a nodata marker. ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
 
         # --- Variable-level metadata (only needed once, on the first write) ---
