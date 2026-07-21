@@ -10,8 +10,9 @@ CCI_BIOMASS_CFG = {
     "title": "ESA CCI Biomass – Global annual aboveground biomass (100 m)",
     "description": (
         "Annual global aboveground biomass (AGB) maps produced within the ESA Climate Change Initiative "
-        "(CCI) Biomass project. The product supports carbon-cycle analysis, model evaluation, and "
-        "large-scale assessments of biomass distribution and change.\n\n"
+        "(CCI) Biomass project, covering 2005-2012 and 2015-2024 (no maps were produced for 2013-2014). "
+        "The product supports carbon-cycle analysis, model evaluation, and large-scale assessments of "
+        "biomass distribution and change.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
     # ------------------------------------------------------------------
@@ -30,8 +31,8 @@ CCI_BIOMASS_CFG = {
             ]
         ],
     },
-    "start_datetime": datetime.datetime(2007, 1, 1, tzinfo=datetime.timezone.utc),
-    "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
+    "start_datetime": datetime.datetime(2005, 1, 1, tzinfo=datetime.timezone.utc),
+    "end_datetime": datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
@@ -84,15 +85,15 @@ CCI_BIOMASS_CFG = {
         # If you have a canonical terms/licensing page, link it explicitly
         {
             "rel": "license",
-            "href": "https://artefacts.ceda.ac.uk/licences/specific_licences/esacci_biomass_terms_and_conditions.pdf",
+            "href": "https://artefacts.ceda.ac.uk/licences/specific_licences/esacci_biomass_terms_and_conditions_v2.pdf",
             "type": "text/html",
             "title": "ESA CCI terms of use / licensing",
         },
         {
             "rel": "cite-as",
-            "href": "https://doi.org/10.5285/AF60720C1E404A9E9D2C145D2B2EAD4E",
+            "href": "https://doi.org/10.5285/6429d1aafe1e43b9b414e4a5a7f8b903",
             "type": "text/html",
-            "title": "Dataset DOI",
+            "title": "Dataset DOI (v7.0)",
         },
     ],
     # ------------------------------------------------------------------

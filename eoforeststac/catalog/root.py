@@ -98,7 +98,7 @@ from eoforeststac.catalog.uls_products import (
 # ---------------------------------------------------------------------
 
 DEFAULT_VERSIONS: Dict[str, List[str]] = {
-    "CCI_BIOMASS": ["6.0"],
+    "CCI_BIOMASS": ["6.0", "7.0"],
     "SAATCHI_BIOMASS": ["2.0"],
     "JRC_TMF": ["2024"],
     "EFDA": ["2.1.1"],
