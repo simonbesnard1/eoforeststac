@@ -108,7 +108,6 @@ class CCIBiomassWriter(BaseZarrWriter):
         crs: str = "EPSG:4326",
         version: str = "7.0",
         chunks: Optional[Dict[str, int]] = None,
-        set_variable_metadata: bool = True,
     ) -> xr.Dataset:
 
         # --- CRS ---
@@ -138,23 +137,27 @@ class CCIBiomassWriter(BaseZarrWriter):
         #     "zero AGB" data value on non-woody land, not a nodata marker. ---
         ds = self.apply_fillvalue(ds, fill_value=fill_value).astype("int32")
 
-        # --- Variable-level metadata (only needed once, on the first write) ---
-        if set_variable_metadata:
-            for var_name, meta in self.VARIABLES.items():
-                if var_name not in ds:
-                    continue
-                ds[var_name].attrs.update(
-                    {
-                        "long_name": meta["long_name"],
-                        "units": "Mg/ha",
-                        "_FillValue": fill_value,
-                        "description": meta["description"],
-                        "source": f"ESA Climate Change Initiative – Biomass v{version}, Santoro & Cartus (2026)",
-                        "grid_mapping": "spatial_ref",
-                    }
-                )
-        else:
-            ds = self._strip_cf_serialization_attrs(ds)
+        # --- Variable-level metadata (set every year: zarr append ("mode=a")
+        #     overrides existing variable/group attrs with whatever is passed
+        #     in, so metadata must be reapplied on every write, not just the
+        #     first one, or later appends silently wipe it). ---
+        for var_name, meta in self.VARIABLES.items():
+            if var_name not in ds:
+                continue
+            ds[var_name].attrs.update(
+                {
+                    "long_name": meta["long_name"],
+                    "units": "Mg/ha",
+                    "description": meta["description"],
+                    "source": f"ESA Climate Change Initiative – Biomass v{version}, Santoro & Cartus (2026)",
+                    "grid_mapping": "spatial_ref",
+                }
+            )
+
+        # _FillValue/scale_factor/etc must live only in zarr `encoding`
+        # (set at creation, see write()), never in variable attrs, or
+        # appending raises/overwrites encoding conflicts.
+        ds = self._strip_cf_serialization_attrs(ds)
 
         return ds
 
@@ -189,6 +192,26 @@ class CCIBiomassWriter(BaseZarrWriter):
 
         store = self.make_store(output_zarr)
 
+        global_meta = {
+            "title": f"ESA CCI Biomass v{version} – Global Aboveground Biomass (100 m)",
+            "version": version,
+            "institution": (
+                "European Space Agency (ESA) Climate Change Initiative (CCI); "
+                "NERC EDS Centre for Environmental Data Analysis"
+            ),
+            "source_dataset": "doi:10.5285/6429d1aafe1e43b9b414e4a5a7f8b903",
+            "created_by": "Santoro, M.; Cartus, O.",
+            "contact": "Maurizio Santoro (GAMMA RS)",
+            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "description": (
+                "Global forest aboveground biomass maps for 2005-2012 and 2015-2024 "
+                "derived from L-band radar (ALOS, ALOS-2), Sentinel-1, ICESat-2 "
+                "calibration and multi-year temporal weighting."
+            ),
+            "spatial_resolution": "100 m",
+            "spatial_ref": crs,
+        }
+
         for i, year in enumerate(years):
             print(f"Loading CCI Biomass {year}...")
             ds = self.load_year(vrt_dir, year)
@@ -200,38 +223,20 @@ class CCIBiomassWriter(BaseZarrWriter):
                 crs=crs,
                 version=version,
                 chunks=chunks,
-                set_variable_metadata=(i == 0),
             )
 
-            if i == 0:
-                self.set_global_metadata(
-                    ds,
-                    {
-                        "title": f"ESA CCI Biomass v{version} – Global Aboveground Biomass (100 m)",
-                        "version": version,
-                        "institution": (
-                            "European Space Agency (ESA) Climate Change Initiative (CCI); "
-                            "NERC EDS Centre for Environmental Data Analysis"
-                        ),
-                        "source_dataset": "doi:10.5285/6429d1aafe1e43b9b414e4a5a7f8b903",
-                        "created_by": "Santoro, M.; Cartus, O.",
-                        "contact": "Maurizio Santoro (GAMMA RS)",
-                        "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "description": (
-                            "Global forest aboveground biomass maps for 2005-2012 and 2015-2024 "
-                            "derived from L-band radar (ALOS, ALOS-2), Sentinel-1, ICESat-2 "
-                            "calibration and multi-year temporal weighting."
-                        ),
-                        "spatial_resolution": "100 m",
-                        "_FillValue": fill_value,
-                        "spatial_ref": crs,
-                    },
-                )
+            # Set on every year: zarr append ("mode=a") overrides the group's
+            # existing attrs with whatever is passed in, so re-setting the same
+            # global metadata each time is what keeps it from being wiped by
+            # later appends (rather than only surviving from the first write).
+            self.set_global_metadata(ds, global_meta)
 
+            if i == 0:
                 encoding = {
                     var: {
                         "chunks": (1, chunks["latitude"], chunks["longitude"]),
                         "compressor": DEFAULT_COMPRESSOR,
+                        "fill_value": fill_value,
                     }
                     for var in ds.data_vars
                 }

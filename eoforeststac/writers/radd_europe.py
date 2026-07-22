@@ -312,12 +312,15 @@ class RADDEuropeWriter(BaseZarrWriter):
                 }
             )
 
-            if i == 0:
-                ds_step = self.add_metadata(ds_step, crs=crs, version=version)
+            # Set on every step, not just i == 0: zarr append ("mode=a")
+            # overrides the group's/array's existing attrs with whatever is
+            # passed in, so metadata must be reapplied on every write or
+            # later appends silently wipe both the global attrs and the
+            # disturbance_occurrence variable's own attrs.
+            ds_step = self.add_metadata(ds_step, crs=crs, version=version)
 
             # Always prevent CF serialization conflicts on append steps
-            if i > 0:
-                ds_step = self._strip_cf_serialization_attrs(ds_step)
+            ds_step = self._strip_cf_serialization_attrs(ds_step)
 
             # Critical: remove _FillValue from attrs (keep only in encoding)
             ds_step = self._drop_fillvalue_attr(ds_step)
