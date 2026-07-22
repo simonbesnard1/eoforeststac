@@ -130,7 +130,7 @@ POTAPOV_HEIGHT_CFG = {
             roles=["data"],
             description=(
                 "Cloud-optimized Zarr store containing global canopy height for the given reference year/epoch. "
-                "Part of a multi-epoch canopy height product (2005/2010/2015/2020)."
+                "Part of a multi-epoch canopy height product (2000/2005/2010/2015/2020)."
             ),
         ),
     },
