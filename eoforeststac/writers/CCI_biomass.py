@@ -51,11 +51,15 @@ class CCIBiomassWriter(BaseZarrWriter):
                 "Mass (oven-dry weight) of the woody parts (stem, bark, branches, twigs) "
                 "of all living trees per unit area, excluding stumps and roots."
             ),
+            "valid_min": 0,
+            "valid_max": 1000,
         },
         "aboveground_biomass_std": {
             "vrt_prefix": "AGB_SD",
             "long_name": "Standard deviation of aboveground biomass",
             "description": "Per-pixel estimate of aboveground biomass uncertainty (1-sigma).",
+            "valid_min": 0,
+            "valid_max": 1000,
         },
     }
 
@@ -153,6 +157,10 @@ class CCIBiomassWriter(BaseZarrWriter):
                     "grid_mapping": "spatial_ref",
                 }
             )
+            if "valid_min" in meta:
+                ds[var_name].attrs["valid_min"] = meta["valid_min"]
+            if "valid_max" in meta:
+                ds[var_name].attrs["valid_max"] = meta["valid_max"]
 
         # _FillValue/scale_factor/etc must live only in zarr `encoding`
         # (set at creation, see write()), never in variable attrs, or
