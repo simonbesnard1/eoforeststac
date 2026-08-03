@@ -108,6 +108,31 @@ REGIONS = {
         "end_datetime": datetime.datetime(2018, 12, 31, tzinfo=datetime.timezone.utc),
         "zarr_name": "ALS_BRAZIL_EBA",
     },
+    "spain_test_pnoa": {
+        "label": "Spain Test PNOA",
+        "description": (
+            "Airborne laser scanning point cloud products derived from the Spanish "
+            "Plan Nacional de Ortofotografía Aérea (PNOA) LiDAR surveys, processed "
+            "with alsdb and stored as analysis-ready Zarr."
+        ),
+        "bbox": [-9.5, 35.9, 4.4, 43.8],
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-9.5, 35.9],
+                    [-9.5, 43.8],
+                    [4.4, 43.8],
+                    [4.4, 35.9],
+                    [-9.5, 35.9],
+                ]
+            ],
+        },
+        "proj_epsg": 25830,
+        "start_datetime": datetime.datetime(2015, 1, 1, tzinfo=datetime.timezone.utc),
+        "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
+        "zarr_name": "ALS_SPAIN_TEST_PNOA",
+    },
 }
 
 # ------------------------------------------------------------------
