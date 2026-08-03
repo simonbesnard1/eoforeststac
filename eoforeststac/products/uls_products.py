@@ -156,7 +156,6 @@ REGIONS = {
         "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
         "zarr_name": "ULS_TEST_REGION",
     },
-
 }
 
 ULS_PRODUCTS_CFG = {

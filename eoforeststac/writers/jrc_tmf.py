@@ -148,24 +148,24 @@ class JRCTMFWriter(BaseZarrWriter):
 
         self._add_legends(ds)
 
-        self.set_global_metadata(
-            ds,
-            {
-                "title": "Tropical Moist Forest (TMF) products v1-2024",
-                "description": (
-                    "Global Tropical Moist Forest datasets describing deforestation, "
-                    "degradation, regrowth, and annual land-cover dynamics from 1990 to 2024."
-                ),
-                "institution": "Joint Research Centre (JRC)",
-                "product_version": version,
-                "spatial_resolution": "30 m",
-                "spatial_ref": crs,
-                "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "references": "https://forobs.jrc.ec.europa.eu/TMF",
-            },
-        )
+        self.set_global_metadata(ds, self._global_metadata(version=version, crs=crs))
 
         return ds
+
+    def _global_metadata(self, *, version: str, crs: str) -> Dict:
+        return {
+            "title": "Tropical Moist Forest (TMF) products v1-2024",
+            "description": (
+                "Global Tropical Moist Forest datasets describing deforestation, "
+                "degradation, regrowth, and annual land-cover dynamics from 1990 to 2024."
+            ),
+            "institution": "Joint Research Centre (JRC)",
+            "product_version": version,
+            "spatial_resolution": "30 m",
+            "spatial_ref": crs,
+            "creation_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "references": "https://forobs.jrc.ec.europa.eu/TMF",
+        }
 
     def _add_legends(self, ds: xr.Dataset):
         ds["TransitionMap_MainClasses"].attrs["legend"] = {
@@ -253,6 +253,22 @@ class JRCTMFWriter(BaseZarrWriter):
         if annual_dir is not None:
             annual_dir = Path(annual_dir)
 
+            # Reused on every AnnualChange write: zarr append ("mode=a")
+            # overrides the group's/array's existing attrs with whatever is
+            # passed in, so both the dataset-level metadata and the
+            # AnnualChange variable's own attrs must be reapplied on every
+            # write, not just the first one, or later appends silently wipe
+            # them (this previously wiped global attrs starting from the very
+            # first AnnualChange year, since a bare DataArray.to_zarr() call
+            # never carries dataset-level attrs at all).
+            global_meta = self._global_metadata(version=version, crs=crs)
+            annual_change_meta = {
+                "long_name": self.ANNUAL_CHANGE["long_name"],
+                "description": self.ANNUAL_CHANGE["description"],
+                "grid_mapping": "spatial_ref",
+                "legend": self.ANNUAL_CHANGE["legend"],
+            }
+
             for i, year in enumerate(self.ANNUAL_CHANGE["years"]):
                 print(f"Writing AnnualChange {year}")
 
@@ -276,27 +292,28 @@ class JRCTMFWriter(BaseZarrWriter):
                     }
                 )
 
+                # Wrap in a Dataset (not a bare DataArray) so dataset-level
+                # (global) attrs actually get written to the group.
+                ds_annual = da.to_dataset(name="AnnualChange")
+                ds_annual["AnnualChange"].attrs.update(annual_change_meta)
+                self.set_global_metadata(ds_annual, global_meta)
+
+                # _FillValue must live only in encoding (set once, at
+                # creation below), never in attrs, or appending conflicts.
+                ds_annual = self._strip_cf_serialization_attrs(ds_annual)
+
                 # --------------------------------------------------
                 # First year → create variable
                 # --------------------------------------------------
                 if i == 0:
-                    da.attrs.update(
-                        {
-                            "long_name": self.ANNUAL_CHANGE["long_name"],
-                            "description": self.ANNUAL_CHANGE["description"],
-                            "grid_mapping": "spatial_ref",
-                            "_FillValue": fill_value,
-                            "legend": self.ANNUAL_CHANGE["legend"],
-                        }
-                    )
-
-                    da.to_zarr(
+                    ds_annual.to_zarr(
                         store=store,
                         mode="a",
                         encoding={
                             "AnnualChange": {
                                 "chunks": (1, chunks["latitude"], chunks["longitude"]),
                                 "compressor": DEFAULT_COMPRESSOR,
+                                "fill_value": fill_value,
                             }
                         },
                         consolidated=False,
@@ -306,16 +323,14 @@ class JRCTMFWriter(BaseZarrWriter):
                 # Subsequent years → append
                 # --------------------------------------------------
                 else:
-                    da = self._strip_cf_serialization_attrs(da)
-
-                    da.to_zarr(
+                    ds_annual.to_zarr(
                         store=store,
                         mode="a",
                         append_dim="time",
                         consolidated=False,
                     )
 
-                del da
+                del da, ds_annual
 
         if consolidate_at_end:
             zarr.consolidate_metadata(store)

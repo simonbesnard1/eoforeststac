@@ -2,6 +2,26 @@ import datetime
 from eoforeststac.core.config import S3_HTTP_BASE
 from eoforeststac.core.assets import create_zarr_asset
 
+# ----------------------------------------------------------------------
+# Per-version temporal coverage (years actually published on CEDA for
+# each version — narrower/differently gapped than the union used for the
+# collection-level extent below).
+#   v6.0: https://dap.ceda.ac.uk/neodc/esacci/biomass/data/agb/maps/v6.0/geotiff/
+#         2007, 2010, 2015-2022
+#   v7.0: https://dap.ceda.ac.uk/neodc/esacci/biomass/data/agb/maps/v7.0/geotiff/
+#         2005-2012, 2015-2024
+# ----------------------------------------------------------------------
+CCI_BIOMASS_VERSION_EXTENT = {
+    "6.0": (
+        datetime.datetime(2007, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
+    ),
+    "7.0": (
+        datetime.datetime(2005, 1, 1, tzinfo=datetime.timezone.utc),
+        datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
+    ),
+}
+
 CCI_BIOMASS_CFG = {
     # ------------------------------------------------------------------
     # Identity / narrative (atlas-friendly)
@@ -10,7 +30,9 @@ CCI_BIOMASS_CFG = {
     "title": "ESA CCI Biomass – Global annual aboveground biomass (100 m)",
     "description": (
         "Annual global aboveground biomass (AGB) maps produced within the ESA Climate Change Initiative "
-        "(CCI) Biomass project. The product supports carbon-cycle analysis, model evaluation, and "
+        "(CCI) Biomass project. Coverage differs by version: v6.0 provides 2007, 2010 and 2015-2022; "
+        "v7.0 provides 2005-2012 and 2015-2024 (see item `start_datetime`/`end_datetime` for the exact "
+        "span of each version). The product supports carbon-cycle analysis, model evaluation, and "
         "large-scale assessments of biomass distribution and change.\n\n"
         "This collection provides an analysis-ready Zarr packaging for cloud-native access."
     ),
@@ -30,8 +52,8 @@ CCI_BIOMASS_CFG = {
             ]
         ],
     },
-    "start_datetime": datetime.datetime(2007, 1, 1, tzinfo=datetime.timezone.utc),
-    "end_datetime": datetime.datetime(2023, 12, 31, tzinfo=datetime.timezone.utc),
+    "start_datetime": datetime.datetime(2005, 1, 1, tzinfo=datetime.timezone.utc),
+    "end_datetime": datetime.datetime(2024, 12, 31, tzinfo=datetime.timezone.utc),
     # ------------------------------------------------------------------
     # HREF layout
     # ------------------------------------------------------------------
@@ -84,15 +106,15 @@ CCI_BIOMASS_CFG = {
         # If you have a canonical terms/licensing page, link it explicitly
         {
             "rel": "license",
-            "href": "https://artefacts.ceda.ac.uk/licences/specific_licences/esacci_biomass_terms_and_conditions.pdf",
+            "href": "https://artefacts.ceda.ac.uk/licences/specific_licences/esacci_biomass_terms_and_conditions_v2.pdf",
             "type": "text/html",
             "title": "ESA CCI terms of use / licensing",
         },
         {
             "rel": "cite-as",
-            "href": "https://doi.org/10.5285/AF60720C1E404A9E9D2C145D2B2EAD4E",
+            "href": "https://doi.org/10.5285/6429d1aafe1e43b9b414e4a5a7f8b903",
             "type": "text/html",
-            "title": "Dataset DOI",
+            "title": "Dataset DOI (v7.0)",
         },
     ],
     # ------------------------------------------------------------------
