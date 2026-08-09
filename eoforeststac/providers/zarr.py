@@ -14,10 +14,10 @@ class ZarrProvider(BaseProvider):
 
     def open_dataset(
         self,
+        item_id: str,
         collection_id: str,
         version: str,
         asset_key: str = "zarr",
-        item_id: Optional[str] = None,
         resolution: Optional[str] = None,
         variables: Optional[Sequence[str]] = None,
     ) -> xr.Dataset:
