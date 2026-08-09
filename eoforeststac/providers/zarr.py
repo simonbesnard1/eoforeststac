@@ -17,6 +17,7 @@ class ZarrProvider(BaseProvider):
         collection_id: str,
         version: str,
         asset_key: str = "zarr",
+        item_id: Optional[str] = None,
         resolution: Optional[str] = None,
         variables: Optional[Sequence[str]] = None,
     ) -> xr.Dataset:
@@ -36,9 +37,9 @@ class ZarrProvider(BaseProvider):
         # ----------------------------------------------------------
         # 1. Derive item ID
         # ----------------------------------------------------------
-        item_id = f"{collection_id}_v{version}"
+        item_id_v = f"{item_id}_v{version}"
 
-        item = collection.get_item(item_id)
+        item = collection.get_item(item_id_v)
 
         # ----------------------------------------------------------
         # 2. Version existence check
