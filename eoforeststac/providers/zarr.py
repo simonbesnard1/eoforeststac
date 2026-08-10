@@ -38,7 +38,8 @@ class ZarrProvider(BaseProvider):
         """
         suffix = f"_v{version}"
         return sorted(
-            i.id[: -len(suffix)] for i in self._items_for_version(collection_id, version)
+            i.id[: -len(suffix)]
+            for i in self._items_for_version(collection_id, version)
         )
 
     def _resolve_item(self, collection_id: str, version: str, region: Optional[str]):
@@ -72,11 +73,13 @@ class ZarrProvider(BaseProvider):
                 )
 
             # No items at all with this version — maybe wrong version?
-            all_versions = sorted({
-                i.id.rsplit("_v", 1)[-1]
-                for i in collection.get_items()
-                if "_v" in i.id
-            })
+            all_versions = sorted(
+                {
+                    i.id.rsplit("_v", 1)[-1]
+                    for i in collection.get_items()
+                    if "_v" in i.id
+                }
+            )
             if all_versions:
                 raise ValueError(
                     f"Version '{version}' not found for collection '{collection_id}'. "
@@ -111,7 +114,11 @@ class ZarrProvider(BaseProvider):
 
     @staticmethod
     def _open_zarr_store(href: str, s3_fs) -> xr.Dataset:
-        store = fsspec.get_mapper(href) if href.startswith("https://") else s3_fs.get_mapper(href)
+        store = (
+            fsspec.get_mapper(href)
+            if href.startswith("https://")
+            else s3_fs.get_mapper(href)
+        )
         try:
             return xr.open_zarr(store=store, consolidated=True)
         except (KeyError, FileNotFoundError):
