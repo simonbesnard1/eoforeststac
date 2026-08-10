@@ -1,7 +1,6 @@
 import datetime
 
 from eoforeststac.core.config import S3_HTTP_BASE
-from eoforeststac.products.als_products import ALS_RESOLUTIONS
 
 ULS_RESOLUTIONS = {
     "10m": {
