@@ -1,0 +1,9 @@
+cff-version: 1.1.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: Joe
+  given-names: Johnson
+orcid: https://doi.org/10.5281/zenodo.22123168
+title:simonbesnard1/eoforeststac: v2026.08.28
+version: v2026.08.28
+date-released: 2026-08-27
