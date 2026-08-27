@@ -44,6 +44,10 @@ from eoforeststac.catalog.robinson_cr import (
     create_robinson_cr_collection,
     create_robinson_cr_item,
 )
+from eoforeststac.catalog.xu_recovery_curves import (
+    create_xu_recovery_curves_collection,
+    create_xu_recovery_curves_item,
+)
 from eoforeststac.catalog.forestpaths_genus import (
     create_forestpaths_genus_collection,
     create_forestpaths_genus_item,
@@ -107,6 +111,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "GAMI_AGECLASS": ["2.1", "3.0", "3.1"],
     "JRC_GFC2020": ["3.0"],
     "ROBINSON_CR": ["1.0"],
+    "XU_RECOVERY_CURVES": ["1.0"],
     "FORESTPATHS_GENUS": ["0.0.1"],
     "HANSEN_GFC": ["1.12"],
     "LIU_BIOMASS": ["0.1"],
@@ -131,7 +136,13 @@ THEMES: Dict[str, Dict[str, object]] = {
         "title": "Biomass & Carbon",
         "description": "Biomass stocks, canopy carbon, and regrowth/carbon accumulation products.",
         "keywords": ["biomass", "carbon", "regrowth", "carbon removal"],
-        "products": ["CCI_BIOMASS", "SAATCHI_BIOMASS", "LIU_BIOMASS", "ROBINSON_CR"],
+        "products": [
+            "CCI_BIOMASS",
+            "SAATCHI_BIOMASS",
+            "LIU_BIOMASS",
+            "ROBINSON_CR",
+            "XU_RECOVERY_CURVES",
+        ],
     },
     "disturbance-change": {
         "title": "Disturbance & Change",
@@ -218,6 +229,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
         ProductSpec("JRC_GFC2020", create_jrc_gfc_collection, create_jrc_gfc_item),
         ProductSpec(
             "ROBINSON_CR", create_robinson_cr_collection, create_robinson_cr_item
+        ),
+        ProductSpec(
+            "XU_RECOVERY_CURVES",
+            create_xu_recovery_curves_collection,
+            create_xu_recovery_curves_item,
         ),
         ProductSpec(
             "FORESTPATHS_GENUS",
