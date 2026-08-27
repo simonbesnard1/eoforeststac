@@ -11,6 +11,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Docs](https://readthedocs.org/projects/eoforeststac/badge/?version=latest)](https://eoforeststac.readthedocs.io/en/latest/)
 [![STAC Browser](https://img.shields.io/badge/STAC-Browser-green)](https://simonbesnard1.github.io/eoforeststac/)
+[![DOI](https://zenodo.org/badge/1020058794.svg)](https://doi.org/10.5281/zenodo.22123168)
 
 **EOForestSTAC** is an open-source Python package that provides a streamlined interface to discover and load cloud-hosted, analysis-ready forest Earth Observation datasets. All products are stored as Zarr archives on GFZ Ceph object storage and are organised in a STAC (SpatioTemporal Asset Catalog), enabling cloud-native access without downloading data locally.
 
