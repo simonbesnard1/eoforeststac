@@ -57,7 +57,7 @@ class ForestPathsGenusWriter(BaseZarrWriter):
         ds: xr.Dataset,
         fill_value: int = 255,
         crs: str = "EPSG:3035",
-        version: str = "1.0",
+        version: str = "0.0.1",
         chunks: Optional[Dict[str, int]] = None,
     ) -> xr.Dataset:
         """
@@ -176,7 +176,7 @@ class ForestPathsGenusWriter(BaseZarrWriter):
         self,
         tif_path: str,
         output_zarr: str,
-        version: str = "1.0",
+        version: str = "0.0.1",
         fill_value: int = 255,
         crs: str = "EPSG:3035",
         chunks: Optional[Dict[str, int]] = None,

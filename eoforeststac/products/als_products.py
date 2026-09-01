@@ -261,7 +261,7 @@ ALS_PRODUCTS_CFG = {
             "crr": "dimensionless",
         },
         "spatial_resolutions": list(ALS_RESOLUTIONS.keys()),
-        "proj:epsg": [25830],
+        "proj:epsg": sorted({r["proj_epsg"] for r in REGIONS.values()}),
         "product_family": ["alsdb"],
         "data_format": ["zarr"],
     },
