@@ -114,7 +114,7 @@ class RestorLanduseWriter(BaseZarrWriter):
     # Metadata
     # ------------------------------------------------------------------
     def add_metadata(
-        self, ds: xr.Dataset, crs: str, version: str = "1.0"
+        self, ds: xr.Dataset, crs: str, version: str = "2.0"
     ) -> xr.Dataset:
         if "lulc" in ds:
             ds["lulc"].attrs.update(
@@ -180,7 +180,7 @@ class RestorLanduseWriter(BaseZarrWriter):
         input_dir: str,
         years: Sequence[int],
         output_zarr: str,
-        version: str = "1.0",
+        version: str = "2.0",
         crs: str = NATIVE_CRS,
         _FillValue: int = 255,
         chunks: Optional[Dict[str, int]] = None,

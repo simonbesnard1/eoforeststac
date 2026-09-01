@@ -157,8 +157,8 @@ GEDI_L4D_CFG = {
         "zarr": {
             "title": "Zarr dataset",
             "description": (
-                "Cloud-optimized Zarr store containing imputed GEDI L4D forest structure variables "
-                "(RH percentiles, canopy cover, AGBD) at 30 m resolution."
+                "Cloud-optimized Zarr store containing imputed GEDI L4D relative height "
+                "percentiles (RH10-RH98) at 30 m resolution."
             ),
             "roles": ["data"],
             "type": "application/vnd.zarr",
@@ -175,7 +175,7 @@ GEDI_L4D_CFG = {
             roles=["data"],
             description=(
                 "Cloud-optimized Zarr store of GEDI L4D imputed forest structure at 30 m. "
-                "Variables: RH10-RH98, canopy cover, AGBD. Projection: EPSG:4326."
+                "Variables: RH10-RH98. Projection: EPSG:4326."
             ),
         ),
     },

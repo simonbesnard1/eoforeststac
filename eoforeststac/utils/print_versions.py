@@ -22,7 +22,7 @@ def get_sys_info():
 
     # get full commit hash
     commit = None
-    if os.path.isdir(".git") and os.path.isdir("eoforestac"):
+    if os.path.isdir(".git") and os.path.isdir("eoforeststac"):
         try:
             pipe = subprocess.Popen(
                 'git log --format="%H" -n 1'.split(" "),
@@ -100,7 +100,7 @@ def show_versions(file=sys.stdout):
 
     deps = [
         # (MODULE_NAME, f(mod) -> mod version)
-        ("eoforestac", lambda mod: mod.__version__),
+        ("eoforeststac", lambda mod: mod.__version__),
         ("pandas", lambda mod: mod.__version__),
         ("geopandas", lambda mod: mod.__version__),
         ("numpy", lambda mod: mod.__version__),

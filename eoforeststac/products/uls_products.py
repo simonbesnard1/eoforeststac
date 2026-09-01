@@ -279,7 +279,7 @@ ULS_PRODUCTS_CFG = {
             "ba_bias": "m2",
         },
         "spatial_resolutions": list(ULS_RESOLUTIONS.keys()),
-        "proj:epsg": [4326],
+        "proj:epsg": sorted({r["proj_epsg"] for r in REGIONS.values()}),
         "product_family": ["uls"],
         "data_format": ["zarr"],
     },

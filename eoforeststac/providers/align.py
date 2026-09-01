@@ -547,27 +547,34 @@ class DatasetAligner:
             # resampling: dataset default + per-variable overrides
             ds_default_resampling, per_var = self._get_dataset_resampling(key)
 
-            # 1) reproject dataset with default resampling
-            ds_reproj = ds.rio.reproject(
-                grid.crs,
-                transform=grid.transform,
-                shape=grid.shape,
-                resampling=ds_default_resampling,
-            )
+            # Split variables so each one is reprojected exactly once, with
+            # its own resampling method, instead of reprojecting the whole
+            # dataset and then re-reprojecting the overridden variables.
+            override_vars = [v for v in per_var if v in ds.data_vars]
+            default_vars = [v for v in ds.data_vars if v not in override_vars]
 
-            # 2) optionally override some variables with different resampling
-            # (reproject only those variables and then replace)
-            if per_var:
-                for var_name, var_resampling in per_var.items():
-                    if var_name not in ds.data_vars:
-                        continue
-                    da = ds[var_name]
-                    da_reproj = da.rio.reproject(
-                        grid.crs,
-                        transform=grid.transform,
-                        shape=grid.shape,
-                        resampling=var_resampling,
-                    )
+            ds_reproj: Optional[xr.Dataset] = None
+
+            # 1) reproject the default-resampling variables together
+            if default_vars:
+                ds_reproj = ds[default_vars].rio.reproject(
+                    grid.crs,
+                    transform=grid.transform,
+                    shape=grid.shape,
+                    resampling=ds_default_resampling,
+                )
+
+            # 2) reproject each overridden variable once, with its own method
+            for var_name in override_vars:
+                da_reproj = ds[var_name].rio.reproject(
+                    grid.crs,
+                    transform=grid.transform,
+                    shape=grid.shape,
+                    resampling=per_var[var_name],
+                )
+                if ds_reproj is None:
+                    ds_reproj = da_reproj.to_dataset()
+                else:
                     ds_reproj[var_name] = da_reproj
 
             # canonical naming
