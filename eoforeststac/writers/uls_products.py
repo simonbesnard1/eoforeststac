@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Dict, Optional
+from pathlib import Path
+from typing import Dict, Optional, Any
 
 import numpy as np
 import xarray as xr
@@ -30,8 +31,21 @@ class ULSProductsWriter(BaseZarrWriter):
         )
     """
 
-    def load_dataset(self, input_zarr: str) -> xr.Dataset:
-        return xr.open_zarr(input_zarr)
+    def load_dataset(
+            self,
+            input_zarr: str,
+    ) -> xr.Dataset:
+
+        ds = (xr.open_zarr(input_zarr))
+
+
+        rename_dims = {
+            old: new
+            for old, new in [("X", "x"), ("Y", "y")]
+            if old in ds.dims
+        }
+
+        return ds.rename_dims(rename_dims)
 
     def process_dataset(
         self,
@@ -51,20 +65,25 @@ class ULSProductsWriter(BaseZarrWriter):
         if chunks is not None:
             ds = ds.chunk(chunks)
 
+        # fix encoding
+        if "species" in ds:
+            ds["species"].encoding = {}
+
         for var in list(ds.data_vars):
             if var == "spatial_ref":
                 continue
             ds[var] = ds[var].astype("float32")
             ds[var] = ds[var].where(np.isfinite(ds[var]), fill_value)
 
-            attrs = VARIABLE_ATTRS.get(var, {}).copy()
-            attrs.update(
-                {
-                    "grid_mapping": "spatial_ref",
-                    "_FillValue": fill_value,
-                }
-            )
-            ds[var].attrs.update(attrs)
+
+            # attrs = VARIABLE_ATTRS.get(var, {}).copy()
+            # attrs.update(
+            #     {
+            #         "grid_mapping": "spatial_ref",
+            #         "_FillValue": fill_value,
+            #     }
+            # )
+            # ds[var].attrs.update(attrs)
 
         expected = set(res_meta["variables"])
         present = {v for v in ds.data_vars if v != "spatial_ref"}
@@ -135,6 +154,7 @@ class ULSProductsWriter(BaseZarrWriter):
             if var == "spatial_ref":
                 continue
             var_chunks = tuple(chunks.get(dim, ds.sizes[dim]) for dim in ds[var].dims)
+
             encoding[var] = {
                 "dtype": "float32",
                 "chunks": var_chunks,
@@ -146,6 +166,45 @@ class ULSProductsWriter(BaseZarrWriter):
         result = self.write_to_zarr(ds, output_zarr, encoding=encoding)
         print(f"{label}: done.")
         return result
+
+    def _find_input(
+            self,
+            input_dir: str,
+            resolution: str,
+    ) -> str:
+        input_path = Path(input_dir)
+
+        matching_paths = [
+            path
+            for path in input_path.iterdir()
+            if path.is_dir()
+               and resolution in path.name
+        ]
+
+        if not matching_paths:
+            raise FileNotFoundError(
+                f"No directory found for resolution '{resolution}' in {input_dir}"
+            )
+
+        if len(matching_paths) > 1:
+            raise RuntimeError(
+                f"Multiple directories found for resolution '{resolution}': "
+                f"{matching_paths}"
+            )
+
+        zarrs = list(matching_paths[0].glob("*.zarr"))
+
+        if not zarrs:
+            raise FileNotFoundError(
+                f"No Zarr found in {matching_paths[0]}"
+            )
+
+        if len(zarrs) > 1:
+            raise RuntimeError(
+                f"Multiple Zarrs found in {matching_paths[0]}: {zarrs}"
+            )
+
+        return str(zarrs[0])
 
     def write_region(
         self,
@@ -161,10 +220,12 @@ class ULSProductsWriter(BaseZarrWriter):
         reg = REGIONS[region]
         results = []
         for resolution in ULS_RESOLUTIONS:
-            input_zarr = f"{input_dir.rstrip('/')}/{resolution}"
+            input_zarr = self._find_input(input_dir, resolution)
+
             output_zarr = (
                 f"{output_prefix}/{reg['zarr_name']}_{resolution}_v{version}.zarr"
             )
+
             result = self.write(
                 input_zarr=input_zarr,
                 output_zarr=output_zarr,
@@ -173,14 +234,15 @@ class ULSProductsWriter(BaseZarrWriter):
                 version=version,
                 fill_value=fill_value,
             )
+
             results.append(result)
         return results
 
 
 def _default_chunks(resolution: str) -> Dict[str, int]:
     defaults = {
-        "1m": {"y": 2048, "x": 2048},
-        "10m": {"y": 1024, "x": 1024},
-        "100m": {"y": 512, "x": 512},
+        "10m": {"species": 16, "y": 2048, "x": 2048},
+        "20m": {"species": 16, "y": 1024, "x": 1024},
+        "100m": {"species": 16, "y": 512, "x": 512},
     }
-    return defaults.get(resolution, {"y": 1024, "x": 1024})
+    return defaults.get(resolution, {"species": 16, "y": 1024, "x": 1024})
