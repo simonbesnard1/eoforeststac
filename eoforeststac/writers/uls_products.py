@@ -32,17 +32,14 @@ class ULSProductsWriter(BaseZarrWriter):
     """
 
     def load_dataset(
-            self,
-            input_zarr: str,
+        self,
+        input_zarr: str,
     ) -> xr.Dataset:
 
-        ds = (xr.open_zarr(input_zarr))
-
+        ds = xr.open_zarr(input_zarr)
 
         rename_dims = {
-            old: new
-            for old, new in [("X", "x"), ("Y", "y")]
-            if old in ds.dims
+            old: new for old, new in [("X", "x"), ("Y", "y")] if old in ds.dims
         }
 
         return ds.rename_dims(rename_dims)
@@ -74,7 +71,6 @@ class ULSProductsWriter(BaseZarrWriter):
                 continue
             ds[var] = ds[var].astype("float32")
             ds[var] = ds[var].where(np.isfinite(ds[var]), fill_value)
-
 
             # attrs = VARIABLE_ATTRS.get(var, {}).copy()
             # attrs.update(
@@ -168,17 +164,16 @@ class ULSProductsWriter(BaseZarrWriter):
         return result
 
     def _find_input(
-            self,
-            input_dir: str,
-            resolution: str,
+        self,
+        input_dir: str,
+        resolution: str,
     ) -> str:
         input_path = Path(input_dir)
 
         matching_paths = [
             path
             for path in input_path.iterdir()
-            if path.is_dir()
-               and resolution in path.name
+            if path.is_dir() and resolution in path.name
         ]
 
         if not matching_paths:
@@ -195,14 +190,10 @@ class ULSProductsWriter(BaseZarrWriter):
         zarrs = list(matching_paths[0].glob("*.zarr"))
 
         if not zarrs:
-            raise FileNotFoundError(
-                f"No Zarr found in {matching_paths[0]}"
-            )
+            raise FileNotFoundError(f"No Zarr found in {matching_paths[0]}")
 
         if len(zarrs) > 1:
-            raise RuntimeError(
-                f"Multiple Zarrs found in {matching_paths[0]}: {zarrs}"
-            )
+            raise RuntimeError(f"Multiple Zarrs found in {matching_paths[0]}: {zarrs}")
 
         return str(zarrs[0])
 
