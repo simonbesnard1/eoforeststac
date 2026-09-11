@@ -244,6 +244,12 @@ class RADDEuropeWriter(BaseZarrWriter):
         print("RADD: loading VRTs…")
         ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)
 
+        # rasterio requires y to be descending (north-up) for clip_box / from_bounds.
+        # If the VRT was stored south-up (y ascending), flip to north-up before writing.
+        if float(ds_in.coords["y"][0]) < float(ds_in.coords["y"][-1]):
+            print("RADD: flipping y-axis to descending (north-up) for rasterio compatibility…")
+            ds_in = ds_in.isel(y=slice(None, None, -1)).chunk(spatial_chunks)
+
         ds_in = self.set_crs(ds_in, crs=crs)
         target_chunks = {
             "y": chunks["y"],

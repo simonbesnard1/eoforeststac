@@ -1,0 +1,23 @@
+name: eoforeststac-titiler
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.11
+  - pip
+  - uvicorn
+  - httpx
+  - pystac
+  - ipyleaflet
+  - ipywidgets
+  - jupyter
+  - jupyterlab
+  - notebook
+  - pip:
+      - "titiler-xarray[full]"
+      - dask
+      - s3fs
+      - zarr
+      - numcodecs
+      - xarray
+      - rioxarray

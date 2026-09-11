@@ -390,6 +390,11 @@ def _write_internal_with_package_writers(root: pystac.Catalog) -> None:
 
     write_json(root.self_href, root.to_dict())
 
+    # Write intermediate theme catalog.json files
+    for theme in root.get_children():
+        if isinstance(theme, pystac.Catalog) and theme.self_href:
+            write_json(theme.self_href, theme.to_dict())
+
     for col in _iter_collections(root):
         write_collection(col)
         for item in col.get_items():
