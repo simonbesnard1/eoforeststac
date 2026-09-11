@@ -69,7 +69,12 @@ class BaseZarrWriter:
 
     @staticmethod
     def set_crs(ds: xr.Dataset, crs: str = "EPSG:4326") -> xr.Dataset:
-        # requires rioxarray to be imported by caller or installed
+        # Ensure y is descending (north-up) so rasterio's from_bounds / clip_box
+        # can map geographic top→bottom to row 0→N without raising
+        # "Bounds and transform are inconsistent".  GeoTIFFs from projected CRS
+        # sources (LAEA, UTM, Albers…) sometimes arrive with ascending y.
+        if "y" in ds.coords and float(ds.coords["y"][0]) < float(ds.coords["y"][-1]):
+            ds = ds.isel(y=slice(None, None, -1))
         return ds.rio.write_crs(crs)
 
     @staticmethod
