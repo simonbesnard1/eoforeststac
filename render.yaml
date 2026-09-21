@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: eoforeststac-titiler
+    runtime: docker
+    dockerfilePath: ./deploy/titiler/Dockerfile
+    dockerContext: .
+    region: frankfurt
+    plan: free
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      - key: TITILER_XARRAY_API_CORS_ORIGINS
+        value: https://simonbesnard1.github.io
+      - key: TITILER_XARRAY_API_CORS_ALLOW_METHODS
+        value: GET
+      - key: ALLOWED_DATA_HOSTS
+        value: s3.gfz-potsdam.de
+      - key: ALLOWED_DATA_PATH_PREFIXES
+        value: /dog.atlaseo-glm.eo-gridded-data/
+      - key: GDAL_DISABLE_READDIR_ON_OPEN
+        value: EMPTY_DIR
+      - key: GDAL_HTTP_MULTIPLEX
+        value: "YES"
+      - key: GDAL_HTTP_VERSION
+        value: "2"
+      - key: VSI_CACHE
+        value: "TRUE"
+      - key: VSI_CACHE_SIZE
+        value: "536870912"

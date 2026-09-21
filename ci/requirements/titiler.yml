@@ -21,3 +21,4 @@ dependencies:
       - numcodecs
       - xarray
       - rioxarray
+      - "ndpyramid[dask]"

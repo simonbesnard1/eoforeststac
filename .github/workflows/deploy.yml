@@ -49,6 +49,16 @@ jobs:
           SB_allowDownload: "false"
         run: npm run build
 
+      - name: Add EOForestSTAC Explorer
+        env:
+          TITILER_URL: ${{ vars.TITILER_URL }}
+        run: |
+          mkdir -p stac-browser/dist/explorer
+          cp -R webapp/. stac-browser/dist/explorer/
+          if [ -n "$TITILER_URL" ]; then
+            sed -i "s|http://localhost:8000|$TITILER_URL|" stac-browser/dist/explorer/config.js
+          fi
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:

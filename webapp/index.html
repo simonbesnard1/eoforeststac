@@ -1,0 +1,1796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>EOForestSTAC Explorer</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Explore cloud-hosted forest Earth observation datasets from the EOForestSTAC catalog.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* ═══ Leaflet core (inlined) ═════════════════════════════════════════ */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}.leaflet-container{overflow:hidden}.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{-webkit-user-select:none;user-select:none;-webkit-user-drag:none}.leaflet-tile::selection{background:transparent}.leaflet-layer{width:100%;height:100%}.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}.leaflet-shadow-pane{z-index:500}.leaflet-marker-pane{z-index:600}.leaflet-tooltip-pane{z-index:650}.leaflet-popup-pane{z-index:700}.leaflet-map-pane canvas{z-index:100}.leaflet-map-pane svg{z-index:200}.leaflet-container{background:var(--map-void);font-family:var(--sans);font-size:12px;line-height:1.5}.leaflet-container a{color:var(--accent)}.leaflet-control-attribution{background:var(--attrib-bg)!important;border-radius:3px;padding:1px 7px!important;color:var(--text-3)!important;font-size:10px}.leaflet-control-attribution a{color:var(--text-2)!important;text-decoration:none}.leaflet-zoom-animated{-webkit-transform-origin:0 0;transform-origin:0 0}.leaflet-zoom-anim .leaflet-zoom-animated{will-change:transform;-webkit-transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}.leaflet-pan-anim .leaflet-tile,.leaflet-zoom-anim .leaflet-tile{-webkit-transition:none;transition:none}.leaflet-zoom-anim .leaflet-zoom-animated.leaflet-zoom-hide{visibility:hidden}.leaflet-interactive{cursor:pointer}.leaflet-grab{cursor:grab}.leaflet-crosshair,.leaflet-crosshair .leaflet-interactive{cursor:crosshair}.leaflet-popup-pane,.leaflet-control{cursor:auto}.leaflet-dragging .leaflet-grab,.leaflet-dragging .leaflet-grab .leaflet-interactive,.leaflet-dragging .leaflet-marker-draggable{cursor:grabbing}.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-image-layer,.leaflet-pane>svg path,.leaflet-tile-container{pointer-events:none}.leaflet-marker-icon.leaflet-interactive,.leaflet-image-layer.leaflet-interactive,.leaflet-pane>svg path.leaflet-interactive,svg.leaflet-image-layer.leaflet-interactive path{pointer-events:auto}.leaflet-container{touch-action:none}
+
+/* ═══ Tokens — dark-first (GFW palette) ══════════════════════════════ */
+:root {
+  /* Ground: neutrals carry a slight green bias toward the GFW accent */
+  --bg:        #0e1412;
+  --panel:     #161e1a;
+  --panel-2:   #1d2723;
+  --panel-3:   #26332d;
+  --rail:      #0a100d;
+  --line:      rgba(255,255,255,.07);
+  --line-2:    rgba(255,255,255,.13);
+  --text:      #e9efea;
+  --text-2:    #93a598;
+  --text-3:    #5d7167;
+  --accent:    #97bd3d;   /* GFW brand green */
+  --accent-t:  #0e1412;   /* text on accent */
+  --accent-w:  rgba(151,189,61,.15);
+  --alert:     #f88b2f;
+  --danger:    #e2574c;
+  --map-void:  #080c0a;
+  --attrib-bg: rgba(10,16,13,.72);
+  --shadow:    0 2px 14px rgba(0,0,0,.45);
+  --shadow-lg: 0 6px 32px rgba(0,0,0,.5);
+  /* theme accents */
+  --bc:#97bd3d; --dc:#f88b2f; --sd:#4a9fd8; --al:#a583d8; --lu:#d8b63a;
+  --sans: 'Fira Sans', system-ui, -apple-system, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --rail-w: 58px;
+  --panel-w: 344px;
+  --r: 4px;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg:#eef1ec; --panel:#ffffff; --panel-2:#f4f6f2; --panel-3:#e7ebe3; --rail:#252d28;
+    --line:rgba(0,0,0,.09); --line-2:rgba(0,0,0,.16);
+    --text:#242a26; --text-2:#5c6b61; --text-3:#8b9a90;
+    --accent:#6f9219; --accent-t:#ffffff; --accent-w:rgba(111,146,25,.12);
+    --alert:#d96f10; --danger:#c23b30;
+    --map-void:#dfe4dd; --attrib-bg:rgba(255,255,255,.78);
+    --shadow:0 1px 8px rgba(0,0,0,.12); --shadow-lg:0 4px 22px rgba(0,0,0,.16);
+    --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10;
+  }
+}
+:root[data-theme="light"] {
+  --bg:#eef1ec; --panel:#ffffff; --panel-2:#f4f6f2; --panel-3:#e7ebe3; --rail:#252d28;
+  --line:rgba(0,0,0,.09); --line-2:rgba(0,0,0,.16);
+  --text:#242a26; --text-2:#5c6b61; --text-3:#8b9a90;
+  --accent:#6f9219; --accent-t:#ffffff; --accent-w:rgba(111,146,25,.12);
+  --alert:#d96f10; --danger:#c23b30;
+  --map-void:#dfe4dd; --attrib-bg:rgba(255,255,255,.78);
+  --shadow:0 1px 8px rgba(0,0,0,.12); --shadow-lg:0 4px 22px rgba(0,0,0,.16);
+  --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10;
+}
+
+/* ═══ Reset ══════════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:var(--sans);font-size:13px;font-weight:400;
+  color:var(--text);background:var(--bg);line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{
+  font-family:inherit;font-size:12px;color:var(--text);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);
+  padding:6px 9px;outline:none;transition:border-color .15s,box-shadow .15s;width:100%;
+}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-w)}
+select{
+  appearance:none;cursor:pointer;padding-right:26px;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>");
+  background-repeat:no-repeat;background-position:right 9px center;
+}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+[hidden]{display:none!important}
+svg{display:block}
+.ico{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ico-sm{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:4px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3);background-clip:content-box}
+
+/* ═══ Shell ══════════════════════════════════════════════════════════ */
+#app{display:flex;height:100vh;width:100vw}
+
+/* ─── Icon rail (GFW's signature left toolbar) ───────────────────── */
+#rail{
+  width:var(--rail-w);flex-shrink:0;
+  background:var(--rail);
+  display:flex;flex-direction:column;align-items:center;
+  padding:0 0 8px;z-index:600;
+  border-right:1px solid rgba(0,0,0,.4);
+}
+.rail-logo{
+  width:var(--rail-w);height:var(--rail-w);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent);color:var(--accent-t);
+  font-size:22px;line-height:1;flex-shrink:0;
+  margin-bottom:8px;
+}
+.rail-btn{
+  width:42px;height:42px;border-radius:var(--r);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.52);margin-bottom:3px;position:relative;
+  transition:color .14s,background .14s;flex-shrink:0;
+}
+.rail-btn:hover{color:#fff;background:rgba(255,255,255,.07)}
+.rail-btn.active{color:var(--accent);background:rgba(255,255,255,.09)}
+.rail-btn.active::before{
+  content:'';position:absolute;left:-8px;top:9px;bottom:9px;width:3px;
+  background:var(--accent);border-radius:0 2px 2px 0;
+}
+.rail-spacer{flex:1}
+.rail-badge{
+  position:absolute;top:4px;right:4px;
+  min-width:15px;height:15px;padding:0 4px;border-radius:8px;
+  background:var(--accent);color:var(--accent-t);
+  font-family:var(--mono);font-size:9px;font-weight:500;
+  display:flex;align-items:center;justify-content:center;
+}
+.rail-status{
+  width:8px;height:8px;border-radius:50%;background:#6b7a70;
+  margin-top:6px;flex-shrink:0;transition:background .3s,box-shadow .3s;
+}
+.rail-status.ok{background:var(--accent);box-shadow:0 0 0 3px var(--accent-w)}
+.rail-status.err{background:var(--danger);box-shadow:0 0 0 3px rgba(226,87,76,.2)}
+.rail-status.wait{background:var(--alert);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Tooltip on rail hover */
+.rail-btn[data-tip]:hover::after{
+  content:attr(data-tip);position:absolute;left:calc(100% + 10px);top:50%;
+  transform:translateY(-50%);background:var(--panel);color:var(--text);
+  padding:5px 9px;border-radius:var(--r);font-size:11px;white-space:nowrap;
+  box-shadow:var(--shadow);z-index:10;pointer-events:none;border:1px solid var(--line);
+}
+
+/* ─── Panel ───────────────────────────────────────────────────────── */
+#panel{
+  width:var(--panel-w);flex-shrink:0;
+  background:var(--panel);
+  display:flex;flex-direction:column;overflow:hidden;
+  border-right:1px solid var(--line);z-index:550;
+  transition:width .22s cubic-bezier(.4,0,.2,1),opacity .18s;
+}
+#panel.closed{width:0;opacity:0;border-right:none}
+.pnl-head{
+  display:flex;align-items:center;gap:9px;
+  padding:0 14px;height:var(--rail-w);flex-shrink:0;
+  border-bottom:1px solid var(--line);
+}
+.pnl-title{
+  flex:1;font-size:13px;font-weight:600;letter-spacing:.005em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.pnl-sub{font-family:var(--mono);font-size:10px;color:var(--text-3);white-space:nowrap}
+.pnl-body{flex:1;overflow-y:auto;overscroll-behavior:contain}
+.pnl-view{display:none}
+.pnl-view.active{display:block}
+
+.ghost-btn{
+  width:26px;height:26px;border-radius:var(--r);color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:color .14s,background .14s;
+}
+.ghost-btn:hover{color:var(--text);background:var(--panel-2)}
+.ghost-btn.danger:hover{color:var(--danger)}
+
+/* Search */
+.search-box{padding:11px 14px;border-bottom:1px solid var(--line);position:relative}
+.search-box .ico-sm{position:absolute;left:24px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
+#ds-search{padding-left:30px;border-radius:16px}
+#ds-search::placeholder{color:var(--text-3)}
+
+/* Loading / empty */
+.state{padding:44px 22px;text-align:center;color:var(--text-3);font-size:12.5px;line-height:1.65}
+.spinner{
+  width:20px;height:20px;border:2px solid var(--line-2);border-top-color:var(--accent);
+  border-radius:50%;margin:0 auto 14px;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Theme accordion */
+.grp{border-bottom:1px solid var(--line)}
+.grp-btn{
+  width:100%;display:flex;align-items:center;gap:9px;
+  padding:11px 14px;text-align:left;transition:background .14s;
+}
+.grp-btn:hover{background:var(--panel-2)}
+.grp-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.grp-name{
+  flex:1;font-size:11px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--text-2);
+}
+.grp-n{font-family:var(--mono);font-size:10px;color:var(--text-3)}
+.grp-btn .ico-sm{color:var(--text-3);transition:transform .2s}
+.grp-btn.open .ico-sm{transform:rotate(180deg)}
+.grp-list{display:none;padding-bottom:4px}
+.grp-list.open{display:block}
+
+/* Dataset row */
+.ds{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:9px 14px 9px 17px;position:relative;
+  transition:background .13s;
+}
+.ds:hover{background:var(--panel-2)}
+.ds.on{background:var(--accent-w)}
+.ds.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
+.ds-main{flex:1;min-width:0}
+.ds-name{font-size:12.5px;font-weight:500;line-height:1.35;margin-bottom:3px}
+.ds-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:9.5px;line-height:1;
+  padding:3px 5px;border-radius:3px;
+  background:var(--panel-3);color:var(--text-3);
+}
+.ds.on .chip{color:var(--text-2)}
+.ds-zoom,.ds-cfg{
+  opacity:0;transition:opacity .14s,color .14s,background .14s;
+  width:22px;height:22px;border-radius:3px;color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ds:hover .ds-zoom,.ds.on .ds-zoom{opacity:1}
+.ds-cfg{display:none}
+.ds.on .ds-cfg{display:flex;opacity:1;color:var(--accent)}
+.ds-zoom:hover,.ds-cfg:hover{color:var(--accent);background:var(--panel-3)}
+
+/* Switch */
+.sw{position:relative;flex-shrink:0;margin-top:1px;display:block;width:32px;height:18px}
+.sw input{position:absolute;opacity:0;width:0;height:0}
+.sw-t{
+  display:block;width:32px;height:18px;border-radius:9px;cursor:pointer;
+  background:var(--panel-3);border:1px solid var(--line-2);
+  transition:background .18s,border-color .18s;position:relative;
+}
+.sw input:checked+.sw-t{background:var(--accent);border-color:var(--accent)}
+.sw-t::after{
+  content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:#fff;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.35);
+}
+.sw input:checked+.sw-t::after{transform:translateX(14px)}
+.sw input:focus-visible+.sw-t{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ─── Layer control card ──────────────────────────────────────────── */
+.lc{border-bottom:1px solid var(--line);padding:13px 14px}
+.lc-top{display:flex;align-items:center;gap:8px;margin-bottom:11px}
+.lc-swatch{width:4px;height:16px;border-radius:2px;flex-shrink:0}
+.lc-name{
+  flex:1;min-width:0;font-size:12.5px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fld{margin-bottom:11px}
+.fld:last-child{margin-bottom:0}
+.fld-lbl{
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  font-size:10px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-3);margin-bottom:5px;
+}
+.fld-val{font-family:var(--mono);font-size:10.5px;color:var(--accent);text-transform:none;letter-spacing:0}
+.fld-static{font-size:12px;color:var(--text-2);font-family:var(--mono)}
+.two-up{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.cmap-bar{height:7px;border-radius:4px;margin-top:6px;border:1px solid var(--line)}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;padding:0;
+  width:100%;height:3px;background:var(--panel-3);border:none;border-radius:2px;
+  cursor:pointer;outline:none;box-shadow:none;
+}
+input[type=range]:focus{box-shadow:none;border:none}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:var(--accent);cursor:pointer;border:2px solid var(--panel);
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+input[type=range]::-moz-range-thumb{
+  width:11px;height:11px;border-radius:50%;background:var(--accent);
+  cursor:pointer;border:2px solid var(--panel);
+}
+.pyr-note{
+  display:flex;align-items:center;gap:5px;margin-top:10px;
+  font-family:var(--mono);font-size:9.5px;color:var(--text-3);
+}
+.pyr-note b{color:var(--accent);font-weight:500}
+
+/* ─── Basemap picker ──────────────────────────────────────────────── */
+.bm-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px}
+.bm-opt{
+  border:2px solid var(--line);border-radius:6px;overflow:hidden;
+  background:var(--panel-2);transition:border-color .15s;text-align:left;
+}
+.bm-opt:hover{border-color:var(--line-2)}
+.bm-opt.on{border-color:var(--accent)}
+.bm-thumb{height:52px;background-size:cover;background-position:center}
+.bm-cap{padding:6px 8px;font-size:11px;font-weight:500}
+.bm-opt.on .bm-cap{color:var(--accent)}
+.opt-row{
+  display:flex;align-items:center;gap:10px;
+  padding:11px 14px;border-top:1px solid var(--line);
+}
+.opt-txt{flex:1;min-width:0}
+.opt-name{font-size:12.5px;font-weight:500}
+.opt-desc{font-size:11px;color:var(--text-3);line-height:1.4;margin-top:2px}
+
+/* ─── Settings ────────────────────────────────────────────────────── */
+.set-sec{padding:14px;border-bottom:1px solid var(--line)}
+.set-h{
+  font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-3);margin-bottom:8px;
+}
+.inline-form{display:flex;gap:7px}
+.btn{
+  padding:6px 13px;border-radius:var(--r);font-size:12px;font-weight:500;
+  background:var(--accent);color:var(--accent-t);white-space:nowrap;flex-shrink:0;
+  transition:opacity .14s;
+}
+.btn:hover{opacity:.85}
+.set-note{font-size:11px;color:var(--text-3);line-height:1.6;margin-top:8px}
+.set-note code{
+  font-family:var(--mono);font-size:10.5px;background:var(--panel-2);
+  padding:1px 5px;border-radius:3px;color:var(--text-2);
+}
+
+/* ═══ Map ════════════════════════════════════════════════════════════ */
+#map-area{flex:1;position:relative;min-width:0}
+#map{position:absolute;inset:0}
+
+/* Map toolbar (right edge, GFW-style) */
+#tools{
+  position:absolute;top:14px;right:14px;z-index:500;
+  display:flex;flex-direction:column;gap:1px;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;box-shadow:var(--shadow);overflow:hidden;
+}
+.tool{
+  width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-2);transition:background .14s,color .14s;position:relative;
+}
+.tool:hover{background:var(--panel-2);color:var(--text)}
+.tool:disabled{opacity:.3;cursor:default}
+.tool+.tool{border-top:1px solid var(--line)}
+.tool[data-tip]:hover::after{
+  content:attr(data-tip);position:absolute;right:calc(100% + 9px);top:50%;
+  transform:translateY(-50%);background:var(--panel);color:var(--text);
+  padding:5px 9px;border-radius:var(--r);font-size:11px;white-space:nowrap;
+  box-shadow:var(--shadow);border:1px solid var(--line);pointer-events:none;
+}
+
+/* Legend (bottom-left) */
+#legend{
+  position:absolute;left:14px;bottom:14px;z-index:500;
+  width:236px;max-height:44vh;overflow-y:auto;
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;box-shadow:var(--shadow-lg);
+}
+.leg-head{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 11px;border-bottom:1px solid var(--line);
+  font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-3);
+  position:sticky;top:0;background:var(--panel);
+}
+.leg-head span{flex:1}
+.leg-item{padding:9px 11px}
+.leg-item+.leg-item{border-top:1px solid var(--line)}
+.leg-vn{
+  display:flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:600;margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.leg-key{width:3px;height:11px;border-radius:2px;flex-shrink:0}
+.leg-ds{
+  font-family:var(--mono);font-size:9.5px;color:var(--text-3);margin-bottom:7px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.leg-ramp{height:9px;border-radius:2px;border:1px solid var(--line)}
+.leg-ticks{
+  display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:4px;
+  font-family:var(--mono);font-size:9.5px;color:var(--text-3);
+  font-variant-numeric:tabular-nums;
+}
+.leg-unit{flex:1;text-align:center;opacity:.8;overflow:hidden;text-overflow:ellipsis}
+.leg-var{
+  width:100%;margin-bottom:8px;padding:4px 22px 4px 7px;
+  font-size:11px;font-family:var(--mono);border-radius:3px;
+  background:var(--panel-2);background-position:right 6px center;
+}
+.leg-classes{display:flex;flex-direction:column;gap:3px}
+.leg-class{display:flex;align-items:center;gap:7px;min-width:0}
+.leg-chip{width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid var(--line)}
+.leg-class-lbl{
+  font-size:10.5px;color:var(--text-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.leg-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+.leg-lvl{
+  font-family:var(--mono);font-size:9px;
+  background:var(--accent-w);color:var(--accent);padding:2px 5px;border-radius:3px;
+}
+.fld-hint{font-size:10.5px;color:var(--text-3);margin-top:5px;line-height:1.5}
+.hint-code{
+  display:block;margin-top:5px;padding:5px 7px;border-radius:3px;
+  font-family:var(--mono);font-size:9.5px;color:var(--text-2);
+  background:var(--panel-2);border:1px solid var(--line);
+  overflow-x:auto;white-space:nowrap;
+}
+
+/* Inspector (bottom-right) */
+#inspector{
+  position:absolute;right:14px;bottom:14px;z-index:500;
+  width:250px;background:var(--panel);border:1px solid var(--line);
+  border-radius:6px;box-shadow:var(--shadow-lg);
+}
+.ins-head{
+  display:flex;align-items:center;gap:7px;padding:8px 11px;
+  border-bottom:1px solid var(--line);
+}
+.ins-head span{
+  flex:1;font-size:10px;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--text-3);
+}
+.ins-body{padding:9px 11px}
+.ins-xy{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-bottom:8px}
+.ins-row{
+  display:flex;justify-content:space-between;align-items:baseline;gap:10px;
+  padding:3px 0;font-size:11.5px;
+}
+.ins-row+.ins-row{border-top:1px solid var(--line)}
+.ins-k{color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ins-v{font-family:var(--mono);font-size:11.5px;font-weight:500;color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ins-v.nil{color:var(--text-3)}
+.ins-msg{font-size:11.5px;color:var(--text-3)}
+
+/* Readout strip */
+#readout{
+  position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:490;
+  display:flex;align-items:center;gap:12px;
+  background:var(--attrib-bg);border:1px solid var(--line);
+  border-radius:14px;padding:4px 13px;
+  font-family:var(--mono);font-size:10.5px;color:var(--text-2);
+  white-space:nowrap;pointer-events:none;backdrop-filter:blur(6px);
+  font-variant-numeric:tabular-nums;
+}
+#readout b{color:var(--text-3);font-weight:400}
+
+@media (max-width: 900px){
+  :root{--panel-w:280px}
+  #legend{width:190px}
+  #inspector{width:200px}
+  #readout{display:none}
+}
+@media (max-width: 700px){
+  #panel{position:absolute;left:var(--rail-w);right:0;top:0;bottom:0;width:auto;max-width:none}
+  #panel.closed{right:auto;width:0}
+  #legend{left:10px;right:10px;bottom:10px;width:auto;max-height:42vh}
+  #inspector{left:10px;right:10px;bottom:10px;width:auto}
+  #tools{top:10px;right:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ MARKUP ══════════════════════════════ -->
+<div id="app">
+
+  <!-- ─── Icon rail ─────────────────────────────────────────────── -->
+  <nav id="rail" aria-label="Explorer tools">
+    <div class="rail-logo" title="EOForestSTAC">🌲</div>
+
+    <button class="rail-btn active" data-view="data" data-tip="Datasets" aria-label="Datasets" aria-pressed="true">
+      <svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+    </button>
+
+    <button class="rail-btn" data-view="layers" data-tip="Active layers" aria-label="Active layers" aria-pressed="false">
+      <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <span class="rail-badge" id="rail-badge" hidden>0</span>
+    </button>
+
+    <button class="rail-btn" data-view="basemap" data-tip="Basemap" aria-label="Basemap and view" aria-pressed="false">
+      <svg class="ico" viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg>
+    </button>
+
+    <div class="rail-spacer"></div>
+
+    <button class="rail-btn" id="theme-btn" data-tip="Toggle theme" aria-label="Toggle light and dark theme">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+    <button class="rail-btn" data-view="settings" data-tip="Server settings" aria-label="Server settings" aria-pressed="false">
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <div class="rail-status wait" id="rail-status" title="Checking TiTiler…" role="status" aria-label="Checking tile server connection"></div>
+  </nav>
+
+  <!-- ─── Panel ─────────────────────────────────────────────────── -->
+  <aside id="panel">
+    <div class="pnl-head">
+      <div class="pnl-title" id="pnl-title">Datasets</div>
+      <div class="pnl-sub" id="pnl-sub"></div>
+      <button class="ghost-btn" id="pnl-close" title="Collapse panel">
+        <svg class="ico-sm" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </div>
+
+    <div class="pnl-body">
+
+      <!-- Datasets -->
+      <section class="pnl-view active" id="view-data">
+        <div class="search-box">
+          <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
+          <input id="ds-search" type="search" placeholder="Search datasets…" autocomplete="off">
+        </div>
+        <div id="catalog">
+          <div class="state"><div class="spinner"></div>Loading STAC catalog…</div>
+        </div>
+      </section>
+
+      <!-- Active layers -->
+      <section class="pnl-view" id="view-layers">
+        <div class="state">No active layers.<br>Turn one on from <b>Datasets</b>.</div>
+      </section>
+
+      <!-- Basemap -->
+      <section class="pnl-view" id="view-basemap">
+        <div class="bm-grid" id="bm-grid"></div>
+        <div class="opt-row">
+          <div class="opt-txt">
+            <div class="opt-name">Place labels</div>
+            <div class="opt-desc">Draw boundaries and place names above data layers.</div>
+          </div>
+          <label class="sw"><input type="checkbox" id="labels-sw" checked><span class="sw-t"></span></label>
+        </div>
+        <div class="opt-row">
+          <div class="opt-txt">
+            <div class="opt-name">Zoom to layer extent</div>
+            <div class="opt-desc">Fly to a dataset's bounding box when you switch it on.</div>
+          </div>
+          <label class="sw"><input type="checkbox" id="autozoom-sw" checked><span class="sw-t"></span></label>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="pnl-view" id="view-settings">
+        <div class="set-sec">
+          <div class="set-h">TiTiler endpoint</div>
+          <div class="inline-form">
+            <input type="url" id="titiler-url" placeholder="http://localhost:8000">
+            <button class="btn" id="connect-btn">Connect</button>
+          </div>
+          <div class="set-note" id="conn-note" aria-live="polite">Checking connection…</div>
+        </div>
+        <div class="set-sec">
+          <div class="set-h">Running locally</div>
+          <div class="set-note">
+            Start the tile server with<br>
+            <code>python scripts/start_titiler.py</code><br>
+            then open <code>localhost:8000/explorer</code> so catalog requests are proxied server-side.
+          </div>
+        </div>
+        <div class="set-sec">
+          <div class="set-h">Catalog</div>
+          <div class="set-note"><code id="cat-url"></code></div>
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+  <!-- ─── Map ───────────────────────────────────────────────────── -->
+  <main id="map-area">
+    <div id="map"></div>
+
+    <div id="tools">
+      <button class="tool" id="t-in" data-tip="Zoom in" aria-label="Zoom in">
+        <svg class="ico" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="tool" id="t-out" data-tip="Zoom out" aria-label="Zoom out">
+        <svg class="ico" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+      <button class="tool" id="t-fit" data-tip="Zoom to active layers" aria-label="Zoom to active layers" disabled>
+        <svg class="ico" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M21 16v3a2 2 0 0 1-2 2h-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/></svg>
+      </button>
+      <button class="tool" id="t-home" data-tip="Reset view" aria-label="Reset map view">
+        <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18"/></svg>
+      </button>
+      <button class="tool" id="t-full" data-tip="Fullscreen" aria-label="Toggle fullscreen">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+    </div>
+
+    <div id="legend" hidden></div>
+
+    <div id="inspector" hidden>
+      <div class="ins-head">
+        <span>Pixel values</span>
+        <button class="ghost-btn" id="ins-close" aria-label="Close pixel inspector">
+          <svg class="ico-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="ins-body">
+        <div class="ins-xy" id="ins-xy">—</div>
+        <div id="ins-rows"></div>
+      </div>
+    </div>
+
+    <div id="readout">
+      <span><b>z</b> <span id="ro-z">3</span></span>
+      <span><b>lat</b> <span id="ro-lat">—</span></span>
+      <span><b>lon</b> <span id="ro-lon">—</span></span>
+    </div>
+  </main>
+
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   CONFIG
+══════════════════════════════════════════════════════════════════ */
+/* Colour ramps as stop arrays, so the same definition drives both the
+   continuous gradient bar and the discrete class swatches. */
+const RAMPS = {
+  greens:  ['#f7fcf5','#c7e9c0','#74c476','#238b45','#00441b'],
+  rdylgn:  ['#a50026','#f46d43','#fee08b','#a6d96a','#006837'],
+  viridis: ['#440154','#414487','#2a788e','#22a884','#7ad151','#fde725'],
+  plasma:  ['#0d0887','#6a00a8','#b12a90','#e16462','#fca636','#f0f921'],
+  inferno: ['#000004','#420a68','#932667','#dd513a','#fca50a','#fcffa4'],
+  magma:   ['#000004','#3b0f70','#8c2981','#de4968','#fe9f6d','#fcfdbf'],
+  reds:    ['#fff5f0','#fcbba1','#fb6a4a','#cb181d','#67000d'],
+  blues:   ['#f7fbff','#c6dbef','#6baed6','#2171b5','#08306b'],
+  ylorbr:  ['#ffffe5','#fee391','#fe9929','#cc4c02','#662506'],
+  ylgnbu:  ['#ffffd9','#c7e9b4','#41b6c4','#225ea8','#081d58'],
+  hot:     ['#0a0000','#ff0000','#ffff00','#ffffff'],
+  greys:   ['#ffffff','#d9d9d9','#969696','#404040','#000000'],
+  rdbu:    ['#b2182b','#ef8a62','#f7f7f7','#67a9cf','#2166ac'],
+  spectral:['#9e0142','#f46d43','#ffffbf','#66c2a5','#5e4fa2'],
+};
+const rampCSS = n => `linear-gradient(to right,${(RAMPS[n] || RAMPS.greys).join(',')})`;
+function sampleRamp(name, t) {
+  const s = RAMPS[name] || RAMPS.greys;
+  const x = Math.max(0, Math.min(1, t)) * (s.length - 1);
+  const i = Math.min(Math.floor(x), s.length - 2);
+  const f = x - i;
+  const rgb = h => [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16));
+  const a = rgb(s[i]), b = rgb(s[i + 1]);
+  return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v) * f)).join(',')})`;
+}
+
+const CFG = {
+  catalog: 'https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/catalog.json',
+  defaultTiTiler: window.EOFOREST_CONFIG?.tiTilerUrl || 'http://localhost:8000',
+  home: { center: [20, 10], zoom: 3 },
+  colormaps: Object.keys(RAMPS),
+  cmapGradients: Object.fromEntries(Object.keys(RAMPS).map(k => [k, rampCSS(k)])),
+  /* data_vars that are grid/CRS carriers rather than renderable rasters */
+  skipVars: new Set(['spatial_ref','crs','transverse_mercator','lambert_azimuthal_equal_area','latitude_longitude','polar_stereographic']),
+  themeInfo: {
+    'biomass-carbon':       { label:'Biomass & Carbon',  cls:'bc' },
+    'disturbance-change':   { label:'Disturbance',       cls:'dc' },
+    'structure-demography': { label:'Structure',         cls:'sd' },
+    'als-lidar':            { label:'LiDAR / ALS',       cls:'al' },
+    'land-use-land-cover':  { label:'Land Use',          cls:'lu' },
+  },
+};
+
+/* Key-free tile services. Esri's ArcGIS Online basemaps and OSM need no token. */
+const ESRI_ATTR = 'Tiles &copy; <a href="https://www.esri.com">Esri</a>';
+const BASEMAPS = {
+  dark: {
+    name: 'Dark canvas',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attr: ESRI_ATTR, maxZoom: 16,
+    thumb: 'linear-gradient(135deg,#2b2f31,#3c4245 60%,#22262a)',
+  },
+  satellite: {
+    name: 'Satellite',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attr: ESRI_ATTR + ', Maxar, Earthstar Geographics', maxZoom: 19,
+    thumb: 'linear-gradient(135deg,#1d3b1c,#3e5a25 45%,#7a6a3a 75%,#2b4a6b)',
+  },
+  terrain: {
+    name: 'Terrain',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}',
+    attr: ESRI_ATTR, maxZoom: 13,
+    thumb: 'linear-gradient(135deg,#cdd6c0,#a8b894 55%,#8fa07c)',
+  },
+  light: {
+    name: 'Light canvas',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attr: ESRI_ATTR, maxZoom: 16,
+    thumb: 'linear-gradient(135deg,#f2f2f0,#e0e0dc 60%,#cfcfca)',
+  },
+  street: {
+    name: 'OpenStreetMap',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attr: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', maxZoom: 19,
+    thumb: 'linear-gradient(135deg,#eee9e2,#d8e6cf 55%,#b9d4e8)',
+  },
+  none: {
+    name: 'No basemap',
+    url: null, attr: '', maxZoom: 22,
+    thumb: 'repeating-conic-gradient(#3a423d 0% 25%,#2a302c 0% 50%) 0/14px 14px',
+  },
+};
+
+const LABELS_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
+
+const LAYER_COLORS = ['#97bd3d','#f88b2f','#4a9fd8','#a583d8','#d8b63a','#e2574c','#3fb8a0'];
+
+/* ══════════════════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════════════════ */
+const S = {
+  tiTiler:   localStorage.getItem('tiTilerUrl') || CFG.defaultTiTiler,
+  tiOk:      false,
+  catalog:   null,
+  layers:    new Map(),
+  map:       null,
+  baseLayer: null,
+  labelLayer:null,
+  basemapId: localStorage.getItem('basemap') || 'dark',
+  showLabels:localStorage.getItem('labels') !== '0',
+  autoZoom:  localStorage.getItem('autozoom') !== '0',
+  view:      'data',
+  panelOpen: true,
+  legendOpen: true,
+};
+
+const el  = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ══════════════════════════════════════════════════════════════════
+   FETCH (CORS-proxied through TiTiler when available)
+══════════════════════════════════════════════════════════════════ */
+async function fetchJSON(url, { viaTiTiler = false } = {}) {
+  const target = (viaTiTiler && S.tiOk)
+    ? `${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`
+    : url;
+  let r;
+  try { r = await fetch(target); }
+  catch (e) {
+    if (!viaTiTiler && S.tiOk)
+      r = await fetch(`${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`);
+    else throw e;
+  }
+  if (!r.ok) throw new Error(`${r.status} ${url}`);
+  return r.json();
+}
+const resolveUrl = (base, rel) => { try { return new URL(rel, base).href; } catch { return rel; } };
+
+/* ══════════════════════════════════════════════════════════════════
+   THEME
+══════════════════════════════════════════════════════════════════ */
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('theme', t);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MAP
+══════════════════════════════════════════════════════════════════ */
+function initMap() {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('mapState')); } catch {}
+
+  S.map = L.map('map', {
+    center: saved ? [saved.lat, saved.lng] : CFG.home.center,
+    zoom:   saved ? saved.z : CFG.home.zoom,
+    zoomControl: false,
+    attributionControl: true,
+    worldCopyJump: true,
+    minZoom: 2,
+  });
+  S.map.attributionControl.setPrefix('');
+
+  // Labels ride above data tiles (tilePane 200) but below vectors (overlayPane 400)
+  S.map.createPane('labels');
+  Object.assign(S.map.getPane('labels').style, { zIndex: 350, pointerEvents: 'none' });
+
+  setBasemap(S.basemapId);
+  setLabels(S.showLabels);
+
+  S.map.on('click', onMapClick);
+  S.map.on('mousemove', e => {
+    el('ro-lat').textContent = e.latlng.lat.toFixed(3);
+    el('ro-lon').textContent = L.Util.wrapNum(e.latlng.lng, [-180, 180], true).toFixed(3);
+  });
+  S.map.on('moveend', () => {
+    const c = S.map.getCenter();
+    localStorage.setItem('mapState', JSON.stringify({ lat: c.lat, lng: c.lng, z: S.map.getZoom() }));
+  });
+  S.map.on('zoomend', () => {
+    const zoom = S.map.getZoom();
+    el('ro-z').textContent = zoom;
+    S.layers.forEach(layer => {
+      updateFootprint(layer);
+      if (!layer.pyramidUrl || !layer.leafletLayer) return;
+      const lvl = getPyramidLevel(layer, zoom);
+      if (lvl !== layer._lastPyramidLevel) {
+        layer._lastPyramidLevel = lvl;
+        layer.leafletLayer.setUrl(buildTileUrl(layer, zoom));
+      }
+    });
+    renderLegend();
+  });
+  el('ro-z').textContent = S.map.getZoom();
+}
+
+function setBasemap(id) {
+  const bm = BASEMAPS[id] || BASEMAPS.dark;
+  if (S.baseLayer) { S.map.removeLayer(S.baseLayer); S.baseLayer = null; }
+  if (bm.url) {
+    S.baseLayer = L.tileLayer(bm.url, { attribution: bm.attr, maxZoom: 22, maxNativeZoom: bm.maxZoom });
+    S.baseLayer.addTo(S.map);
+    S.baseLayer.bringToBack();
+  }
+  S.basemapId = id;
+  localStorage.setItem('basemap', id);
+  document.querySelectorAll('.bm-opt').forEach(b => b.classList.toggle('on', b.dataset.bm === id));
+}
+
+function setLabels(on) {
+  S.showLabels = on;
+  localStorage.setItem('labels', on ? '1' : '0');
+  if (on && !S.labelLayer) {
+    S.labelLayer = L.tileLayer(LABELS_URL, { pane: 'labels', maxZoom: 22, maxNativeZoom: 13, attribution: '' }).addTo(S.map);
+  } else if (!on && S.labelLayer) {
+    S.map.removeLayer(S.labelLayer);
+    S.labelLayer = null;
+  }
+}
+
+/* ── Zoom to a bounding box ────────────────────────────────────────── */
+function boundsToLatLng(b) {
+  if (!Array.isArray(b) || b.length !== 4 || b.some(v => !Number.isFinite(v))) return null;
+  const [w, s, e, n] = b;
+  const clamp = v => Math.max(-85.05, Math.min(85.05, v));
+  return L.latLngBounds([clamp(Math.min(s, n)), Math.min(w, e)], [clamp(Math.max(s, n)), Math.max(w, e)]);
+}
+
+function zoomToLayer(layer, { animate = true } = {}) {
+  const bb = boundsToLatLng(layer.bounds);
+  if (!bb || !bb.isValid()) return false;
+  S.map.flyToBounds(bb, { padding: [56, 56], maxZoom: 12, duration: animate ? 0.9 : 0 });
+  return true;
+}
+
+function zoomToAllLayers() {
+  let combined = null;
+  S.layers.forEach(l => {
+    const bb = boundsToLatLng(l.bounds);
+    if (!bb) return;
+    combined = combined ? combined.extend(bb) : bb;
+  });
+  if (combined?.isValid()) S.map.flyToBounds(combined, { padding: [56, 56], maxZoom: 12, duration: 0.9 });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TITILER CONNECTION
+══════════════════════════════════════════════════════════════════ */
+async function checkTiTiler() {
+  const dot = el('rail-status'), note = el('conn-note');
+  dot.className = 'rail-status wait';
+  note.textContent = 'Checking connection…';
+  try {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), 4500);
+    const r = await fetch(`${S.tiTiler}/`, { signal: ac.signal });
+    clearTimeout(t);
+    S.tiOk = r.ok || r.status === 404;
+  } catch { S.tiOk = false; }
+  dot.className = `rail-status ${S.tiOk ? 'ok' : 'err'}`;
+  dot.title = S.tiOk ? `Tile server connected — ${S.tiTiler}` : 'Tile server unreachable';
+  dot.setAttribute('aria-label', dot.title);
+  note.innerHTML = S.tiOk
+    ? `Connected to <code>${esc(S.tiTiler)}</code>.`
+    : `Cannot reach <code>${esc(S.tiTiler)}</code>. Tiles and pixel queries are unavailable.`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   STAC CATALOG
+══════════════════════════════════════════════════════════════════ */
+async function loadCatalog() {
+  const host = el('catalog');
+  try {
+    const root = await fetchJSON(CFG.catalog, { viaTiTiler: true });
+    const themes = await Promise.all(
+      root.links.filter(l => l.rel === 'child').map(tl => loadTheme(tl, CFG.catalog))
+    );
+    S.catalog = { themes: themes.filter(t => t && t.collections.length) };
+    renderCatalog();
+  } catch (e) {
+    host.innerHTML = `<div class="state">
+      <div style="color:var(--danger);font-weight:500;margin-bottom:6px">Catalog failed to load</div>
+      <div style="font-family:var(--mono);font-size:11px">${esc(e.message)}</div>
+      ${S.tiOk ? '' : '<div style="margin-top:10px">Start the tile server first — it proxies the S3 request past the browser’s CORS check.</div>'}
+    </div>`;
+  }
+}
+
+async function loadTheme(link, base) {
+  try {
+    const url = resolveUrl(base, link.href);
+    const theme = await fetchJSON(url, { viaTiTiler: true });
+    const cols = await Promise.all(
+      theme.links.filter(l => l.rel === 'child').map(cl => loadCollection(cl, url))
+    );
+    return { id: theme.id, title: link.title || theme.title, collections: cols.filter(Boolean) };
+  } catch { return null; }
+}
+
+async function loadCollection(link, base) {
+  try {
+    const url = resolveUrl(base, link.href);
+    const col = await fetchJSON(url, { viaTiTiler: true });
+    const itemLinks = col.links.filter(l => l.rel === 'item');
+    if (!itemLinks.length) return null;
+    const item = await fetchJSON(resolveUrl(url, itemLinks[0].href), { viaTiTiler: true });
+    const zarrs = Object.entries(item.assets || {})
+      .filter(([, a]) => a.href?.endsWith('.zarr'))
+      .map(([key, a]) => ({ key, href: a.href, title: a.title || key }));
+    if (!zarrs.length) return null;
+    return {
+      id: col.id,
+      title: col.title || col.id,
+      version: item.properties?.version || '',
+      variables: item.properties?.variables || [],
+      bbox: Array.isArray(item.bbox) && item.bbox.length >= 4 ? item.bbox.slice(0, 4).map(Number) : null,
+      zarrs,
+    };
+  } catch { return null; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CATALOG UI
+══════════════════════════════════════════════════════════════════ */
+function renderCatalog() {
+  const host = el('catalog');
+  if (!S.catalog?.themes?.length) {
+    host.innerHTML = '<div class="state">No zarr datasets found in this catalog.</div>';
+    return;
+  }
+
+  let total = 0;
+  host.innerHTML = S.catalog.themes.map(theme => {
+    const info = CFG.themeInfo[theme.id] || { label: theme.title || theme.id, cls: 'bc' };
+    total += theme.collections.length;
+    return `<div class="grp" data-grp="${esc(theme.id)}">
+      <button class="grp-btn open" data-list="list-${esc(theme.id)}" aria-expanded="true">
+        <span class="grp-dot" style="background:var(--${info.cls})"></span>
+        <span class="grp-name">${esc(info.label)}</span>
+        <span class="grp-n">${theme.collections.length}</span>
+        <svg class="ico-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="grp-list open" id="list-${esc(theme.id)}">
+        ${theme.collections.map(renderDatasetRow).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  el('pnl-sub').textContent = `${total} datasets`;
+
+  host.querySelectorAll('.grp-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const open = el(btn.dataset.list).classList.toggle('open');
+      btn.classList.toggle('open', open);
+      btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+  host.querySelectorAll('.sw input').forEach(inp => {
+    inp.addEventListener('change', () => toggleDataset(inp.dataset.id, inp.checked));
+  });
+  host.querySelectorAll('.ds-zoom').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const col = findCollection(btn.dataset.id);
+      const live = S.layers.get(btn.dataset.id);
+      const bounds = live?.bounds || col?.bbox;
+      if (bounds) zoomToLayer({ bounds });
+    });
+  });
+  host.querySelectorAll('.ds-cfg').forEach(btn => {
+    btn.addEventListener('click', () => {
+      openView('layers');
+      const card = document.querySelector(`.lc[data-card="${CSS.escape(btn.dataset.id)}"]`);
+      card?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      card?.animate(
+        [{ background: 'var(--accent-w)' }, { background: 'transparent' }],
+        { duration: 900, easing: 'ease-out' }
+      );
+    });
+  });
+}
+
+function renderDatasetRow(col) {
+  const on = S.layers.has(col.id);
+  const chips = [];
+  if (col.version) chips.push(`v${col.version}`);
+  if (col.variables.length) chips.push(`${col.variables.length} var${col.variables.length > 1 ? 's' : ''}`);
+  if (col.zarrs.length > 1) chips.push(`${col.zarrs.length} assets`);
+  return `<div class="ds ${on ? 'on' : ''}" id="ds-${esc(col.id)}">
+    <div class="ds-main">
+      <div class="ds-name">${esc(col.title)}</div>
+      ${chips.length ? `<div class="ds-meta">${chips.map(c => `<span class="chip">${esc(c)}</span>`).join('')}</div>` : ''}
+    </div>
+    <button class="ds-zoom" data-id="${esc(col.id)}" title="Zoom to extent" aria-label="Zoom to ${esc(col.title)} extent">
+      <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+    <button class="ds-cfg" data-id="${esc(col.id)}" title="Variable & display settings" aria-label="Display settings for ${esc(col.title)}">
+      <svg class="ico-sm" viewBox="0 0 24 24"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="9" cy="8" r="2.4"/><circle cx="16" cy="16" r="2.4"/></svg>
+    </button>
+    <label class="sw"><input type="checkbox" data-id="${esc(col.id)}" aria-label="Show ${esc(col.title)}" ${on ? 'checked' : ''}><span class="sw-t"></span></label>
+  </div>`;
+}
+
+function findCollection(id) {
+  for (const t of S.catalog?.themes || [])
+    for (const c of t.collections)
+      if (c.id === id) return c;
+  return null;
+}
+
+function filterCatalog(q) {
+  q = q.trim().toLowerCase();
+  document.querySelectorAll('.grp').forEach(grp => {
+    let shown = 0;
+    grp.querySelectorAll('.ds').forEach(row => {
+      const hit = !q || row.querySelector('.ds-name').textContent.toLowerCase().includes(q)
+                     || row.id.slice(3).toLowerCase().includes(q);
+      row.hidden = !hit;
+      if (hit) shown++;
+    });
+    grp.hidden = q !== '' && shown === 0;
+    if (q) { grp.querySelector('.grp-list').classList.add('open'); grp.querySelector('.grp-btn').classList.add('open'); }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PYRAMID HELPERS
+══════════════════════════════════════════════════════════════════ */
+function getPyramidLevel(layer, zoom) {
+  if (!layer.pyramidUrl) return null;
+  return Math.min(Math.max(0, layer.nativeMinZoom - zoom), layer.numPyramidLevels - 1);
+}
+function getEffectiveZarrUrl(layer, zoom) {
+  const level = getPyramidLevel(layer, zoom ?? S.map.getZoom());
+  if (level === null || level === 0) return layer.zarrUrl;
+  return `${layer.pyramidUrl}/${level}`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LAYERS
+══════════════════════════════════════════════════════════════════ */
+async function toggleDataset(id, on) {
+  const row = el(`ds-${id}`);
+  if (on) {
+    row?.classList.add('on');
+    const col = findCollection(id);
+    if (!col) return;
+    await activateLayer(col);
+  } else {
+    row?.classList.remove('on');
+    removeLayer(id);
+  }
+  renderLayerPanel();
+  renderLegend();
+  syncLayerCount();
+  /* Jump straight to the controls for the layer just switched on — otherwise
+     the variable/colormap/range pickers sit unnoticed behind a rail tab. */
+  if (on) openView('layers');
+}
+
+/* The zarr store is the authority on which variables exist — the STAC item's
+   `variables` property is often absent or stale. `/dataset/keys` is the
+   registered endpoint here; `/variables` is NOT mounted by titiler.xarray's
+   default app, so asking for it just 404s. */
+async function fetchVariables(zarrUrl, fallback = []) {
+  if (S.tiOk) {
+    for (const route of ['/dataset/keys', '/variables']) {
+      try {
+        const keys = await fetchJSON(`${S.tiTiler}${route}?` + new URLSearchParams({ url: zarrUrl }));
+        const usable = (Array.isArray(keys) ? keys : []).filter(k => !CFG.skipVars.has(k));
+        if (usable.length) return usable;
+      } catch { /* try next route */ }
+    }
+  }
+  const fb = fallback.filter(k => !CFG.skipVars.has(k));
+  return fb.length ? fb : ['data'];
+}
+
+/* Pull everything that depends on the chosen variable: dimensions, value
+   range, zoom floor and geographic bounds. tilejson carries minzoom/maxzoom
+   and minmax; /info carries the variable's xarray attrs and dim names. */
+async function fetchVariableMeta(layer, { resetRange = true } = {}) {
+  if (!S.tiOk) return;
+  const qs = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
+
+  const [info, tj] = await Promise.all([
+    fetchJSON(`${S.tiTiler}/info?${qs}`).catch(() => null),
+    fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`).catch(() => null),
+  ]);
+
+  if (info) {
+    layer.dimInfo = parseDimInfo(info);
+    if (layer.dimValue >= (layer.dimInfo?.length ?? 1)) layer.dimValue = 0;
+    layer.attrs  = info.attrs || {};
+    layer.dtype  = info.dtype || '';
+    layer.width  = info.width  || 0;
+    layer.height = info.height || 0;
+    layer.units  = layer.attrs.units || '';
+    layer.label  = layer.attrs.long_name || layer.attrs.standard_name || layer.activeVar;
+    if (Array.isArray(info.bounds) && info.bounds.length === 4) layer.bounds = info.bounds.map(Number);
+  }
+
+  if (tj) {
+    if (Number.isFinite(tj.minzoom)) {
+      layer.nativeMinZoom = tj.minzoom;
+      if (!layer.pyramidUrl) layer.minZoom = tj.minzoom;
+    }
+    if (Number.isFinite(tj.maxzoom)) layer.maxZoom = tj.maxzoom;
+    if (Array.isArray(tj.bounds) && tj.bounds.length === 4) layer.bounds = tj.bounds.map(Number);
+    if (!layer.dtype && tj.data_type) layer.dtype = tj.data_type;
+    if (resetRange) applyRange(layer, tj.minmax, info?.attrs);
+  } else if (resetRange && info) {
+    applyRange(layer, info.minmax, info.attrs);
+  }
+
+  if (resetRange && !layer.rangeKnown) await probeStatistics(layer);
+  layer.classes = buildClasses(layer);
+
+  /* tilejson reports minzoom 0 for zarr regardless of size, so the real
+     constraint is the array budget, not the declared zoom range. */
+  layer.zoomFloor = computeZoomFloor(layer);
+  if (layer.zoomFloor !== null) {
+    layer.nativeMinZoom = Math.max(layer.nativeMinZoom, layer.zoomFloor);
+    layer.minZoom = layer.pyramidUrl
+      ? Math.max(0, layer.zoomFloor - (layer.numPyramidLevels - 1))
+      : layer.zoomFloor;
+  }
+}
+
+/* No declared valid range — derive one from the data. Only ever run against
+   the coarsest pyramid level: /statistics on a full-resolution store would
+   pull the whole array into memory. */
+async function probeStatistics(layer) {
+  if (!layer.pyramidUrl || layer.numPyramidLevels < 2) return;
+  const coarsest = `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
+  try {
+    const qs = new URLSearchParams({ url: coarsest, variable: layer.activeVar });
+    const sel = selParam(layer);
+    if (sel) qs.set('sel', sel);
+    const stats = await fetchJSON(`${S.tiTiler}/statistics?${qs}`);
+    const band = stats && typeof stats === 'object' ? Object.values(stats)[0] : null;
+    if (!band) return;
+    const lo = Number(band.percentile_2 ?? band.min);
+    const hi = Number(band.percentile_98 ?? band.max);
+    if (Number.isFinite(lo) && Number.isFinite(hi) && hi > lo) {
+      layer.rMin = +lo.toPrecision(3);
+      layer.rMax = +hi.toPrecision(3);
+      layer.rangeKnown = true;
+    }
+  } catch { /* fall back to manual range */ }
+}
+
+const DTYPE_BYTES = {
+  bool:1, int8:1, uint8:1, int16:2, uint16:2, float16:2,
+  int32:4, uint32:4, float32:4, int64:8, uint64:8, float64:8,
+  complex64:8, complex128:16,
+};
+
+/* rio-tiler clips the array to the tile bbox and then refuses anything over
+   RIO_TILER_MAX_ARRAY_SIZE (1 GB), returning a 500. At low zoom a tile covers
+   most of a continental grid, so the clip barely helps. Work out the first
+   zoom whose clipped slice fits, and refuse to request tiles below it — the
+   footprint outline is shown instead. */
+function computeZoomFloor(layer) {
+  const { width, height, dtype } = layer;
+  const bb = boundsToLatLng(layer.bounds);
+  if (!width || !height || !bb) return null;
+
+  const itemsize = DTYPE_BYTES[String(dtype).replace(/^[<>|=]/, '')] ?? 4;
+  const bands = selParam(layer) ? 1 : Math.max(1, layer.dimInfo?.length ?? 1);
+  const lonSpan = Math.max(1e-6, bb.getEast() - bb.getWest());
+  const latSpan = Math.max(1e-6, bb.getNorth() - bb.getSouth());
+  const pxLon = lonSpan / width, pxLat = latSpan / height;
+  const BUDGET = 0.6e9;   // headroom under the 1 GB ceiling
+
+  for (let z = 0; z <= 22; z++) {
+    const deg = 360 / 2 ** z;
+    const w = Math.min(width,  deg / pxLon);
+    const h = Math.min(height, deg / pxLat);
+    if (w * h * bands * itemsize < BUDGET) return z;
+  }
+  return 22;
+}
+
+/* Prefer the variable's declared valid_min/valid_max over an arbitrary default,
+   so the legend describes the data instead of a guess. */
+function applyRange(layer, minmax, attrs) {
+  let lo = null, hi = null;
+  const pair = Array.isArray(minmax) ? (Array.isArray(minmax[0]) ? minmax[0] : minmax) : null;
+  if (pair && pair.length >= 2 && Number.isFinite(+pair[0]) && Number.isFinite(+pair[1])) {
+    lo = +pair[0]; hi = +pair[1];
+  } else if (attrs && Number.isFinite(+attrs.valid_min) && Number.isFinite(+attrs.valid_max)) {
+    lo = +attrs.valid_min; hi = +attrs.valid_max;
+  }
+  if (lo === null || hi === null || hi <= lo) { layer.rangeKnown = false; return; }
+  layer.rMin = lo; layer.rMax = hi; layer.rangeKnown = true;
+}
+
+/* Integer variables spanning a handful of values (masks, class rasters) read
+   far better as discrete swatches than as a continuous ramp. */
+function buildClasses(layer) {
+  const span = layer.rMax - layer.rMin;
+  const isInt = /^u?int|^bool/i.test(layer.dtype || '');
+  if (!layer.rangeKnown || !isInt || span < 1 || span > 11) return null;
+  const n = span + 1;
+  const names = layer.attrs?.flag_meanings ? String(layer.attrs.flag_meanings).split(/[\s,]+/) : null;
+  return Array.from({ length: n }, (_, i) => ({
+    value: layer.rMin + i,
+    label: names?.[i] || String(layer.rMin + i),
+    color: sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
+  }));
+}
+
+async function activateLayer(col) {
+  const zarrUrl = col.zarrs[0].href;
+  const layer = {
+    id: col.id,
+    title: col.title,
+    zarrUrl,
+    variables: ['data'],
+    activeVar: 'data',
+    label: '', units: '', attrs: {}, dtype: '',
+    width: 0, height: 0, zoomFloor: null,
+    colormap: 'greens',
+    rMin: 0, rMax: 1, rangeKnown: false, classes: null,
+    opacity: 0.9,
+    dimInfo: null, dimValue: 0,
+    nativeMinZoom: 4, minZoom: 4, maxZoom: 18,
+    bounds: col.bbox,
+    color: LAYER_COLORS[S.layers.size % LAYER_COLORS.length],
+    footprintLayer: null, footprintLabel: null, leafletLayer: null,
+    pyramidUrl: null, numPyramidLevels: 0, _lastPyramidLevel: null,
+  };
+
+  layer.variables = await fetchVariables(zarrUrl, col.variables);
+  layer.activeVar = layer.variables[0];
+  layer.label = layer.activeVar;
+
+  if (S.tiOk) {
+    const pyramidUrl = zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
+    try {
+      await fetchJSON(`${S.tiTiler}/info?` + new URLSearchParams({ url: `${pyramidUrl}/1`, variable: layer.activeVar }));
+      let numLevels = 1;
+      for (let lvl = 2; lvl <= 10; lvl++) {
+        try {
+          await fetchJSON(`${S.tiTiler}/info?` + new URLSearchParams({ url: `${pyramidUrl}/${lvl}`, variable: layer.activeVar }));
+          numLevels = lvl;
+        } catch { break; }
+      }
+      layer.pyramidUrl = pyramidUrl;
+      layer.numPyramidLevels = numLevels + 1;
+      layer.minZoom = 0;
+    } catch { /* no pyramid built for this dataset */ }
+
+    await fetchVariableMeta(layer);
+  }
+
+  S.layers.set(col.id, layer);
+  addLeafletLayer(layer);
+  updateFootprint(layer);
+  if (S.autoZoom) zoomToLayer(layer);
+}
+
+function parseDimInfo(info) {
+  const spatial = new Set(['x','y','latitude','longitude','lat','lon']);
+  const dims = (info.dimensions || []).filter(d => !spatial.has(d));
+  if (!dims.length) return null;
+  const bands = info.band_descriptions || [];
+  if (bands.length < 2) return null;
+  const labels = bands.map(([, l]) => l).filter(Boolean);
+  const isTimelike = labels.some(l => /^\d{4}/.test(l));
+  const isCategorical = !isTimelike && labels.some(l => l && !/^\d+$/.test(l) && !/^b\d+$/.test(l));
+  return { name: dims[0], type: isCategorical ? 'categorical' : 'index', values: labels, length: bands.length };
+}
+
+/* titiler.xarray exposes only `sel` — there is no `isel`. An unrecognised
+   query param is silently dropped, which leaves every band of the extra
+   dimension loaded (and renders the wrong slice). `sel` selects by coordinate
+   VALUE, so send the band label rather than an integer index. */
+function selParam(layer) {
+  const di = layer.dimInfo;
+  if (!di || di.length < 2) return null;
+  const label = di.values[layer.dimValue];
+  if (label == null) return null;
+  const s = String(label);
+  if (/^b\d+$/.test(s) || s.includes('::')) return null;   // no real coordinate to select on
+  const timeLike = /^\d{4}-\d{2}-\d{2}/.test(s);
+  return `${di.name}=${timeLike ? 'nearest::' : ''}${s}`;
+}
+
+function buildTileUrl(layer, zoom) {
+  const zarr = getEffectiveZarrUrl(layer, zoom ?? S.map.getZoom());
+  /* No `nodata` override: xarray already decodes the zarr fill_value to NaN,
+     and passing a value here calls write_nodata() on top of that — which
+     un-masks the NaNs and renders the fill as if it were real data. */
+  const p = new URLSearchParams({
+    url: zarr,
+    variable: layer.activeVar,
+    rescale: `${layer.rMin},${layer.rMax}`,
+    colormap_name: layer.colormap,
+  });
+  const sel = selParam(layer);
+  if (sel) p.set('sel', sel);
+  return `${S.tiTiler}/tiles/WebMercatorQuad/{z}/{x}/{y}?${p}`;
+}
+
+function addLeafletLayer(layer) {
+  const zoom = S.map.getZoom();
+  layer._lastPyramidLevel = getPyramidLevel(layer, zoom);
+  const opts = {
+    opacity: layer.opacity, minZoom: layer.minZoom, maxZoom: 22, tileSize: 256,
+  };
+  /* Tiles that miss the data entirely still cost a full server-side read, and
+     for projected grids a bbox outside the CRS's area of use reprojects to
+     something enormous. Let Leaflet skip them. */
+  const bb = boundsToLatLng(layer.bounds);
+  if (bb) opts.bounds = bb;
+  layer.leafletLayer = L.tileLayer(buildTileUrl(layer, zoom), opts).addTo(S.map);
+}
+
+async function updateLeafletLayer(id, { refreshMeta = false } = {}) {
+  const layer = S.layers.get(id);
+  if (!layer?.leafletLayer) return;
+  if (refreshMeta) {
+    await fetchVariableMeta(layer).catch(() => {});
+    renderLayerPanel();
+  } else {
+    layer.classes = buildClasses(layer);
+  }
+  const zoom = S.map.getZoom();
+  layer._lastPyramidLevel = getPyramidLevel(layer, zoom);
+  layer.leafletLayer.options.minZoom = layer.minZoom;
+  const bb = boundsToLatLng(layer.bounds);
+  if (bb) layer.leafletLayer.options.bounds = bb;
+  layer.leafletLayer.setUrl(buildTileUrl(layer, zoom));
+  layer.leafletLayer.setOpacity(layer.opacity);
+  updateFootprint(layer);
+  renderLegend();
+}
+
+function removeLayer(id) {
+  const layer = S.layers.get(id);
+  if (!layer) return;
+  [layer.leafletLayer, layer.footprintLayer, layer.footprintLabel]
+    .forEach(l => { if (l) S.map.removeLayer(l); });
+  S.layers.delete(id);
+}
+
+/* Footprint outline while the map is zoomed out past the layer's tile floor */
+function updateFootprint(layer) {
+  const bb = boundsToLatLng(layer.bounds);
+  if (!bb) return;
+  const show = S.map.getZoom() < layer.minZoom;
+  if (show && !layer.footprintLayer) {
+    layer.footprintLayer = L.rectangle(bb, {
+      color: layer.color, weight: 1.5, fillColor: layer.color,
+      fillOpacity: 0.06, dashArray: '5 4', interactive: false,
+    }).addTo(S.map);
+    layer.footprintLabel = L.marker(bb.getCenter(), {
+      interactive: false,
+      icon: L.divIcon({
+        className: '',
+        iconSize: null,
+        html: `<div style="font:500 11px/1.35 'Fira Sans',sans-serif;color:${layer.color};
+                 background:var(--attrib-bg);padding:4px 8px;border-radius:4px;white-space:nowrap;
+                 border:1px solid ${layer.color}55;transform:translate(-50%,-50%)">
+                 ${esc(layer.title)}
+                 <span style="display:block;font-size:9px;opacity:.7">zoom in to load tiles</span>
+               </div>`,
+      }),
+    }).addTo(S.map);
+  } else if (!show && layer.footprintLayer) {
+    S.map.removeLayer(layer.footprintLayer);
+    S.map.removeLayer(layer.footprintLabel);
+    layer.footprintLayer = layer.footprintLabel = null;
+  }
+}
+
+function syncLayerCount() {
+  const n = S.layers.size;
+  const badge = el('rail-badge');
+  badge.textContent = n;
+  badge.hidden = n === 0;
+  el('t-fit').disabled = ![...S.layers.values()].some(l => boundsToLatLng(l.bounds));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ACTIVE LAYERS PANEL
+══════════════════════════════════════════════════════════════════ */
+function renderLayerPanel() {
+  const host = el('view-layers');
+  if (!S.layers.size) {
+    host.innerHTML = '<div class="state">No active layers.<br>Turn one on from <b>Datasets</b>.</div>';
+    return;
+  }
+
+  host.innerHTML = [...S.layers.values()].map(layer => {
+    const di = layer.dimInfo;
+    let dimFld = '';
+    if (di && di.length > 1) {
+      if (di.type === 'categorical') {
+        dimFld = `<div class="fld">
+          <div class="fld-lbl"><span>${esc(di.name)}</span></div>
+          <select data-id="${esc(layer.id)}" data-prop="dimValue">
+            ${di.values.map((v, i) => `<option value="${i}" ${i === layer.dimValue ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+          </select>
+        </div>`;
+      } else {
+        dimFld = `<div class="fld">
+          <div class="fld-lbl">
+            <span>${esc(di.name)}</span>
+            <span class="fld-val" data-role="dimlabel">${esc(di.values[layer.dimValue] ?? `[${layer.dimValue}]`)}</span>
+          </div>
+          <input type="range" min="0" max="${di.length - 1}" step="1" value="${layer.dimValue}"
+                 data-id="${esc(layer.id)}" data-prop="dimValue"
+                 data-labels='${esc(JSON.stringify(di.values))}'>
+        </div>`;
+      }
+    }
+
+    const varFld = `<div class="fld">
+        <div class="fld-lbl">
+          <span>Variable</span>
+          <span class="fld-val">${layer.variables.length} available</span>
+        </div>
+        ${layer.variables.length > 1
+          ? `<select data-id="${esc(layer.id)}" data-prop="activeVar">
+               ${layer.variables.map(v => `<option value="${esc(v)}" ${v === layer.activeVar ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+             </select>`
+          : `<div class="fld-static">${esc(layer.activeVar)}</div>`}
+        ${layer.label && layer.label !== layer.activeVar
+          ? `<div class="fld-hint">${esc(layer.label)}${layer.units ? ` · ${esc(layer.units)}` : ''}</div>` : ''}
+      </div>`;
+
+    return `<div class="lc" data-card="${esc(layer.id)}">
+      <div class="lc-top">
+        <span class="lc-swatch" style="background:${layer.color}"></span>
+        <span class="lc-name" title="${esc(layer.id)}">${esc(layer.title)}</span>
+        <button class="ghost-btn" data-act="zoom" data-id="${esc(layer.id)}" title="Zoom to extent">
+          <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+        <button class="ghost-btn danger" data-act="remove" data-id="${esc(layer.id)}" title="Remove layer">
+          <svg class="ico-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      ${varFld}
+      ${dimFld}
+
+      <div class="fld">
+        <div class="fld-lbl"><span>Colour ramp</span></div>
+        <select data-id="${esc(layer.id)}" data-prop="colormap">
+          ${CFG.colormaps.map(c => `<option value="${c}" ${c === layer.colormap ? 'selected' : ''}>${c}</option>`).join('')}
+        </select>
+        <div class="cmap-bar" data-role="ramp" style="background:${CFG.cmapGradients[layer.colormap]}"></div>
+      </div>
+
+      <div class="fld">
+        <div class="fld-lbl">
+          <span>Value range${layer.units ? ` (${esc(layer.units)})` : ''}</span>
+          <span class="fld-val">${layer.rangeKnown ? 'from data' : 'manual'}</span>
+        </div>
+        <div class="two-up">
+          <input type="number" step="any" value="${layer.rMin}" data-id="${esc(layer.id)}" data-prop="rMin" aria-label="minimum">
+          <input type="number" step="any" value="${layer.rMax}" data-id="${esc(layer.id)}" data-prop="rMax" aria-label="maximum">
+        </div>
+      </div>
+
+      <div class="fld">
+        <div class="fld-lbl">
+          <span>Opacity</span>
+          <span class="fld-val" data-role="op">${Math.round(layer.opacity * 100)}%</span>
+        </div>
+        <input type="range" min="0" max="1" step="0.05" value="${layer.opacity}"
+               data-id="${esc(layer.id)}" data-prop="opacity">
+      </div>
+
+      ${layer.pyramidUrl
+        ? `<div class="pyr-note">
+             <svg class="ico-sm" viewBox="0 0 24 24"><polygon points="12 3 22 20 2 20 12 3"/></svg>
+             overview pyramid · <b>${layer.numPyramidLevels} levels</b>
+           </div>`
+        : `<div class="pyr-note">
+             <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16"/></svg>
+             native only · tiles from z${layer.minZoom}
+           </div>
+           ${layer.zoomFloor > 3 ? `<div class="fld-hint">
+             ${esc(layer.width)}×${esc(layer.height)} px at ${esc(layer.dtype || 'unknown dtype')} exceeds the tile server's
+             1&nbsp;GB array limit below z${layer.zoomFloor}. Build overviews to see it globally:
+             <code class="hint-code">python scripts/build_pyramid.py &lt;zarr-url&gt; --levels 6</code>
+           </div>` : ''}`}
+    </div>`;
+  }).join('');
+
+  host.querySelectorAll('select[data-prop],input[data-prop]').forEach(ctrl => {
+    ctrl.addEventListener(ctrl.type === 'range' ? 'input' : 'change', () => onLayerControl(ctrl));
+  });
+  host.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const layer = S.layers.get(btn.dataset.id);
+      if (!layer) return;
+      if (btn.dataset.act === 'zoom') zoomToLayer(layer);
+      else {
+        removeLayer(layer.id);
+        el(`ds-${layer.id}`)?.classList.remove('on');
+        const sw = document.querySelector(`.sw input[data-id="${CSS.escape(layer.id)}"]`);
+        if (sw) sw.checked = false;
+        renderLayerPanel(); renderLegend(); syncLayerCount();
+      }
+    });
+  });
+}
+
+let _debounce;
+function onLayerControl(ctrl) {
+  const { id, prop } = ctrl.dataset;
+  const layer = S.layers.get(id);
+  if (!layer) return;
+
+  let val = ctrl.value;
+  if (prop === 'rMin' || prop === 'rMax' || prop === 'opacity') val = parseFloat(val);
+  if (prop === 'dimValue') val = parseInt(val, 10);
+  if (Number.isNaN(val)) return;
+  layer[prop] = val;
+
+  /* Null when the control lives in the legend rather than a layer card. */
+  const card = ctrl.closest('.lc');
+  if (card) {
+    if (prop === 'opacity') card.querySelector('[data-role="op"]').textContent = Math.round(val * 100) + '%';
+    if (prop === 'colormap') card.querySelector('[data-role="ramp"]').style.background = CFG.cmapGradients[val];
+    if (prop === 'dimValue' && ctrl.type === 'range') {
+      const labels = JSON.parse(ctrl.dataset.labels || '[]');
+      const out = card.querySelector('[data-role="dimlabel"]');
+      if (out) out.textContent = labels[val] ?? `[${val}]`;
+    }
+  }
+
+  if (prop === 'opacity') { layer.leafletLayer?.setOpacity(val); renderLegend(); return; }
+
+  /* A new variable has its own dims, range and zoom floor — refetch them. */
+  const refreshMeta = prop === 'activeVar';
+  clearTimeout(_debounce);
+  _debounce = setTimeout(() => { updateLeafletLayer(id, { refreshMeta }); renderLegend(); }, refreshMeta ? 0 : 180);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LEGEND
+══════════════════════════════════════════════════════════════════ */
+const fmtNum = v => {
+  if (!Number.isFinite(v)) return '—';
+  const a = Math.abs(v);
+  if (a !== 0 && (a >= 1e5 || a < 1e-3)) return v.toExponential(1);
+  return Number.isInteger(v) ? String(v) : v.toFixed(a < 10 ? 2 : 1);
+};
+
+function renderLegend() {
+  const leg = el('legend');
+  if (!S.layers.size) { leg.hidden = true; return; }
+  /* Don't rebuild under an open dropdown — zoomend fires while it's in use. */
+  if (leg.contains(document.activeElement)) return;
+  leg.hidden = false;
+  const zoom = S.map?.getZoom() ?? 0;
+
+  leg.innerHTML =
+    `<div class="leg-head">
+       <span>Legend</span>
+       <button class="ghost-btn" id="leg-toggle" title="Collapse legend">
+         <svg class="ico-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+       </button>
+     </div>
+     <div id="leg-items" ${S.legendOpen ? '' : 'hidden'}>` +
+    [...S.layers.values()].map(layer => {
+      const lvl = getPyramidLevel(layer, zoom);
+      const pills = [];
+      if (zoom < layer.minZoom)          pills.push(`no tiles below z${layer.minZoom}`);
+      else if (layer.pyramidUrl && lvl > 0) pills.push(`overview L${lvl}`);
+      if (layer.dimInfo && layer.dimInfo.length > 1)
+        pills.push(`${layer.dimInfo.name} ${layer.dimInfo.values[layer.dimValue] ?? layer.dimValue}`);
+
+      const body = layer.classes
+        ? `<div class="leg-classes">
+             ${layer.classes.map(c => `
+               <div class="leg-class">
+                 <span class="leg-chip" style="background:${c.color}"></span>
+                 <span class="leg-class-lbl">${esc(c.label)}</span>
+               </div>`).join('')}
+           </div>`
+        : `<div class="leg-ramp" style="background:${rampCSS(layer.colormap)}"></div>
+           <div class="leg-ticks">
+             <span>${fmtNum(layer.rMin)}</span>
+             ${layer.units ? `<span class="leg-unit">${esc(layer.units)}</span>` : ''}
+             <span>${fmtNum(layer.rMax)}</span>
+           </div>`;
+
+      const varPicker = layer.variables.length > 1
+        ? `<select class="leg-var" data-id="${esc(layer.id)}" data-prop="activeVar" title="Switch variable">
+             ${layer.variables.map(v => `<option value="${esc(v)}" ${v === layer.activeVar ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+           </select>`
+        : '';
+
+      return `<div class="leg-item">
+        <div class="leg-vn">
+          <span class="leg-key" style="background:${layer.color}"></span>
+          ${esc(layer.label || layer.activeVar)}
+        </div>
+        <div class="leg-ds">${esc(layer.title)}</div>
+        ${varPicker}
+        ${body}
+        ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
+      </div>`;
+    }).join('') + '</div>';
+
+  el('leg-toggle').addEventListener('click', () => {
+    S.legendOpen = !S.legendOpen;
+    renderLegend();
+  });
+  el('leg-toggle').style.transform = S.legendOpen ? '' : 'rotate(180deg)';
+
+  leg.querySelectorAll('.leg-var').forEach(sel => {
+    sel.addEventListener('change', () => onLayerControl(sel));
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PIXEL INSPECTOR
+══════════════════════════════════════════════════════════════════ */
+async function onMapClick(e) {
+  const { lat, lng } = e.latlng;
+  const lon = L.Util.wrapNum(lng, [-180, 180], true);
+  el('inspector').hidden = false;
+  el('ins-xy').textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+  if (!S.tiOk)      { el('ins-rows').innerHTML = '<div class="ins-msg">Tile server not connected.</div>'; return; }
+  if (!S.layers.size) { el('ins-rows').innerHTML = '<div class="ins-msg">No active layers.</div>'; return; }
+
+  el('ins-rows').innerHTML = '<div class="ins-msg">Querying…</div>';
+
+  const rows = await Promise.all([...S.layers.values()].map(async layer => {
+    try {
+      const p = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
+      const sel = selParam(layer);
+      if (sel) p.set('sel', sel);
+      const r = await fetch(`${S.tiTiler}/point/${lon.toFixed(6)},${lat.toFixed(6)}?${p}`);
+      if (!r.ok) return { layer, val: null };
+      const d = await r.json();
+      return { layer, val: Array.isArray(d.values) ? d.values[0] : d.value };
+    } catch { return { layer, val: null }; }
+  }));
+
+  el('ins-rows').innerHTML = rows.map(({ layer, val }) => {
+    const nil = val == null || val === -9999;
+    const shown = nil ? 'no data' : (typeof val === 'number' ? (Number.isInteger(val) ? val : val.toFixed(3)) : val);
+    return `<div class="ins-row">
+      <span class="ins-k" title="${esc(layer.title)}">${esc(layer.activeVar)}</span>
+      <span class="ins-v ${nil ? 'nil' : ''}">${esc(shown)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANEL / RAIL WIRING
+══════════════════════════════════════════════════════════════════ */
+const VIEW_TITLES = { data: 'Datasets', layers: 'Active layers', basemap: 'Basemap & view', settings: 'Settings' };
+
+/* Clicking the rail button you're already on collapses the panel;
+   openView() is the non-toggling form used when code needs a view shown. */
+function showView(view) {
+  if (S.view === view && S.panelOpen) { setPanelOpen(false); return; }
+  openView(view);
+}
+
+function openView(view) {
+  S.view = view;
+  setPanelOpen(true);
+  document.querySelectorAll('.rail-btn[data-view]').forEach(b => {
+    const active = b.dataset.view === view;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('.pnl-view').forEach(v => v.classList.toggle('active', v.id === `view-${view}`));
+  el('pnl-title').textContent = VIEW_TITLES[view];
+  el('pnl-sub').textContent = view === 'data' && S.catalog
+    ? `${S.catalog.themes.reduce((n, t) => n + t.collections.length, 0)} datasets`
+    : view === 'layers' ? `${S.layers.size} active` : '';
+}
+
+function setPanelOpen(open) {
+  S.panelOpen = open;
+  el('panel').classList.toggle('closed', !open);
+  setTimeout(() => S.map?.invalidateSize({ pan: false }), 240);
+}
+
+function renderBasemapGrid() {
+  el('bm-grid').innerHTML = Object.entries(BASEMAPS).map(([id, bm]) => `
+    <button class="bm-opt ${id === S.basemapId ? 'on' : ''}" data-bm="${id}">
+      <div class="bm-thumb" style="background:${bm.thumb}"></div>
+      <div class="bm-cap">${esc(bm.name)}</div>
+    </button>`).join('');
+  el('bm-grid').querySelectorAll('.bm-opt').forEach(b => {
+    b.addEventListener('click', () => setBasemap(b.dataset.bm));
+  });
+}
+
+function initUI() {
+  applyTheme(localStorage.getItem('theme') || 'dark');
+  el('cat-url').textContent = CFG.catalog;
+  el('titiler-url').value = S.tiTiler;
+  el('labels-sw').checked = S.showLabels;
+  el('autozoom-sw').checked = S.autoZoom;
+  renderBasemapGrid();
+
+  document.querySelectorAll('.rail-btn[data-view]').forEach(b => {
+    b.addEventListener('click', () => showView(b.dataset.view));
+  });
+  el('pnl-close').addEventListener('click', () => setPanelOpen(false));
+
+  el('theme-btn').addEventListener('click', () => {
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  el('ds-search').addEventListener('input', e => filterCatalog(e.target.value));
+
+  el('labels-sw').addEventListener('change', e => setLabels(e.target.checked));
+  el('autozoom-sw').addEventListener('change', e => {
+    S.autoZoom = e.target.checked;
+    localStorage.setItem('autozoom', S.autoZoom ? '1' : '0');
+  });
+
+  el('connect-btn').addEventListener('click', async () => {
+    const url = el('titiler-url').value.trim().replace(/\/+$/, '');
+    if (!url) return;
+    S.tiTiler = url;
+    localStorage.setItem('tiTilerUrl', url);
+    await checkTiTiler();
+    if (!S.catalog) await loadCatalog();
+    S.layers.forEach((_, id) => updateLeafletLayer(id));
+  });
+
+  el('t-in').addEventListener('click', () => S.map.zoomIn());
+  el('t-out').addEventListener('click', () => S.map.zoomOut());
+  el('t-fit').addEventListener('click', zoomToAllLayers);
+  el('t-home').addEventListener('click', () => S.map.flyTo(CFG.home.center, CFG.home.zoom, { duration: 0.8 }));
+  el('t-full').addEventListener('click', () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.();
+  });
+
+  el('ins-close').addEventListener('click', () => el('inspector').hidden = true);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') el('inspector').hidden = true;
+    if (e.key === '/' && document.activeElement !== el('ds-search')) {
+      e.preventDefault(); showView('data'); el('ds-search').focus();
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BOOT
+══════════════════════════════════════════════════════════════════ */
+(async function main() {
+  initUI();
+  initMap();
+  await checkTiTiler();
+  await loadCatalog();
+  syncLayerCount();
+})();
+</script>
+</body>
+</html>
