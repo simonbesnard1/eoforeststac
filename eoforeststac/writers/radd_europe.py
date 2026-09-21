@@ -244,7 +244,9 @@ class RADDEuropeWriter(BaseZarrWriter):
         print("RADD: loading VRTs…")
         ds_in = self.load_dataset(alert_vrt, mask_vrt, spatial_chunks=spatial_chunks)
 
-        ds_in = self.set_crs(ds_in, crs=crs)  # also normalises y to descending (north-up)
+        ds_in = self.set_crs(
+            ds_in, crs=crs
+        )  # also normalises y to descending (north-up)
         target_chunks = {
             "y": chunks["y"],
             "x": chunks["x"],
