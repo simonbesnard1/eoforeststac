@@ -1,0 +1,83 @@
+name: eoforeststac
+
+services:
+  web:
+    build:
+      context: ../..
+      dockerfile: deploy/vm/Dockerfile.web
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+    depends_on:
+      titiler:
+        condition: service_healthy
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+      - /var/cache/nginx:size=16m,uid=101,gid=101
+      - /var/run:size=1m,uid=101,gid=101
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    mem_limit: 128m
+    cpus: 0.50
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 4096
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+    networks:
+      - backend
+
+  titiler:
+    build:
+      context: ../..
+      dockerfile: deploy/titiler/Dockerfile
+    expose:
+      - "8000"
+    environment:
+      ALLOWED_DATA_HOSTS: s3.gfz-potsdam.de
+      ALLOWED_DATA_PATH_PREFIXES: /dog.atlaseo-glm.eo-gridded-data/
+      MAX_PROXY_BYTES: "5242880"
+      TITILER_XARRAY_API_CORS_ORIGINS: "[]"
+      GDAL_DISABLE_READDIR_ON_OPEN: EMPTY_DIR
+      GDAL_HTTP_MULTIPLEX: "YES"
+      GDAL_HTTP_VERSION: "2"
+      VSI_CACHE: "TRUE"
+      VSI_CACHE_SIZE: "268435456"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 2800m
+    cpus: 2.0
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 8192
+    logging:
+      driver: json-file
+      options:
+        max-size: 25m
+        max-file: "3"
+    networks:
+      - backend
+      - egress
+
+networks:
+  backend:
+    internal: true
+  egress: {}

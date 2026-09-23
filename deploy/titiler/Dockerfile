@@ -16,9 +16,14 @@ RUN python -m pip install --upgrade pip && \
 
 COPY deploy/titiler/app.py ./app.py
 
+RUN groupadd --system --gid 10001 eoforest && \
+    useradd --system --uid 10001 --gid eoforest --no-create-home eoforest
+
+USER 10001:10001
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:' + __import__('os').getenv('PORT', '8000') + '/healthz', timeout=4)"
 
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --proxy-headers --forwarded-allow-ips='*'"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-server-header"]
