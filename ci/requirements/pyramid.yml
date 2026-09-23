@@ -1,0 +1,15 @@
+name: eoforeststac-pyramid
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - "numpy>=2,<3"
+      - "xarray==2025.12.0"
+      - "dask[array]==2025.12.0"
+      - "zarr==2.18.0"
+      - "numcodecs==0.15.1"
+      - "s3fs==2024.12.0"
+      - "httpx>=0.28,<0.29"

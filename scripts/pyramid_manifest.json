@@ -1,0 +1,55 @@
+{
+  "catalog": "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+  "products": [
+    {
+      "collection": "CCI_BIOMASS",
+      "reducers": {
+        "aboveground_biomass": "mean",
+        "aboveground_biomass_std": "mean"
+      }
+    },
+    {
+      "collection": "SAATCHI_BIOMASS",
+      "reducers": {"agb": "mean"}
+    },
+    {
+      "collection": "JRC_TMF",
+      "reducers": {
+        "AnnualChange": "first",
+        "DeforestationYear": "max",
+        "DegradationYear": "max",
+        "TransitionMap_MainClasses": "first",
+        "TransitionMap_Subtypes": "first",
+        "UndisturbedDegradedForest": "max"
+      }
+    },
+    {
+      "collection": "HANSEN_GFC",
+      "reducers": {
+        "data_mask": "first",
+        "gain": "max",
+        "loss_year": "max",
+        "tree_cover": "mean"
+      }
+    },
+    {
+      "collection": "JRC_GFC2020",
+      "reducers": {"forest_cover": "first"}
+    },
+    {
+      "collection": "GAMI",
+      "reducers": {"forest_age": "mean"}
+    },
+    {
+      "collection": "POTAPOV_HEIGHT",
+      "reducers": {"canopy_height": "mean"}
+    },
+    {
+      "collection": "WANG_FORESTAGE",
+      "reducers": {
+        "natural_forest_age": "mean",
+        "planted_forest_age": "mean"
+      }
+    }
+  ]
+}

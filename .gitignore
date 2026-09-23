@@ -190,6 +190,12 @@ cython_debug/
 
 # Local scripts (data ingestion, one-off utilities)
 scripts/
+!scripts/
+scripts/*
+!scripts/build_pyramid.py
+!scripts/build_catalog_pyramids.py
+!scripts/pyramid_manifest.json
+!scripts/PYRAMIDS.md
 
 # Ruff stuff:
 .ruff_cache/

@@ -470,8 +470,39 @@ input[type=range]::-moz-range-thumb{
   #tools{top:10px;right:10px}
 }
 </style>
+<style>
+/* 2026 visual refresh: a calm, map-first forest monitoring interface. */
+:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px}
+:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22}
+:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45)}
+body{font-size:14px;background:var(--bg)}
+#site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#2f6b3c,#579050);box-shadow:0 4px 12px rgba(47,107,60,.2)}.brand-mark svg{width:22px;height:22px}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
+.top-nav{display:flex;align-items:center;gap:4px;margin-left:auto}.top-nav a{color:var(--text-2);text-decoration:none;font-size:12.5px;font-weight:500;padding:8px 10px;border-radius:7px;transition:.15s background,.15s color}.top-nav a:hover{background:var(--panel-2);color:var(--accent)}.header-pill{display:flex;align-items:center;gap:7px;margin-left:5px;padding:7px 10px;border-radius:18px;background:var(--accent-w);color:var(--accent);font-size:11px;font-weight:600}.header-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+#app{height:calc(100vh - var(--header-h))}#rail{align-items:stretch;padding:12px 9px;background:var(--rail);border-right:1px solid var(--line);gap:4px}.rail-logo{display:none}.rail-btn{width:100%;height:42px;margin:0;padding:0 11px;border-radius:8px;justify-content:flex-start;gap:10px;color:rgba(255,255,255,.62);font-size:12.5px;font-weight:500}.rail-btn:hover{color:#fff;background:rgba(255,255,255,.07)}.rail-btn.active{color:#a8ce70;background:rgba(134,176,82,.14)}.rail-btn.active::before{left:-9px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}.rail-label{display:block;white-space:nowrap}.rail-badge{position:static;margin-left:auto}.rail-status{margin:10px 12px 3px}.rail-btn[data-tip]:hover::after{display:none}
+#panel{box-shadow:4px 0 18px rgba(34,58,42,.04)}.pnl-head{height:64px;padding:0 19px}.pnl-title{font-size:17px;letter-spacing:-.01em}.pnl-sub{font-size:10px}.search-box{padding:14px 18px 16px;border-bottom:0}.search-box .ico-sm{left:30px}#ds-search{height:39px;padding-left:34px;border-radius:9px;background:var(--panel-2)}
+.catalog-intro{padding:18px 19px 10px}.catalog-eyebrow{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}.catalog-intro h2{font-size:19px;line-height:1.25;letter-spacing:-.02em;margin-bottom:7px}.catalog-intro p{font-size:12.5px;line-height:1.55;color:var(--text-2)}
+.grp{margin:6px 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}.grp-btn{padding:12px 13px}.grp-dot{width:9px;height:9px;border-radius:50%}.grp-name{font-size:10.5px}.ds{padding:11px 13px 11px 16px;border-top:1px solid var(--line)}.ds-name{font-size:13px;line-height:1.4}.chip{border-radius:10px;padding:3px 7px}
+.lc{margin:10px;border:1px solid var(--line);border-radius:10px;padding:15px;background:var(--panel);box-shadow:var(--shadow)}.lc-name{font-size:13.5px}.fld-lbl,.set-h{letter-spacing:.04em;text-transform:none;font-size:11px;font-weight:600}.bm-grid{gap:12px;padding:18px}.bm-opt{border-width:1px;border-radius:9px}.bm-thumb{height:64px}.opt-row,.set-sec{padding:15px 18px}.btn{padding:8px 14px;border-radius:8px}
+#tools{top:18px;right:18px;border-radius:10px}.tool{width:38px;height:38px}#legend,#inspector{border-radius:10px}
+#map-empty{position:absolute;z-index:450;left:50%;top:46%;transform:translate(-50%,-50%);width:min(360px,calc(100% - 40px));padding:22px 24px;text-align:center;background:var(--attrib-bg);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);backdrop-filter:blur(10px);pointer-events:none}.map-empty-icon{width:40px;height:40px;margin:0 auto 11px;border-radius:50%;display:grid;place-items:center;background:var(--accent-w);color:var(--accent)}#map-empty h2{font-size:17px;margin-bottom:6px;letter-spacing:-.015em}#map-empty p{font-size:12.5px;line-height:1.5;color:var(--text-2)}
+@media(max-width:900px){:root{--rail-w:58px;--panel-w:310px}#site-header{padding:0 16px}.brand-tagline,.top-nav{display:none}#rail{align-items:center;padding:10px 7px}.rail-btn{width:42px;padding:0;justify-content:center}.rail-label{display:none}.rail-status{margin:9px auto}.rail-btn[data-tip]:hover::after{display:block}}
+@media(max-width:700px){:root{--header-h:56px}#site-header{padding:0 12px}.brand-mark{width:32px;height:32px}.brand-name{font-size:15px}.header-pill{margin-left:auto;font-size:10px}#panel{left:var(--rail-w)}#map-empty{top:42%}}
+</style>
 </head>
 <body>
+<header id="site-header">
+  <a class="brand" href="../" aria-label="EOForestSTAC home">
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 6.8 9h3.1l-4.6 6.2h5V22h3.4v-6.8h5L14.1 9h3.1L12 2Z"/></svg></span>
+    <span class="brand-copy"><span class="brand-name">EOForestSTAC</span><span class="brand-tagline">Global forest Earth observation explorer</span></span>
+  </a>
+  <nav class="top-nav" aria-label="Main navigation">
+    <a href="../">Catalog</a>
+    <a href="https://eoforeststac.readthedocs.io/en/latest/">Documentation</a>
+    <a href="https://github.com/simonbesnard1/eoforeststac">GitHub</a>
+  </nav>
+  <span class="header-pill">Interactive map</span>
+</header>
 
 <!-- ══════════════════════════ MARKUP ══════════════════════════════ -->
 <div id="app">
@@ -481,25 +512,25 @@ input[type=range]::-moz-range-thumb{
     <div class="rail-logo" title="EOForestSTAC">🌲</div>
 
     <button class="rail-btn active" data-view="data" data-tip="Datasets" aria-label="Datasets" aria-pressed="true">
-      <svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg><span class="rail-label">Datasets</span>
     </button>
 
     <button class="rail-btn" data-view="layers" data-tip="Active layers" aria-label="Active layers" aria-pressed="false">
-      <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="rail-label">Active layers</span>
       <span class="rail-badge" id="rail-badge" hidden>0</span>
     </button>
 
     <button class="rail-btn" data-view="basemap" data-tip="Basemap" aria-label="Basemap and view" aria-pressed="false">
-      <svg class="ico" viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg><span class="rail-label">Basemap</span>
     </button>
 
     <div class="rail-spacer"></div>
 
     <button class="rail-btn" id="theme-btn" data-tip="Toggle theme" aria-label="Toggle light and dark theme">
-      <svg class="ico" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span class="rail-label">Appearance</span>
     </button>
     <button class="rail-btn" data-view="settings" data-tip="Server settings" aria-label="Server settings" aria-pressed="false">
-      <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="rail-label">Settings</span>
     </button>
     <div class="rail-status wait" id="rail-status" title="Checking TiTiler…" role="status" aria-label="Checking tile server connection"></div>
   </nav>
@@ -518,6 +549,11 @@ input[type=range]::-moz-range-thumb{
 
       <!-- Datasets -->
       <section class="pnl-view active" id="view-data">
+        <div class="catalog-intro">
+          <div class="catalog-eyebrow">Data explorer</div>
+          <h2>Explore global forest datasets</h2>
+          <p>Switch on a product to visualize it, compare layers, and inspect values anywhere on the map.</p>
+        </div>
         <div class="search-box">
           <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
           <input id="ds-search" type="search" placeholder="Search datasets…" autocomplete="off">
@@ -581,6 +617,12 @@ input[type=range]::-moz-range-thumb{
   <!-- ─── Map ───────────────────────────────────────────────────── -->
   <main id="map-area">
     <div id="map"></div>
+
+    <div id="map-empty">
+      <div class="map-empty-icon"><svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+      <h2>Build your forest map</h2>
+      <p>Select a dataset from the panel to add your first layer. Click the map to inspect pixel values.</p>
+    </div>
 
     <div id="tools">
       <button class="tool" id="t-in" data-tip="Zoom in" aria-label="Zoom in">
@@ -733,7 +775,7 @@ const S = {
   map:       null,
   baseLayer: null,
   labelLayer:null,
-  basemapId: localStorage.getItem('basemap') || 'dark',
+  basemapId: localStorage.getItem('basemap') || 'light',
   showLabels:localStorage.getItem('labels') !== '0',
   autoZoom:  localStorage.getItem('autozoom') !== '0',
   view:      'data',
@@ -1407,6 +1449,7 @@ function syncLayerCount() {
   const badge = el('rail-badge');
   badge.textContent = n;
   badge.hidden = n === 0;
+  el('map-empty').hidden = n !== 0;
   el('t-fit').disabled = ![...S.layers.values()].some(l => boundsToLatLng(l.bounds));
 }
 
@@ -1728,7 +1771,7 @@ function renderBasemapGrid() {
 }
 
 function initUI() {
-  applyTheme(localStorage.getItem('theme') || 'dark');
+  applyTheme(localStorage.getItem('theme') || 'light');
   el('cat-url').textContent = CFG.catalog;
   el('titiler-url').value = S.tiTiler;
   el('labels-sw').checked = S.showLabels;

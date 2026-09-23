@@ -67,6 +67,13 @@ uvicorn deploy.titiler.app:app --reload --port 8000
 python -m http.server 8080 --directory webapp
 ```
 
+### Building visualization pyramids
+
+The high-resolution global products use precomputed Zarr overview levels for
+responsive map display. See [scripts/PYRAMIDS.md](scripts/PYRAMIDS.md) for the
+reviewed product list, aggregation policies, server setup, dry-run validation,
+and resumable production commands.
+
 ## Installation
 
 Install directly from GitHub:
