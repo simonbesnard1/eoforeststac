@@ -37,6 +37,18 @@ export AWS_SECRET_ACCESS_KEY=...
 
 Do not place credentials in the repository or command history.
 
+Prefer an existing shared credential profile when one is available. Profiles
+are read from `~/.aws/credentials`, so secret values never appear in the
+command or repository:
+
+```bash
+python scripts/build_catalog_pyramids.py \
+  --profile atlaseo-glm \
+  --dry-run
+```
+
+The equivalent environment setting is `export AWS_PROFILE=atlaseo-glm`.
+
 ## Validate before writing
 
 Resolve the catalog jobs without opening the stores:

@@ -53,20 +53,23 @@ def first_valid(values: np.ndarray, axis: int | tuple[int, ...] | None = None) -
     return np.where(valid.any(axis=-1), selected, np.nan)
 
 
-def make_s3() -> s3fs.S3FileSystem:
+def make_s3(profile: str | None = None) -> s3fs.S3FileSystem:
     """Create an authenticated S3 client for the GFZ-compatible endpoint."""
     kwargs: dict[str, Any] = {
         "client_kwargs": {
             "endpoint_url": os.environ.get("AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de")
         }
     }
-    if os.environ.get("AWS_ACCESS_KEY_ID"):
+    profile = profile or os.environ.get("AWS_PROFILE")
+    if profile:
+        kwargs["profile"] = profile
+    elif os.environ.get("AWS_ACCESS_KEY_ID"):
         kwargs["key"] = os.environ["AWS_ACCESS_KEY_ID"]
-    if os.environ.get("AWS_SECRET_ACCESS_KEY"):
-        kwargs["secret"] = os.environ["AWS_SECRET_ACCESS_KEY"]
-    if os.environ.get("AWS_SESSION_TOKEN"):
-        kwargs["token"] = os.environ["AWS_SESSION_TOKEN"]
-    if not os.environ.get("AWS_ACCESS_KEY_ID"):
+        if os.environ.get("AWS_SECRET_ACCESS_KEY"):
+            kwargs["secret"] = os.environ["AWS_SECRET_ACCESS_KEY"]
+        if os.environ.get("AWS_SESSION_TOKEN"):
+            kwargs["token"] = os.environ["AWS_SESSION_TOKEN"]
+    else:
         kwargs["anon"] = True
     return s3fs.S3FileSystem(**kwargs)
 
@@ -231,7 +234,7 @@ def build_pyramid(args: argparse.Namespace) -> None:
     if source_url == output_url:
         raise ValueError("Source and output stores must be different")
 
-    s3 = make_s3()
+    s3 = make_s3(args.profile)
     source_store = s3_map(source_url, s3)
     source = open_zarr_store(source_store)
     y_dim, x_dim = tuple(args.dims) if args.dims else detect_spatial_dims(source)
@@ -311,6 +314,10 @@ def make_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("url", help="Source s3:// or GFZ HTTPS Zarr URL")
     parser.add_argument("--out", help="Output URL; defaults to *_pyramid.zarr")
+    parser.add_argument(
+        "--profile",
+        help="Credential profile from ~/.aws/credentials (or set AWS_PROFILE)",
+    )
     parser.add_argument(
         "--levels",
         type=int,

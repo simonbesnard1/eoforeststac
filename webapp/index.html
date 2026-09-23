@@ -768,7 +768,11 @@ const LAYER_COLORS = ['#97bd3d','#f88b2f','#4a9fd8','#a583d8','#d8b63a','#e2574c
    STATE
 ══════════════════════════════════════════════════════════════════ */
 const S = {
-  tiTiler:   localStorage.getItem('tiTilerUrl') || CFG.defaultTiTiler,
+  /* A deployment-provided endpoint is authoritative. Saved values are only
+     useful for local development where config.js has no explicit override. */
+  tiTiler:   window.EOFOREST_CONFIG?.tiTilerUrl !== 'http://localhost:8000'
+               ? window.EOFOREST_CONFIG.tiTilerUrl
+               : localStorage.getItem('tiTilerUrl') || CFG.defaultTiTiler,
   tiOk:      false,
   catalog:   null,
   layers:    new Map(),

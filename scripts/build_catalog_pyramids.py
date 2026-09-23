@@ -112,6 +112,10 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--target-size", type=int, default=8192)
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument(
+        "--profile",
+        help="Credential profile from ~/.aws/credentials (or set AWS_PROFILE)",
+    )
     parser.add_argument("--output-dtype", default="float32")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--list", action="store_true", help="List resolved jobs and exit")
@@ -149,6 +153,8 @@ def main() -> None:
             "--output-dtype",
             args.output_dtype,
         ]
+        if args.profile:
+            command.extend(["--profile", args.profile])
         for variable, reducer in product.get("reducers", {}).items():
             command.extend(["--reducer", f"{variable}={reducer}"])
         if args.dry_run:
