@@ -979,13 +979,19 @@ async function loadCollection(link, base) {
     const item = await fetchJSON(resolveUrl(url, itemLinks[0].href), { viaTiTiler: true });
     const zarrs = Object.entries(item.assets || {})
       .filter(([, a]) => a.href?.endsWith('.zarr'))
-      .map(([key, a]) => ({ key, href: a.href, title: a.title || key }));
+      .map(([key, a]) => ({
+        key,
+        href: a.href,
+        title: a.title || key,
+        rasterBands: Array.isArray(a['raster:bands']) ? a['raster:bands'] : [],
+      }));
     if (!zarrs.length) return null;
     return {
       id: col.id,
       title: col.title || col.id,
       version: item.properties?.version || '',
       variables: item.properties?.variables || [],
+      summaries: col.summaries || {},
       bbox: Array.isArray(item.bbox) && item.bbox.length >= 4 ? item.bbox.slice(0, 4).map(Number) : null,
       zarrs,
     };
@@ -1167,8 +1173,11 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
     layer.dtype  = info.dtype || '';
     layer.width  = info.width  || 0;
     layer.height = info.height || 0;
-    layer.units  = layer.attrs.units || '';
-    layer.label  = layer.attrs.long_name || layer.attrs.standard_name || layer.activeVar;
+    const band = stacBand(layer);
+    const unitsByVariable = layer.summaries?.units_by_variable || {};
+    layer.units  = layer.attrs.units || band?.unit || unitsByVariable[layer.activeVar] || '';
+    layer.label  = layer.attrs.long_name || layer.attrs.standard_name
+      || band?.description || band?.name || layer.activeVar;
     if (Array.isArray(info.bounds) && info.bounds.length === 4) layer.bounds = info.bounds.map(Number);
   }
 
@@ -1185,6 +1194,7 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
     applyRange(layer, info.minmax, info.attrs);
   }
 
+  if (!layer.colormapManual) layer.colormap = automaticColormap(layer);
   if (resetRange && !layer.rangeKnown) await probeStatistics(layer);
   layer.classes = buildClasses(layer);
 
@@ -1254,15 +1264,60 @@ function computeZoomFloor(layer) {
   return 22;
 }
 
-/* Prefer the variable's declared valid_min/valid_max over an arbitrary default,
-   so the legend describes the data instead of a guess. */
+function stacBand(layer) {
+  return layer.rasterBands?.find(b => b.name === layer.activeVar)
+    || (layer.rasterBands?.length === 1 ? layer.rasterBands[0] : null);
+}
+
+function metadataClasses(layer) {
+  const attrs = layer.attrs || {};
+  let legend = attrs.legend;
+  if (typeof legend === 'string') {
+    try { legend = JSON.parse(legend); } catch { legend = null; }
+  }
+  if (legend && typeof legend === 'object' && !Array.isArray(legend)) {
+    return Object.entries(legend).map(([value, label]) => ({ value: +value, label: String(label) }))
+      .filter(c => Number.isFinite(c.value)).sort((a, b) => a.value - b.value);
+  }
+
+  const values = Array.isArray(attrs.flag_values) ? attrs.flag_values : null;
+  const meanings = attrs.flag_meanings
+    ? String(attrs.flag_meanings).trim().split(/[\s,]+/).map(v => v.replaceAll('_', ' '))
+    : null;
+  if (values?.length) return values.map((value, i) => ({ value: +value, label: meanings?.[i] || String(value) }));
+
+  const byVariable = layer.summaries?.classes_by_variable?.[layer.activeVar];
+  const generic = layer.variables?.length === 1 ? layer.summaries?.classes : null;
+  const declared = Array.isArray(byVariable) ? byVariable : generic;
+  if (!Array.isArray(declared)) return null;
+  return declared.map(item => typeof item === 'object'
+    ? { value: +(item.value ?? item.id), label: String(item.name ?? item.label ?? item.value), color: item.color }
+    : { value: +item, label: String(item) }
+  ).filter(c => Number.isFinite(c.value));
+}
+
+function automaticColormap(layer) {
+  const name = `${layer.activeVar} ${layer.label} ${layer.units}`.toLowerCase();
+  if (/(uncertainty|standard deviation|std|error)/.test(name)) return 'blues';
+  if (/(loss|deforest|degrad|disturb|change)/.test(name)) return 'ylorbr';
+  if (/(year|age)/.test(name)) return 'viridis';
+  if (/(height|biomass|carbon|cover|forest)/.test(name)) return 'greens';
+  return 'viridis';
+}
+
+/* Prefer declared STAC/Zarr ranges over service estimates, so the legend is
+   stable across locations, zoom levels and pyramid resolutions. */
 function applyRange(layer, minmax, attrs) {
   let lo = null, hi = null;
+  const band = stacBand(layer);
+  const stats = band?.statistics || {};
   const pair = Array.isArray(minmax) ? (Array.isArray(minmax[0]) ? minmax[0] : minmax) : null;
-  if (pair && pair.length >= 2 && Number.isFinite(+pair[0]) && Number.isFinite(+pair[1])) {
-    lo = +pair[0]; hi = +pair[1];
-  } else if (attrs && Number.isFinite(+attrs.valid_min) && Number.isFinite(+attrs.valid_max)) {
+  if (attrs && Number.isFinite(+attrs.valid_min) && Number.isFinite(+attrs.valid_max)) {
     lo = +attrs.valid_min; hi = +attrs.valid_max;
+  } else if (Number.isFinite(+(stats.minimum ?? stats.min)) && Number.isFinite(+(stats.maximum ?? stats.max))) {
+    lo = +(stats.minimum ?? stats.min); hi = +(stats.maximum ?? stats.max);
+  } else if (pair && pair.length >= 2 && Number.isFinite(+pair[0]) && Number.isFinite(+pair[1])) {
+    lo = +pair[0]; hi = +pair[1];
   }
   if (lo === null || hi === null || hi <= lo) { layer.rangeKnown = false; return; }
   layer.rMin = lo; layer.rMax = hi; layer.rangeKnown = true;
@@ -1271,14 +1326,21 @@ function applyRange(layer, minmax, attrs) {
 /* Integer variables spanning a handful of values (masks, class rasters) read
    far better as discrete swatches than as a continuous ramp. */
 function buildClasses(layer) {
+  const declared = metadataClasses(layer);
+  if (declared?.length) {
+    const n = declared.length;
+    return declared.map((item, i) => ({
+      ...item,
+      color: item.color || sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
+    }));
+  }
   const span = layer.rMax - layer.rMin;
   const isInt = /^u?int|^bool/i.test(layer.dtype || '');
   if (!layer.rangeKnown || !isInt || span < 1 || span > 11) return null;
   const n = span + 1;
-  const names = layer.attrs?.flag_meanings ? String(layer.attrs.flag_meanings).split(/[\s,]+/) : null;
   return Array.from({ length: n }, (_, i) => ({
     value: layer.rMin + i,
-    label: names?.[i] || String(layer.rMin + i),
+    label: String(layer.rMin + i),
     color: sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
   }));
 }
@@ -1294,11 +1356,14 @@ async function activateLayer(col) {
     label: '', units: '', attrs: {}, dtype: '',
     width: 0, height: 0, zoomFloor: null,
     colormap: 'greens',
+    colormapManual: false,
     rMin: 0, rMax: 1, rangeKnown: false, classes: null,
     opacity: 0.9,
     dimInfo: null, dimValue: 0,
     nativeMinZoom: 4, minZoom: 4, maxZoom: 18,
     bounds: col.bbox,
+    summaries: col.summaries || {},
+    rasterBands: col.zarrs[0].rasterBands || [],
     color: LAYER_COLORS[S.layers.size % LAYER_COLORS.length],
     footprintLayer: null, footprintLabel: null, leafletLayer: null,
     pyramidUrl: null, numPyramidLevels: 0, _lastPyramidLevel: null,
@@ -1595,6 +1660,8 @@ function onLayerControl(ctrl) {
   if (prop === 'dimValue') val = parseInt(val, 10);
   if (Number.isNaN(val)) return;
   layer[prop] = val;
+  if (prop === 'colormap') layer.colormapManual = true;
+  if (prop === 'activeVar') layer.colormapManual = false;
 
   /* Null when the control lives in the legend rather than a layer card. */
   const card = ctrl.closest('.lc');
