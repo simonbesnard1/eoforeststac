@@ -97,6 +97,11 @@ from eoforeststac.catalog.uls_products import (
     create_uls_products_item,
 )
 
+from eoforeststac.catalog.als_biomass_products import (
+    create_als_biomass_products_collection,
+    create_als_biomass_products_item,
+)
+
 # ---------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------
@@ -122,6 +127,7 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "WANG_FORESTAGE": ["2.0"],
     "ALS_PRODUCTS": ["1.0"],
     "ULS_PRODUCTS": ["1.0"],
+    "ALS_BIOMASS_PRODUCTS": ["1.0"],
 }
 
 ItemFactory = Callable[[str], pystac.Item]
@@ -187,7 +193,7 @@ THEMES: Dict[str, Dict[str, object]] = {
             "canopy height",
             "forest structure",
         ],
-        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS"],
+        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS", "ALS_BIOMASS_PRODUCTS"],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -207,7 +213,7 @@ class ProductSpec:
     item_factory: ItemFactory
 
 
-def _product_specs() -> Tuple[ProductSpec, ...]:
+def _product_specs(create_als_prodcuts_products_item=None) -> Tuple[ProductSpec, ...]:
     """Single registry of products and their builders."""
     return (
         ProductSpec(
@@ -281,6 +287,11 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "ULS_PRODUCTS",
             create_uls_products_collection,
             create_uls_products_item,
+        ),
+        ProductSpec(
+            "ALS_BIOMASS_PRODUCTS",
+            create_als_biomass_products_collection,
+            create_als_biomass_products_item,
         ),
     )
 
