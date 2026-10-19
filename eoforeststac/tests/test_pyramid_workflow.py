@@ -43,6 +43,31 @@ def test_coarsen_level_uses_variable_specific_reducers():
     assert result.continuous.dtype == np.dtype("float32")
 
 
+def test_first_reducer_stays_lazy_and_skips_nans():
+    """`first` must not compute the dask graph while building the level."""
+    import dask
+    import dask.array as da
+
+    values = np.array(
+        [[np.nan, 2.0, 3.0, np.nan], [4.0, 5.0, np.nan, 6.0], [np.nan, np.nan, 7.0, 8.0]]
+    )
+    dataset = xr.Dataset(
+        {"classes": (("y", "x"), da.from_array(values, chunks=2))},
+        coords={"y": [3.0, 2.0, 1.0], "x": [1.0, 2.0, 3.0, 4.0]},
+    )
+
+    def refuse_compute(*args, **kwargs):
+        raise AssertionError("coarsen_level computed the dask graph")
+
+    with dask.config.set(scheduler=refuse_compute):
+        result = coarsen_level(dataset, "y", "x", {"classes": "first"}, "float32")
+    assert isinstance(result.classes.data, da.Array)
+
+    np.testing.assert_allclose(result.classes.values, [[2.0, 3.0], [np.nan, 7.0]])
+    np.testing.assert_allclose(result.y, [2.5, 1.0])
+    np.testing.assert_allclose(result.x, [1.5, 3.5])
+
+
 def test_pyramid_helpers():
     dataset = xr.Dataset(coords={"y": range(202_500), "x": range(405_000)})
     assert automatic_levels(dataset, "y", "x", target_size=8192) == 6
