@@ -455,7 +455,7 @@ body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:46px;height:46px;flex-shrink:0;object-fit:contain}.bn-eo{color:#3f8a2e}.bn-stac{color:#2b5d9a}:root[data-theme="dark"] .bn-eo{color:#86b052}:root[data-theme="dark"] .bn-stac{color:#7aa7dd}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
 .top-nav{display:flex;align-items:center;gap:4px;margin-left:auto}.top-nav a{color:var(--text-2);text-decoration:none;font-size:12.5px;font-weight:500;padding:8px 10px;border-radius:7px;transition:.15s background,.15s color}.top-nav a:hover{background:var(--panel-2);color:var(--accent)}.header-pill{display:flex;align-items:center;gap:7px;margin-left:5px;padding:7px 10px;border-radius:18px;background:var(--accent-w);color:var(--accent);font-size:11px;font-weight:600}.header-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
-#app{height:calc(100vh - var(--header-h))}#rail{align-items:stretch;padding:12px 9px;background:var(--rail);border-right:1px solid var(--line);gap:4px}.rail-logo{display:none}.rail-btn{width:100%;height:42px;margin:0;padding:0 11px;border-radius:8px;justify-content:flex-start;gap:10px;color:rgba(255,255,255,.62);font-size:12.5px;font-weight:500}.rail-btn:hover{color:#fff;background:rgba(255,255,255,.07)}.rail-btn.active{color:#a8ce70;background:rgba(134,176,82,.14)}.rail-btn.active::before{left:-9px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}.rail-label{display:block;white-space:nowrap}.rail-badge{position:static;margin-left:auto}.rail-status{margin:10px 12px 3px}.rail-btn[data-tip]:hover::after{display:none}
+#app{height:calc(100vh - var(--header-h))}#rail{align-items:stretch;padding:12px 9px;background:var(--rail);border-right:1px solid var(--line);gap:4px}.rail-logo{display:none}.rail-btn{width:100%;height:42px;margin:0;padding:0 11px;border-radius:8px;justify-content:flex-start;gap:10px;color:rgba(255,255,255,.62);font-size:12.5px;font-weight:500}.rail-btn:hover{color:#fff;background:rgba(255,255,255,.07)}.rail-btn.active{color:#a8ce70;background:rgba(134,176,82,.14)}.rail-btn.active::before{left:-9px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}.rail-label{display:block;white-space:nowrap}.rail-badge{position:absolute;left:22px;right:auto;top:5px;min-width:14px;height:14px;font-size:8.5px;box-shadow:0 0 0 2px var(--rail)}.rail-status{margin:10px 12px 3px}.rail-btn[data-tip]:hover::after{display:none}
 #panel{box-shadow:4px 0 18px rgba(34,58,42,.04)}.pnl-head{height:64px;padding:0 19px}.pnl-title{font-size:17px;letter-spacing:-.01em}.pnl-sub{font-size:10px}.search-box{padding:14px 18px 16px;border-bottom:0}.search-box .ico-sm{left:30px}#ds-search{height:39px;padding-left:34px;border-radius:9px;background:var(--panel-2)}
 /* Category rail: one button per STAC theme, GNW-style. */
 .rail-sec{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38);padding:12px 11px 4px}
@@ -1317,11 +1317,26 @@ async function fetchVariables(zarrUrl, fallback = []) {
 async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   if (!S.tiOk) return;
   const qs = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
+  for (const s of extraSels(layer)) qs.append('sel', s);
 
   const [info, tj] = await Promise.all([
     fetchJSON(`${S.tiTiler}/info?${qs}`).catch(() => null),
     fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`).catch(() => null),
   ]);
+
+  /* /info refuses variables with more than one extra dimension (GAMI is
+     members × time × y × x). Pin every extra dimension but the time-like one
+     and ask again; the remaining one becomes the usual slider. */
+  if (!info && !layer.extraDims) {
+    const res = await fetchJSON(`${S.tiTiler}/dataset/dims?` +
+      new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar })).catch(() => null);
+    const dims = res?.dims || [];
+    if (dims.length >= 2) {
+      const main = dims.find(d => d.values.some(v => /^\d{4}-\d{2}-\d{2}/.test(v))) || dims[0];
+      layer.extraDims = dims.filter(d => d !== main).map(d => ({ name: d.name, values: d.values, index: 0 }));
+      return fetchVariableMeta(layer, { resetRange });
+    }
+  }
 
   if (info) {
     layer.dimInfo = parseDimInfo(info);
@@ -1374,8 +1389,7 @@ async function probeStatistics(layer) {
   const coarsest = `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
   try {
     const qs = new URLSearchParams({ url: coarsest, variable: layer.activeVar });
-    const sel = selParam(layer);
-    if (sel) qs.set('sel', sel);
+    for (const s of selParams(layer)) qs.append('sel', s);
     const stats = await fetchJSON(`${S.tiTiler}/statistics?${qs}`);
     const band = stats && typeof stats === 'object' ? Object.values(stats)[0] : null;
     if (!band) return;
@@ -1410,7 +1424,10 @@ function computeZoomFloor(layer) {
   const lonSpan = Math.max(1e-6, bb.getEast() - bb.getWest());
   const latSpan = Math.max(1e-6, bb.getNorth() - bb.getSouth());
   const pxLon = lonSpan / width, pxLat = latSpan / height;
-  const BUDGET = 0.6e9;   // headroom under the 1 GB ceiling
+  /* Per-tile read budget. The map fetches ~a dozen tiles at once and the
+     server runs up to 8 reads in parallel, so this has to stay far below
+     rio-tiler's 1 GB per-array ceiling. */
+  const BUDGET = 1.5e8;
 
   for (let z = 0; z <= 22; z++) {
     const deg = 360 / 2 ** z;
@@ -1516,7 +1533,7 @@ async function activateLayer(col) {
     colormapManual: false,
     rMin: 0, rMax: 1, rangeKnown: false, classes: null,
     opacity: 0.9,
-    dimInfo: null, dimValue: 0,
+    dimInfo: null, dimValue: 0, extraDims: null,
     nativeMinZoom: 4, minZoom: 4, maxZoom: 18,
     bounds: col.bbox,
     summaries: col.summaries || {},
@@ -1582,6 +1599,18 @@ function selParam(layer) {
   return `${di.name}=${timeLike ? 'nearest::' : ''}${s}`;
 }
 
+function extraSels(layer) {
+  return (layer.extraDims || []).map(d => {
+    const v = String(d.values[d.index]);
+    return `${d.name}=${/^\d{4}-\d{2}-\d{2}/.test(v) ? 'nearest::' : ''}${v}`;
+  });
+}
+
+/* Every `sel` a request needs: pinned extra dimensions plus the slider's. */
+function selParams(layer) {
+  return [...extraSels(layer), selParam(layer)].filter(Boolean);
+}
+
 function buildTileUrl(layer, zoom) {
   const zarr = getEffectiveZarrUrl(layer, zoom ?? S.map.getZoom());
   /* No `nodata` override: xarray already decodes the zarr fill_value to NaN,
@@ -1593,8 +1622,7 @@ function buildTileUrl(layer, zoom) {
     rescale: `${layer.rMin},${layer.rMax}`,
     colormap_name: layer.colormap,
   });
-  const sel = selParam(layer);
-  if (sel) p.set('sel', sel);
+  for (const s of selParams(layer)) p.append('sel', s);
   return `${S.tiTiler}/tiles/WebMercatorQuad/{z}/{x}/{y}?${p}`;
 }
 
@@ -1714,6 +1742,14 @@ function renderLayerPanel() {
       }
     }
 
+    const extraFld = (layer.extraDims || []).map((d, i) => `<div class="fld">
+        <div class="fld-lbl"><span>${esc(d.name)}</span></div>
+        <select data-id="${esc(layer.id)}" data-prop="extra:${i}">
+          ${d.values.map((v, j) => `<option value="${j}" ${j === d.index ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+        </select>
+      </div>`).join('');
+    dimFld = extraFld + dimFld;
+
     const varFld = `<div class="fld">
         <div class="fld-lbl">
           <span>Variable</span>
@@ -1813,13 +1849,22 @@ function onLayerControl(ctrl) {
   const layer = S.layers.get(id);
   if (!layer) return;
 
+  if (prop.startsWith('extra:')) {
+    const dim = layer.extraDims?.[parseInt(prop.slice(6), 10)];
+    if (!dim) return;
+    dim.index = parseInt(ctrl.value, 10);
+    clearTimeout(_debounce);
+    _debounce = setTimeout(() => { updateLeafletLayer(id); renderLegend(); }, 180);
+    return;
+  }
+
   let val = ctrl.value;
   if (prop === 'rMin' || prop === 'rMax' || prop === 'opacity') val = parseFloat(val);
   if (prop === 'dimValue') val = parseInt(val, 10);
   if (Number.isNaN(val)) return;
   layer[prop] = val;
   if (prop === 'colormap') layer.colormapManual = true;
-  if (prop === 'activeVar') layer.colormapManual = false;
+  if (prop === 'activeVar') { layer.colormapManual = false; layer.extraDims = null; }
 
   /* Null when the control lives in the legend rather than a layer card. */
   const card = ctrl.closest('.lc');
@@ -1872,6 +1917,7 @@ function renderLegend() {
       const pills = [];
       if (zoom < layer.minZoom)          pills.push(`no tiles below z${layer.minZoom}`);
       else if (layer.pyramidUrl && lvl > 0) pills.push(`overview L${lvl}`);
+      for (const d of layer.extraDims || []) pills.push(`${d.name} ${d.values[d.index]}`);
       if (layer.dimInfo && layer.dimInfo.length > 1)
         pills.push(`${layer.dimInfo.name} ${layer.dimInfo.values[layer.dimValue] ?? layer.dimValue}`);
 
@@ -1936,8 +1982,7 @@ async function onMapClick(e) {
   const rows = await Promise.all([...S.layers.values()].map(async layer => {
     try {
       const p = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
-      const sel = selParam(layer);
-      if (sel) p.set('sel', sel);
+      for (const s of selParams(layer)) p.append('sel', s);
       const r = await fetch(`${S.tiTiler}/point/${lon.toFixed(6)},${lat.toFixed(6)}?${p}`);
       if (!r.ok) return { layer, val: null };
       const d = await r.json();

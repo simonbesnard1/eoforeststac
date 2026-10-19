@@ -5,10 +5,13 @@ from __future__ import annotations
 import os
 from urllib.parse import urlsplit
 
+import anyio.to_thread
 import httpx
+import numpy as np
 from fastapi import HTTPException, Query, Request
 from fastapi.responses import Response
 from starlette.responses import JSONResponse
+from titiler.xarray import io as xarray_io
 from titiler.xarray.main import app
 
 
@@ -30,6 +33,23 @@ ALLOWED_PATH_PREFIXES = tuple(
     if value.strip()
 )
 MAX_PROXY_BYTES = int(os.getenv("MAX_PROXY_BYTES", str(5 * 1024 * 1024)))
+# Each tile read can hold a few hundred MB while it resamples, so cap how many
+# run at once (anyio's default is 40) and let the rest queue.
+MAX_READ_THREADS = int(os.getenv("MAX_READ_THREADS", "8"))
+# titiler.xarray memoises open_zarr() without a bound, and every opened store
+# keeps its coordinate indexes in memory (tens to hundreds of MB for global
+# 10-30 m grids). Reset the memo once it holds this many datasets.
+MAX_OPEN_DATASETS = int(os.getenv("MAX_OPEN_DATASETS", "12"))
+
+
+@app.on_event("startup")
+async def limit_read_concurrency() -> None:
+    anyio.to_thread.current_default_thread_limiter().total_tokens = MAX_READ_THREADS
+
+
+def _bound_dataset_cache() -> None:
+    if xarray_io.open_zarr.cache_info().currsize > MAX_OPEN_DATASETS:
+        xarray_io.open_zarr.cache_clear()
 
 
 def validate_remote_url(value: str) -> str:
@@ -62,7 +82,50 @@ async def restrict_dataset_urls(request: Request, call_next):
             validate_remote_url(source_url)
         except HTTPException as exc:
             return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+        _bound_dataset_cache()
     return await call_next(request)
+
+
+SPATIAL_DIMS = frozenset(["x", "y", *xarray_io.X_DIM_NAMES, *xarray_io.Y_DIM_NAMES])
+MAX_DIM_LABELS = 1000
+
+
+def _dim_label(value) -> str:
+    if isinstance(value, np.datetime64):
+        return str(np.datetime_as_string(value))
+    value = value.item() if isinstance(value, np.generic) else value
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
+    return str(value)
+
+
+@app.get("/dataset/dims", include_in_schema=False)
+def dataset_dims(
+    url: str = Query(..., description="Allowlisted Zarr store URL"),
+    variable: str = Query(..., description="Variable name"),
+):
+    """List a variable's non-spatial dimensions and their coordinate labels.
+
+    TiTiler's /info only handles 2-D/3-D arrays; for 4-D variables (e.g. GAMI's
+    members x time) the browser needs these labels to pin all but one extra
+    dimension with `sel`.
+    """
+    validate_remote_url(url)
+    try:
+        ds = xarray_io.open_zarr(url)
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail="Dataset could not be opened") from exc
+    if variable not in ds.data_vars:
+        raise HTTPException(status_code=404, detail="Unknown variable")
+    da = ds[variable]
+    dims = []
+    for name in da.dims:
+        if name in SPATIAL_DIMS:
+            continue
+        size = int(da.sizes[name])
+        values = ds[name].values[:MAX_DIM_LABELS] if name in ds.coords else range(min(size, MAX_DIM_LABELS))
+        dims.append({"name": name, "size": size, "values": [_dim_label(v) for v in values]})
+    return {"dims": dims}
 
 
 @app.get("/proxy/fetch", include_in_schema=False)
