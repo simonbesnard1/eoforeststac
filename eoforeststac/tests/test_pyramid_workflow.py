@@ -49,7 +49,11 @@ def test_first_reducer_stays_lazy_and_skips_nans():
     import dask.array as da
 
     values = np.array(
-        [[np.nan, 2.0, 3.0, np.nan], [4.0, 5.0, np.nan, 6.0], [np.nan, np.nan, 7.0, 8.0]]
+        [
+            [np.nan, 2.0, 3.0, np.nan],
+            [4.0, 5.0, np.nan, 6.0],
+            [np.nan, np.nan, 7.0, 8.0],
+        ]
     )
     dataset = xr.Dataset(
         {"classes": (("y", "x"), da.from_array(values, chunks=2))},

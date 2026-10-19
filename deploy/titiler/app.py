@@ -114,7 +114,9 @@ def dataset_dims(
     try:
         ds = xarray_io.open_zarr(url)
     except Exception as exc:
-        raise HTTPException(status_code=404, detail="Dataset could not be opened") from exc
+        raise HTTPException(
+            status_code=404, detail="Dataset could not be opened"
+        ) from exc
     if variable not in ds.data_vars:
         raise HTTPException(status_code=404, detail="Unknown variable")
     da = ds[variable]
@@ -123,8 +125,14 @@ def dataset_dims(
         if name in SPATIAL_DIMS:
             continue
         size = int(da.sizes[name])
-        values = ds[name].values[:MAX_DIM_LABELS] if name in ds.coords else range(min(size, MAX_DIM_LABELS))
-        dims.append({"name": name, "size": size, "values": [_dim_label(v) for v in values]})
+        values = (
+            ds[name].values[:MAX_DIM_LABELS]
+            if name in ds.coords
+            else range(min(size, MAX_DIM_LABELS))
+        )
+        dims.append(
+            {"name": name, "size": size, "values": [_dim_label(v) for v in values]}
+        )
     return {"dims": dims}
 
 

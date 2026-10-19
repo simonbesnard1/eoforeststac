@@ -59,7 +59,9 @@ def make_s3(profile: str | None = None) -> s3fs.S3FileSystem:
     """Create an authenticated S3 client for the GFZ-compatible endpoint."""
     kwargs: dict[str, Any] = {
         "client_kwargs": {
-            "endpoint_url": os.environ.get("AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de")
+            "endpoint_url": os.environ.get(
+                "AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de"
+            )
         }
     }
     profile = profile or os.environ.get("AWS_PROFILE")
@@ -111,9 +113,13 @@ def parse_reducers(values: list[str]) -> dict[str, str]:
         try:
             variable, reducer = value.rsplit("=", 1)
         except ValueError as exc:
-            raise ValueError(f"Reducer must use VARIABLE=METHOD syntax: {value}") from exc
+            raise ValueError(
+                f"Reducer must use VARIABLE=METHOD syntax: {value}"
+            ) from exc
         if reducer not in _REDUCERS:
-            raise ValueError(f"Unsupported reducer {reducer!r}; choose from {sorted(_REDUCERS)}")
+            raise ValueError(
+                f"Unsupported reducer {reducer!r}; choose from {sorted(_REDUCERS)}"
+            )
         reducers[variable] = reducer
     return reducers
 
@@ -138,7 +144,9 @@ def reducer_plan(
 ) -> dict[str, str]:
     unknown = set(overrides) - set(ds.data_vars)
     if unknown:
-        raise ValueError(f"Reducer overrides reference unknown variables: {sorted(unknown)}")
+        raise ValueError(
+            f"Reducer overrides reference unknown variables: {sorted(unknown)}"
+        )
     return {
         name: overrides.get(name, infer_reducer(name, variable.attrs))
         for name, variable in ds.data_vars.items()
@@ -161,7 +169,9 @@ def coarsen_level(
                 output_vars[name] = variable
                 continue
 
-            coarsened = variable.coarsen({y_dim: 2, x_dim: 2}, boundary="pad", coord_func="mean")
+            coarsened = variable.coarsen(
+                {y_dim: 2, x_dim: 2}, boundary="pad", coord_func="mean"
+            )
             method = reducers[name]
             if method == "mean":
                 result = coarsened.mean(skipna=True)
@@ -218,7 +228,9 @@ def prepare_root(
                 {
                     "version": "0.4",
                     "name": "EOForestSTAC visualization pyramid",
-                    "datasets": [{"path": str(level)} for level in range(1, levels + 1)],
+                    "datasets": [
+                        {"path": str(level)} for level in range(1, levels + 1)
+                    ],
                     "metadata": {
                         "native_source": source_url,
                         "native_level": 0,
@@ -232,7 +244,9 @@ def prepare_root(
 
 def build_pyramid(args: argparse.Namespace) -> None:
     source_url = normalize_s3_url(args.url)
-    output_url = normalize_s3_url(args.out or source_url.removesuffix(".zarr") + "_pyramid.zarr")
+    output_url = normalize_s3_url(
+        args.out or source_url.removesuffix(".zarr") + "_pyramid.zarr"
+    )
     if source_url == output_url:
         raise ValueError("Source and output stores must be different")
 
@@ -287,7 +301,9 @@ def build_pyramid(args: argparse.Namespace) -> None:
             s3.rm(level_prefix, recursive=True)
 
         print(f"Level {level}: constructing 2x overview")
-        overview = coarsen_level(parent, y_dim, x_dim, reducers, output_dtype=output_dtype)
+        overview = coarsen_level(
+            parent, y_dim, x_dim, reducers, output_dtype=output_dtype
+        )
         chunks = {y_dim: args.chunk_size, x_dim: args.chunk_size}
         for dim in overview.dims:
             if dim not in chunks:
