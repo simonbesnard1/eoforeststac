@@ -14,6 +14,8 @@ from starlette.responses import JSONResponse
 from titiler.xarray import io as xarray_io
 from titiler.xarray.main import app
 
+from download import create_router
+
 
 def _csv_env(name: str, default: str) -> frozenset[str]:
     return frozenset(
@@ -134,6 +136,9 @@ def dataset_dims(
             {"name": name, "size": size, "values": [_dim_label(v) for v in values]}
         )
     return {"dims": dims}
+
+
+app.include_router(create_router(validate_remote_url))
 
 
 @app.get("/proxy/fetch", include_in_schema=False)

@@ -306,6 +306,37 @@ input[type=range]::-moz-range-thumb{
 }
 .btn:hover{opacity:.85}
 .set-note{font-size:11px;color:var(--text-3);line-height:1.6;margin-top:8px}
+/* Area download */
+.dl-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dl-tool{
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px;cursor:pointer;
+  border:1px solid var(--line);border-radius:8px;font-size:11px;color:var(--text-2);background:var(--panel);
+  transition:border-color .14s,color .14s,background .14s;
+}
+.dl-tool:hover{border-color:var(--accent);color:var(--accent)}
+.dl-tool.on{border-color:var(--accent);color:var(--accent);background:var(--accent-w)}
+.dl-area{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:11.5px;color:var(--text-2)}
+.dl-area span{flex:1;min-width:0}
+.dl-link{font-size:11px;color:var(--text-3);text-decoration:underline;cursor:pointer}
+.dl-link:hover{color:var(--danger)}
+.dl-row{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-top:1px solid var(--line)}
+.dl-row:first-child{border-top:0}
+.dl-row input{width:auto;margin-top:2px;accent-color:var(--accent)}
+.dl-row-main{flex:1;min-width:0}
+.dl-row-name{font-size:12px;line-height:1.35;color:var(--text)}
+.dl-row-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:2px}
+.dl-row-meta.err{color:var(--danger);font-family:inherit}
+.dl-actions{display:flex;gap:7px;margin-top:10px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:var(--panel-2);color:var(--text);border:1px solid var(--line)}
+.dl-bar{height:6px;border-radius:3px;background:var(--panel-3);overflow:hidden;margin-top:10px}
+.dl-bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+.dl-shape{stroke:var(--accent);fill:var(--accent);fill-opacity:.08;stroke-width:2;stroke-dasharray:6 4}
+#map.dl-drawing,#map.dl-drawing .leaflet-interactive{cursor:crosshair}
+.dlg-code{
+  width:100%;min-height:300px;font-family:var(--mono);font-size:11.5px;line-height:1.5;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px;resize:vertical;color:var(--text);
+}
 .set-note code{
   font-family:var(--mono);font-size:10.5px;background:var(--panel-2);
   padding:1px 5px;border-radius:3px;color:var(--text-2);
@@ -546,6 +577,10 @@ body{font-size:14px;background:var(--bg)}
       <svg class="ico" viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg><span class="rail-label">Basemap</span>
     </button>
 
+    <button class="rail-btn" data-view="download" data-tip="Download data" aria-label="Download data for an area" aria-pressed="false">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="rail-label">Download</span>
+    </button>
+
     <div class="rail-spacer"></div>
 
     <button class="rail-btn" id="theme-btn" data-tip="Toggle theme" aria-label="Toggle light and dark theme">
@@ -615,6 +650,49 @@ body{font-size:14px;background:var(--bg)}
             <div class="opt-desc">Fly to a dataset's bounding box when you switch it on.</div>
           </div>
           <label class="sw"><input type="checkbox" id="autozoom-sw" checked><span class="sw-t"></span></label>
+        </div>
+      </section>
+
+      <!-- Area download -->
+      <section class="pnl-view" id="view-download">
+        <div class="set-sec">
+          <div class="set-h">1 · Area</div>
+          <div class="dl-tools">
+            <button class="dl-tool" data-draw="rect" title="Drag on the map">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/></svg>Rectangle
+            </button>
+            <button class="dl-tool" data-draw="poly" title="Click vertices; double-click to finish">
+              <svg class="ico" viewBox="0 0 24 24"><polygon points="12 3 21 9.5 17.5 20 6.5 20 3 9.5"/></svg>Polygon
+            </button>
+            <label class="dl-tool" title="GeoJSON Polygon or MultiPolygon, EPSG:4326">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>GeoJSON
+              <input type="file" id="dl-file" accept=".geojson,.json,application/geo+json" hidden>
+            </label>
+          </div>
+          <div class="set-note" id="dl-area-note">Draw an area on the map or upload a GeoJSON polygon.</div>
+        </div>
+        <div class="set-sec">
+          <div class="set-h">2 · Layers</div>
+          <div id="dl-layers"></div>
+          <div class="opt-row" style="padding:10px 0 0;border:0">
+            <div class="opt-txt">
+              <div class="opt-name">All time steps</div>
+              <div class="opt-desc">Otherwise only the step shown on the map.</div>
+            </div>
+            <label class="sw"><input type="checkbox" id="dl-alltime"><span class="sw-t"></span></label>
+          </div>
+        </div>
+        <div class="set-sec">
+          <div class="set-h">3 · Download</div>
+          <div class="set-note" id="dl-summary" style="margin-top:0">Native resolution, clipped to the area: GeoTIFF for single maps, NetCDF when time or other dimensions remain. The zip includes a README with licenses and citations.</div>
+          <div class="dl-actions">
+            <button class="btn" id="dl-go" disabled>Download zip</button>
+            <button class="btn btn-ghost" id="dl-code" disabled>Python code</button>
+          </div>
+          <div id="dl-progress" hidden>
+            <div class="dl-bar"><span id="dl-bar"></span></div>
+            <div class="set-note" id="dl-status" aria-live="polite"></div>
+          </div>
         </div>
       </section>
 
@@ -905,6 +983,7 @@ const S = {
   cat:       null,
   panelOpen: true,
   legendOpen: true,
+  dl: { drawing: null, geometry: null, shape: null, excluded: new Set(), estimate: null, polling: null },
   colormapNames: Object.keys(RAMPS),
 };
 
@@ -1879,6 +1958,7 @@ function syncLayerCount() {
   syncRail();
   el('map-empty').hidden = n !== 0;
   el('t-fit').disabled = ![...S.layers.values()].some(l => boundsToLatLng(l.bounds));
+  if (S.view === 'download') refreshDownload();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2161,6 +2241,7 @@ function renderLegend() {
    PIXEL INSPECTOR
 ══════════════════════════════════════════════════════════════════ */
 async function onMapClick(e) {
+  if (S.dl.drawing) return;
   const { lat, lng } = e.latlng;
   const lon = L.Util.wrapNum(lng, [-180, 180], true);
   el('inspector').hidden = false;
@@ -2193,9 +2274,329 @@ async function onMapClick(e) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
+   AREA DOWNLOAD
+   Draw or upload an area, size every active layer server-side, then run
+   a background job that zips native-resolution cut-outs (POST /download,
+   poll GET /download/{id}, fetch /download/{id}/file).
+══════════════════════════════════════════════════════════════════ */
+const fmtBytes = b => b >= 1e9 ? `${(b / 1e9).toFixed(2)} GB`
+  : b >= 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1e3))} kB`;
+
+/* Leaflet longitudes keep counting past ±180 once the map has wrapped. */
+function normalizeRing(latlngs) {
+  const mean = latlngs.reduce((a, p) => a + p.lng, 0) / latlngs.length;
+  const shift = Math.round(mean / 360) * 360;
+  const ring = latlngs.map(p => [
+    +Math.max(-180, Math.min(180, p.lng - shift)).toFixed(6),
+    +Math.max(-90, Math.min(90, p.lat)).toFixed(6),
+  ]);
+  ring.push([...ring[0]]);
+  return ring;
+}
+
+function cancelDraw() {
+  const d = S.dl.drawing;
+  if (!d) return;
+  d.off.forEach(([ev, fn]) => S.map.off(ev, fn));
+  d.preview?.remove();
+  S.map.dragging.enable();
+  S.map.doubleClickZoom.enable();
+  el('map').classList.remove('dl-drawing');
+  document.querySelectorAll('.dl-tool[data-draw]').forEach(b => b.classList.remove('on'));
+  /* Let the click that ended the drawing finish before the inspector listens again. */
+  setTimeout(() => { S.dl.drawing = null; }, 0);
+}
+
+function startDraw(kind) {
+  cancelDraw();
+  setTimeout(() => {
+    const d = { kind, off: [], preview: null, points: [] };
+    S.dl.drawing = d;
+    el('map').classList.add('dl-drawing');
+    document.querySelector(`.dl-tool[data-draw="${kind}"]`)?.classList.add('on');
+    S.map.doubleClickZoom.disable();
+    const on = (ev, fn) => { S.map.on(ev, fn); d.off.push([ev, fn]); };
+
+    if (kind === 'rect') {
+      S.map.dragging.disable();
+      let start = null;
+      on('mousedown', e => {
+        start = e.latlng;
+        d.preview = L.rectangle([start, start], { className: 'dl-shape', interactive: false }).addTo(S.map);
+      });
+      on('mousemove', e => { if (start) d.preview.setBounds(L.latLngBounds(start, e.latlng)); });
+      on('mouseup', e => {
+        if (!start) return;
+        const b = L.latLngBounds(start, e.latlng);
+        cancelDraw();
+        if (S.map.latLngToContainerPoint(b.getNorthWest()).distanceTo(S.map.latLngToContainerPoint(b.getSouthEast())) < 6) return;
+        setArea({ type: 'Polygon', coordinates: [normalizeRing([b.getSouthWest(), b.getSouthEast(), b.getNorthEast(), b.getNorthWest()])] });
+      });
+    } else {
+      const redraw = cursor => {
+        const pts = cursor ? [...d.points, cursor] : d.points;
+        if (!d.preview) d.preview = L.polyline(pts, { className: 'dl-shape', interactive: false }).addTo(S.map);
+        else d.preview.setLatLngs(pts);
+      };
+      const finish = () => {
+        const pts = d.points;
+        cancelDraw();
+        if (pts.length >= 3) setArea({ type: 'Polygon', coordinates: [normalizeRing(pts)] });
+      };
+      on('click', e => {
+        const px = S.map.latLngToContainerPoint(e.latlng);
+        const near = p => S.map.latLngToContainerPoint(p).distanceTo(px) < 8;
+        if (d.points.length >= 3 && near(d.points[0])) return finish();
+        if (d.points.length && near(d.points[d.points.length - 1])) return;   // dblclick's 2nd click
+        d.points.push(e.latlng);
+        redraw();
+      });
+      on('mousemove', e => { if (d.points.length) redraw(e.latlng); });
+      on('dblclick', finish);
+    }
+  }, 0);
+}
+
+function collectPolygons(obj, out = []) {
+  if (!obj || typeof obj !== 'object') return out;
+  if (obj.type === 'FeatureCollection') (obj.features || []).forEach(f => collectPolygons(f, out));
+  else if (obj.type === 'Feature') collectPolygons(obj.geometry, out);
+  else if (obj.type === 'GeometryCollection') (obj.geometries || []).forEach(g => collectPolygons(g, out));
+  else if (obj.type === 'Polygon') out.push(obj.coordinates);
+  else if (obj.type === 'MultiPolygon') out.push(...obj.coordinates);
+  return out;
+}
+
+async function loadAreaFile(file) {
+  try {
+    const polygons = collectPolygons(JSON.parse(await file.text()))
+      .map(rings => rings.map(ring => ring.map(p => [+p[0], +p[1]])));
+    if (!polygons.length) throw new Error('no Polygon or MultiPolygon found');
+    setArea(polygons.length === 1
+      ? { type: 'Polygon', coordinates: polygons[0] }
+      : { type: 'MultiPolygon', coordinates: polygons }, { fit: true });
+  } catch (err) {
+    el('dl-area-note').textContent = `Could not read ${file.name}: ${err.message}`;
+  }
+}
+
+function setArea(geometry, { fit = false } = {}) {
+  S.dl.shape?.remove();
+  S.dl.geometry = geometry;
+  S.dl.shape = geometry
+    ? L.geoJSON(geometry, { style: () => ({ className: 'dl-shape' }), interactive: false }).addTo(S.map)
+    : null;
+  if (fit && S.dl.shape) S.map.fitBounds(S.dl.shape.getBounds(), { padding: [40, 40] });
+  refreshDownload();
+}
+
+function areaLabel(geometry) {
+  const b = L.geoJSON(geometry).getBounds();
+  const kmPerDeg = 111.32;
+  const w = (b.getEast() - b.getWest()) * kmPerDeg * Math.cos(b.getCenter().lat * Math.PI / 180);
+  const h = (b.getNorth() - b.getSouth()) * kmPerDeg;
+  const kind = geometry.type === 'MultiPolygon' ? `${geometry.coordinates.length} polygons` : 'Area';
+  return `${kind} · ${w.toFixed(w < 10 ? 1 : 0)} × ${h.toFixed(h < 10 ? 1 : 0)} km`;
+}
+
+function dlLayers() {
+  return [...S.layers.values()].filter(l => !S.dl.excluded.has(l.id));
+}
+
+function dlPayload(layer) {
+  const col = findCollection(layer.id);
+  const allTimes = el('dl-alltime').checked;
+  const sel = allTimes ? extraSels(layer) : selParams(layer);
+  const shown = !allTimes && selParam(layer) ? String(layer.dimInfo.values[layer.dimValue]).slice(0, 10) : '';
+  const cite = (col?.links || []).find(l => l.rel === 'cite-as' && /^https?:\/\//i.test(l.href || ''))?.href || '';
+  return {
+    url: layer.zarrUrl,
+    variable: layer.activeVar,
+    sel,
+    name: [layer.id, layer.activeVar, shown].filter(Boolean).join('_'),
+    title: layer.title,
+    license: col?.license || '',
+    citation: cite,
+    providers: (col?.providers || []).map(p => p.name).filter(Boolean).join('; '),
+  };
+}
+
+async function postJSON(path, body) {
+  const r = await fetch(`${S.tiTiler}${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof data.detail === 'string' ? data.detail : `HTTP ${r.status}`);
+  return data;
+}
+
+let _dlEstimateTimer, _dlEstimateSeq = 0;
+function refreshDownload({ estimate = true } = {}) {
+  const g = S.dl.geometry;
+  el('dl-area-note').innerHTML = g
+    ? `<div class="dl-area"><span>${esc(areaLabel(g))}</span><a class="dl-link" id="dl-clear">clear</a></div>`
+    : 'Draw an area on the map or upload a GeoJSON polygon.';
+  el('dl-clear')?.addEventListener('click', () => setArea(null));
+
+  const layers = [...S.layers.values()];
+  const est = S.dl.estimate;
+  el('dl-layers').innerHTML = layers.length
+    ? layers.map(l => {
+        const e = est?.byName?.[dlPayload(l).name];
+        const meta = !g ? '' : !e ? 'sizing…'
+          : e.error ? `<span class="err">${esc(e.error)}</span>`
+          : `${fmtBytes(e.bytes)} · ${e.format} · ${Object.values(e.dims).join('×')}`;
+        return `<label class="dl-row">
+          <input type="checkbox" data-dl="${esc(l.id)}" ${S.dl.excluded.has(l.id) ? '' : 'checked'}>
+          <div class="dl-row-main">
+            <div class="dl-row-name">${esc(l.title)}</div>
+            <div class="dl-row-meta${e?.error ? ' err' : ''}">${esc(l.label || l.activeVar)}${meta ? ` · ${meta}` : ''}</div>
+          </div>
+        </label>`;
+      }).join('')
+    : '<div class="set-note" style="margin-top:0">No active layers. Switch datasets on to include them.</div>';
+  el('dl-layers').querySelectorAll('input[data-dl]').forEach(inp => inp.addEventListener('change', () => {
+    if (inp.checked) S.dl.excluded.delete(inp.dataset.dl); else S.dl.excluded.add(inp.dataset.dl);
+    scheduleEstimate();
+  }));
+
+  const ok = est && g && est.total > 0 && est.total <= est.max && !est.stale;
+  el('dl-go').disabled = !ok || !!S.dl.polling;
+  el('dl-code').disabled = !(est && g && est.layers.some(x => !x.error));
+  if (g && est && !est.stale) {
+    el('dl-summary').textContent = est.total > est.max
+      ? `${fmtBytes(est.total)} selected — over the ${fmtBytes(est.max)} limit. Shrink the area, untick layers, or use the Python code.`
+      : `${fmtBytes(est.total)} uncompressed (limit ${fmtBytes(est.max)}).`;
+  }
+  if (estimate && (!est || est.stale)) scheduleEstimate();
+}
+
+function scheduleEstimate() {
+  if (S.dl.estimate) S.dl.estimate.stale = true;
+  clearTimeout(_dlEstimateTimer);
+  _dlEstimateTimer = setTimeout(runEstimate, 350);
+}
+
+async function runEstimate() {
+  const seq = ++_dlEstimateSeq;
+  const layers = dlLayers();
+  if (!S.dl.geometry || !layers.length) { S.dl.estimate = null; refreshDownload({ estimate: false }); return; }
+  const payload = layers.map(dlPayload);
+  try {
+    const res = await postJSON('/download/estimate', { geometry: S.dl.geometry, layers: payload });
+    if (seq !== _dlEstimateSeq) return;
+    const byName = Object.fromEntries(res.layers.map(x => [x.name, x]));
+    S.dl.estimate = { layers: res.layers, byName, payload, total: res.total_bytes, max: res.max_bytes, stale: false };
+  } catch (err) {
+    if (seq !== _dlEstimateSeq) return;
+    S.dl.estimate = null;
+    el('dl-summary').textContent = `Could not size the request: ${err.message}`;
+  }
+  refreshDownload({ estimate: false });
+}
+
+async function startDownload() {
+  const est = S.dl.estimate;
+  if (!est) return;
+  const layers = est.payload.filter(p => !est.byName[p.name]?.error);
+  el('dl-progress').hidden = false;
+  el('dl-bar').style.width = '0%';
+  el('dl-status').textContent = 'Starting…';
+  try {
+    const { id } = await postJSON('/download', { geometry: S.dl.geometry, layers });
+    S.dl.polling = id;
+    refreshDownload({ estimate: false });
+    for (;;) {
+      await new Promise(r => setTimeout(r, 1500));
+      const st = await fetchJSON(`${S.tiTiler}/download/${id}`);
+      el('dl-bar').style.width = `${Math.round(st.progress * 100)}%`;
+      el('dl-status').textContent = st.status === 'done'
+        ? `Ready · ${fmtBytes(st.size)} zip`
+        : `${st.message} · ${Math.round(st.progress * 100)}%`;
+      if (st.status === 'error') throw new Error(st.message);
+      if (st.status === 'done') {
+        const a = document.createElement('a');
+        a.href = `${S.tiTiler}/download/${id}/file`;
+        a.download = '';
+        document.body.append(a); a.click(); a.remove();
+        break;
+      }
+    }
+  } catch (err) {
+    el('dl-status').textContent = `Download failed: ${err.message}`;
+  } finally {
+    S.dl.polling = null;
+    refreshDownload({ estimate: false });
+  }
+}
+
+const pyStr = v => JSON.stringify(String(v));
+const pyVal = v => /^-?\d+(\.\d+)?$/.test(String(v)) ? String(v) : pyStr(v);
+
+function pythonSnippet() {
+  const est = S.dl.estimate;
+  const lines = [
+    '# EOForestSTAC area subset: bounding box of the drawn area, native grid.',
+    '# pip install xarray zarr fsspec aiohttp   (rioxarray + shapely for the polygon mask)',
+    'import xarray as xr',
+    '',
+    `area = ${JSON.stringify(S.dl.geometry)}  # EPSG:4326`,
+    '',
+  ];
+  for (const p of est.payload) {
+    const e = est.byName[p.name];
+    if (!e || e.error) continue;
+    lines.push(`# ${p.title}${p.license ? ` (license: ${p.license})` : ''}`);
+    if (p.citation) lines.push(`# cite: ${p.citation}`);
+    lines.push(`ds = xr.open_zarr(${pyStr(p.url)}, chunks={})`);
+    lines.push(`da = ds[${pyStr(p.variable)}]`);
+    for (const s of p.sel) {
+      const [dim, raw] = [s.slice(0, s.indexOf('=')), s.slice(s.indexOf('=') + 1)];
+      const nearest = raw.startsWith('nearest::');
+      const value = nearest ? raw.slice(9) : raw;
+      lines.push(`da = da.sel(${dim}=${pyVal(value)}${nearest ? ', method="nearest"' : ''})`);
+    }
+    const [y0, y1] = e.y_range, [x0, x1] = e.x_range;
+    lines.push(`da = da.sel(${e.y_dim}=slice(${y0}, ${y1}), ${e.x_dim}=slice(${x0}, ${x1}))  # ${e.crs}`);
+    lines.push(`# da = da.rio.write_crs(${pyStr(e.crs)}).rio.clip([area], crs="EPSG:4326")  # polygon mask`);
+    lines.push(`da.to_netcdf(${pyStr(`${p.name}.nc`)})`, '');
+  }
+  return lines.join('\n');
+}
+
+/* The page is served over plain http on the intranet, where the async
+   clipboard API is unavailable, so show the code with a select-and-copy box. */
+function showPythonSnippet() {
+  el('dlg-eyebrow').textContent = 'Download';
+  el('dlg-title').textContent = 'Python code for this area';
+  el('dlg-body').innerHTML = `<p>Reads the same native data straight from the Zarr stores, with no size limit.</p>
+    <textarea class="dlg-code" id="dl-snippet" readonly spellcheck="false"></textarea>
+    <div class="dl-actions"><button class="btn" id="dl-copy">Copy</button></div>`;
+  el('dl-snippet').value = pythonSnippet();
+  el('dl-copy').addEventListener('click', async () => {
+    const ta = el('dl-snippet');
+    ta.select();
+    try { await navigator.clipboard.writeText(ta.value); } catch { document.execCommand('copy'); }
+    el('dl-copy').textContent = 'Copied';
+  });
+  el('ds-info-dlg').showModal();
+}
+
+function initDownload() {
+  document.querySelectorAll('.dl-tool[data-draw]').forEach(b => b.addEventListener('click', () => {
+    if (S.dl.drawing?.kind === b.dataset.draw) cancelDraw(); else startDraw(b.dataset.draw);
+  }));
+  el('dl-file').addEventListener('change', e => { if (e.target.files[0]) loadAreaFile(e.target.files[0]); e.target.value = ''; });
+  el('dl-alltime').addEventListener('change', scheduleEstimate);
+  el('dl-go').addEventListener('click', startDownload);
+  el('dl-code').addEventListener('click', showPythonSnippet);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cancelDraw(); });
+}
+
+/* ══════════════════════════════════════════════════════════════════
    PANEL / RAIL WIRING
 ══════════════════════════════════════════════════════════════════ */
-const VIEW_TITLES = { data: 'Datasets', layers: 'Active layers', basemap: 'Basemap & view', settings: 'Settings' };
+const VIEW_TITLES = { data: 'Datasets', layers: 'Active layers', basemap: 'Basemap & view', download: 'Download data', settings: 'Settings' };
 
 /* Clicking the rail button you're already on collapses the panel;
    openView() is the non-toggling form used when code needs a view shown.
@@ -2214,6 +2615,7 @@ function openView(view, cat) {
   document.querySelectorAll('.pnl-view').forEach(v => v.classList.toggle('active', v.id === `view-${view}`));
   if (view === 'data') applyCatalogFilter();
   else syncPanelHead();
+  if (view === 'download') refreshDownload();
 }
 
 function syncPanelHead(hits = 0) {
@@ -2259,6 +2661,7 @@ function initUI() {
   el('autozoom-sw').checked = S.autoZoom;
   renderBasemapGrid();
   renderRailCats();
+  initDownload();
 
   document.querySelectorAll('.rail-btn[data-view]:not([data-cat])').forEach(b => {
     b.addEventListener('click', () => showView(b.dataset.view));
