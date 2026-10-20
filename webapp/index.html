@@ -1916,6 +1916,7 @@ async function updateLeafletLayer(id, { refreshMeta = false } = {}) {
   layer.leafletLayer.setOpacity(layer.opacity);
   updateFootprint(layer);
   renderLegend();
+  if (S.view === 'download') refreshDownload();
 }
 
 function removeLayer(id) {
@@ -2437,8 +2438,17 @@ async function postJSON(path, body) {
 }
 
 let _dlEstimateTimer, _dlEstimateSeq = 0;
+/* What a download would request right now. An estimate is only valid for
+   the exact request it sized: layers finish activating, get switched on or
+   off, and change time step or variable after the area is drawn. */
+function dlSignature() {
+  if (!S.dl.geometry) return null;
+  return JSON.stringify({ geometry: S.dl.geometry, layers: dlLayers().map(dlPayload) });
+}
+
 function refreshDownload({ estimate = true } = {}) {
   const g = S.dl.geometry;
+  if (S.dl.estimate && S.dl.estimate.sig !== dlSignature()) S.dl.estimate.stale = true;
   el('dl-area-note').innerHTML = g
     ? `<div class="dl-area"><span>${esc(areaLabel(g))}</span><a class="dl-link" id="dl-clear">clear</a></div>`
     : 'Draw an area on the map or upload a GeoJSON polygon.';
@@ -2488,11 +2498,12 @@ async function runEstimate() {
   const layers = dlLayers();
   if (!S.dl.geometry || !layers.length) { S.dl.estimate = null; refreshDownload({ estimate: false }); return; }
   const payload = layers.map(dlPayload);
+  const sig = dlSignature();
   try {
     const res = await postJSON('/download/estimate', { geometry: S.dl.geometry, layers: payload });
     if (seq !== _dlEstimateSeq) return;
     const byName = Object.fromEntries(res.layers.map(x => [x.name, x]));
-    S.dl.estimate = { layers: res.layers, byName, payload, total: res.total_bytes, max: res.max_bytes, stale: false };
+    S.dl.estimate = { layers: res.layers, byName, payload, sig, total: res.total_bytes, max: res.max_bytes, stale: false };
   } catch (err) {
     if (seq !== _dlEstimateSeq) return;
     S.dl.estimate = null;
@@ -2503,7 +2514,7 @@ async function runEstimate() {
 
 async function startDownload() {
   const est = S.dl.estimate;
-  if (!est) return;
+  if (!est || est.sig !== dlSignature()) { refreshDownload(); return; }
   const layers = est.payload.filter(p => !est.byName[p.name]?.error);
   el('dl-progress').hidden = false;
   el('dl-bar').style.width = '0%';
