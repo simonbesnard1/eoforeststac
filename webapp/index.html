@@ -342,6 +342,7 @@ input[type=range]::-moz-range-thumb{
   width:100%;min-height:300px;font-family:var(--mono);font-size:11.5px;line-height:1.5;
   background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px;resize:vertical;color:var(--text);
 }
+.set-note a{color:var(--accent);font-weight:500}
 .set-note code{
   font-family:var(--mono);font-size:10.5px;background:var(--panel-2);
   padding:1px 5px;border-radius:3px;color:var(--text-2);
@@ -2515,15 +2516,17 @@ async function startDownload() {
       await new Promise(r => setTimeout(r, 1500));
       const st = await fetchJSON(`${S.tiTiler}/download/${id}`);
       el('dl-bar').style.width = `${Math.round(st.progress * 100)}%`;
-      el('dl-status').textContent = st.status === 'done'
-        ? `Ready · ${fmtBytes(st.size)} zip`
-        : `${st.message} · ${Math.round(st.progress * 100)}%`;
+      el('dl-status').textContent = `${st.message} · ${Math.round(st.progress * 100)}%`;
       if (st.status === 'error') throw new Error(st.message);
       if (st.status === 'done') {
-        const a = document.createElement('a');
-        a.href = `${S.tiTiler}/download/${id}/file`;
-        a.download = '';
-        document.body.append(a); a.click(); a.remove();
+        /* A synthetic link click seconds after the user's own click is not a
+           user gesture, and Firefox silently drops it. Navigating to the
+           attachment starts the download without leaving the page; the link
+           is the manual fallback. */
+        const url = `${S.tiTiler}/download/${id}/file`;
+        el('dl-status').innerHTML = `Ready · ${fmtBytes(st.size)} zip. ` +
+          `If the download did not start, <a href="${esc(url)}" download>save the zip</a> (kept for 2 hours).`;
+        window.location.assign(url);
         break;
       }
     }
