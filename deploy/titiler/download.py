@@ -299,10 +299,19 @@ def _polygon_mask(
 # ── Writers ─────────────────────────────────────────────────────────────
 
 
+# The data are already decoded, so these describe the source store's
+# serialization; the writers set their own, and xarray refuses duplicates.
+_ENCODING_ATTRS = frozenset(
+    {"_FillValue", "missing_value", "scale_factor", "add_offset"}
+)
+
+
 def _clean_attrs(attrs: dict[str, Any]) -> dict[str, Any]:
     """NetCDF/GeoTIFF tags take scalars, strings and flat numeric lists."""
     clean = {}
     for key, value in attrs.items():
+        if key in _ENCODING_ATTRS:
+            continue
         if isinstance(value, (str, int, float, np.number)):
             clean[key] = value
         elif isinstance(value, bool):
@@ -321,6 +330,7 @@ def write_layer(prepared: PreparedLayer, path: Path) -> None:
     out = prepared.data.rio.set_spatial_dims(x_dim=prepared.x_dim, y_dim=prepared.y_dim)
     out = out.rio.write_crs(prepared.crs)
     out.attrs = _clean_attrs(out.attrs)
+    out.encoding = {}
     if prepared.extension == "tif":
         out.rio.write_nodata(prepared.nodata, encoded=False, inplace=True)
         out.rio.to_raster(
