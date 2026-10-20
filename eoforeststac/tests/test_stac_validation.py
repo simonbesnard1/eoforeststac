@@ -418,7 +418,6 @@ class TestConfigSchema:
         from eoforeststac.products.robinson_cr import ROBINSON_CR_CFG
         from eoforeststac.products.saatchi_biomass import SAATCHI_BIOMASS_CFG
         from eoforeststac.products.uls_products import ULS_PRODUCTS_CFG
-        from eoforeststac.products.wang_forestage import WANG_FORESTAGE_CFG
 
         return {
             "ALS_PRODUCTS": ALS_PRODUCTS_CFG,
@@ -438,7 +437,6 @@ class TestConfigSchema:
             "RESTOR_LANDUSE": RESTOR_LANDUSE_CFG,
             "ROBINSON_CR": ROBINSON_CR_CFG,
             "SAATCHI_BIOMASS": SAATCHI_BIOMASS_CFG,
-            "WANG_FORESTAGE": WANG_FORESTAGE_CFG,
             "ULS_PRODUCTS": ULS_PRODUCTS_CFG,
         }
 

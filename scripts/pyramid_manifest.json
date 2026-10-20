@@ -45,13 +45,6 @@
       "reducers": {"canopy_height": "mean"}
     },
     {
-      "collection": "WANG_FORESTAGE",
-      "reducers": {
-        "natural_forest_age": "mean",
-        "planted_forest_age": "mean"
-      }
-    },
-    {
       "collection": "LIU_BIOMASS",
       "reducers": {
         "aboveground_biomass": "mean",

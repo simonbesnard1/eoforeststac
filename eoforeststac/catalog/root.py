@@ -84,10 +84,6 @@ from eoforeststac.catalog.gami_ageclass import (
 #     create_gedi_l4d_collection,
 #     create_gedi_l4d_item,
 # )
-from eoforeststac.catalog.wang_forestage import (
-    create_wang_forestage_collection,
-    create_wang_forestage_item,
-)
 from eoforeststac.catalog.als_products import (
     create_als_products_collection,
     create_als_products_item,
@@ -119,7 +115,6 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "RESTOR_LANDUSE": ["2.0"],
     # "POTAPOV_LCLUC": ["2020"],
     # "GEDI_L4D": ["2.0"],
-    "WANG_FORESTAGE": ["2.0"],
     "ALS_PRODUCTS": ["1.0"],
     "ULS_PRODUCTS": ["1.0"],
 }
@@ -173,7 +168,6 @@ THEMES: Dict[str, Dict[str, object]] = {
             "POTAPOV_HEIGHT",
             "FORESTPATHS_GENUS",
             # "GEDI_L4D",
-            "WANG_FORESTAGE",
         ],
     },
     "als-lidar": {
@@ -267,11 +261,6 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
         #     create_gedi_l4d_collection,
         #     create_gedi_l4d_item,
         # ),
-        ProductSpec(
-            "WANG_FORESTAGE",
-            create_wang_forestage_collection,
-            create_wang_forestage_item,
-        ),
         ProductSpec(
             "ALS_PRODUCTS",
             create_als_products_collection,
