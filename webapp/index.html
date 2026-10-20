@@ -331,7 +331,12 @@ input[type=range]::-moz-range-thumb{
 .btn-ghost{background:var(--panel-2);color:var(--text);border:1px solid var(--line)}
 .dl-bar{height:6px;border-radius:3px;background:var(--panel-3);overflow:hidden;margin-top:10px}
 .dl-bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
-.dl-shape{stroke:var(--accent);fill:var(--accent);fill-opacity:.08;stroke-width:2;stroke-dasharray:6 4}
+/* Magenta is absent from the green/blue/yellow ramps the layers use; the
+   white halo keeps it visible over dark data and satellite basemaps. */
+.dl-shape{
+  stroke:#e6007e;fill:#e6007e;fill-opacity:.07;stroke-width:3.5;stroke-dasharray:10 6;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff);
+}
 #map.dl-drawing,#map.dl-drawing .leaflet-interactive{cursor:crosshair}
 .dlg-code{
   width:100%;min-height:300px;font-family:var(--mono);font-size:11.5px;line-height:1.5;
