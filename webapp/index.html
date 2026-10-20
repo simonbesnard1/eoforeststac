@@ -364,10 +364,11 @@ input[type=range]::-moz-range-thumb{
 }
 .leg-ramp{height:9px;border-radius:2px;border:1px solid var(--line)}
 .leg-ticks{
-  display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:4px;
-  font-family:var(--mono);font-size:9.5px;color:var(--text-3);
+  display:flex;justify-content:space-between;align-items:baseline;gap:4px;margin-top:4px;
+  font-family:var(--mono);font-size:9px;color:var(--text-3);
   font-variant-numeric:tabular-nums;
 }
+.leg-ticks span:not(:first-child):not(:last-child){opacity:.72}
 .leg-unit{flex:1;text-align:center;opacity:.8;overflow:hidden;text-overflow:ellipsis}
 .leg-var{
   width:100%;margin-bottom:8px;padding:4px 22px 4px 7px;
@@ -377,9 +378,23 @@ input[type=range]::-moz-range-thumb{
 .leg-classes{display:flex;flex-direction:column;gap:3px}
 .leg-class{display:flex;align-items:center;gap:7px;min-width:0}
 .leg-chip{width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid var(--line)}
+.leg-chip-nil{
+  background:repeating-linear-gradient(45deg,var(--panel-3) 0 3px,transparent 3px 6px);
+}
 .leg-class-lbl{
-  font-size:10.5px;color:var(--text-2);
+  flex:1;font-size:10.5px;color:var(--text-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.leg-class-val{
+  font-family:var(--mono);font-size:9.5px;color:var(--text-3);
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.leg-nodata{
+  display:flex;align-items:center;gap:7px;
+  margin-top:7px;padding-top:7px;border-top:1px solid var(--line);
+}
+.leg-prov{
+  margin-top:6px;font-size:9.5px;line-height:1.4;color:var(--text-3);
 }
 .leg-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
 .leg-lvl{
@@ -709,6 +724,88 @@ const RAMPS = {
   spectral:['#9e0142','#f46d43','#ffffbf','#66c2a5','#5e4fa2'],
 };
 const rampCSS = n => `linear-gradient(to right,${(RAMPS[n] || RAMPS.greys).join(',')})`;
+
+/* RAMPS above are only a fallback. The tiles are coloured by rio-tiler's own
+   256-entry lookup table, so a hand-written 5-stop approximation puts the wrong
+   colours in the legend. Fetch the real LUT and key the legend off that. */
+const LUT = new Map();          // colormap name -> [[r,g,b,a] x 256]
+const LUT_INFLIGHT = new Map(); // name -> promise, so concurrent layers share one fetch
+
+function loadLUT(name) {
+  if (LUT.has(name)) return Promise.resolve(LUT.get(name));
+  if (LUT_INFLIGHT.has(name)) return LUT_INFLIGHT.get(name);
+  if (!S.tiOk) return Promise.resolve(null);
+
+  const p = (async () => {
+    try {
+      const raw = await fetchJSON(`${S.tiTiler}/colorMaps/${encodeURIComponent(name)}?f=json`);
+      /* Sequential maps come back keyed 0..255; interval maps as
+         [[[lo,hi],[r,g,b,a]], ...]. Normalise both to 256 stops. */
+      let stops = null;
+      if (Array.isArray(raw)) {
+        stops = Array.from({ length: 256 }, (_, i) => {
+          const hit = raw.find(e => Array.isArray(e?.[0]) && i >= e[0][0] && i <= e[0][1]);
+          return (hit || raw[raw.length - 1])?.[1] || [0, 0, 0, 0];
+        });
+      } else if (raw && typeof raw === 'object') {
+        stops = Array.from({ length: 256 }, (_, i) => raw[i] || raw[String(i)] || [0, 0, 0, 0]);
+      }
+      if (stops) LUT.set(name, stops);
+      return stops;
+    } catch { return null; }
+    finally { LUT_INFLIGHT.delete(name); }
+  })();
+  LUT_INFLIGHT.set(name, p);
+  return p;
+}
+
+const rgba = c => `rgba(${c[0]},${c[1]},${c[2]},${(c[3] ?? 255) / 255})`;
+
+/* Exact colour for a normalised position, straight out of the server LUT. */
+function colorAt(name, t) {
+  const lut = LUT.get(name);
+  if (!lut) return sampleRamp(name, t);
+  const i = Math.max(0, Math.min(255, Math.round(Math.max(0, Math.min(1, t)) * 255)));
+  return rgba(lut[i]);
+}
+
+/* Build the gradient from the LUT. 48 stops is visually exact for smooth maps
+   and keeps hard edges of stepped maps roughly in place. */
+function gradientFor(name) {
+  const lut = LUT.get(name);
+  if (!lut) { loadLUT(name).then(s => { if (s) renderLegend(); }); return rampCSS(name); }
+  const N = 48;
+  const stops = Array.from({ length: N }, (_, k) => {
+    const t = k / (N - 1);
+    return `${rgba(lut[Math.round(t * 255)])} ${(t * 100).toFixed(1)}%`;
+  });
+  return `linear-gradient(to right,${stops.join(',')})`;
+}
+
+/* The server knows which colormaps it supports — 211 of them — so don't ship
+   a guessed subset in the client. */
+async function loadColormapNames() {
+  if (!S.tiOk) return;
+  try {
+    /* Without f=json this endpoint negotiates to HTML. */
+    const res = await fetchJSON(`${S.tiTiler}/colorMaps?f=json`);
+    const list = res?.colormaps ?? res?.colorMaps ?? res;
+    const names = (Array.isArray(list) ? list : [])
+      .map(c => (typeof c === 'string' ? c : c?.id ?? c?.name))
+      .filter(Boolean);
+    if (names.length) S.colormapNames = names;
+  } catch { /* keep the built-in list */ }
+}
+
+/* Curated names first, then everything else the server offers. */
+function colormapOptions(selected) {
+  const curated = Object.keys(RAMPS).filter(n => S.colormapNames.includes(n));
+  const rest = S.colormapNames.filter(n => !curated.includes(n)).sort();
+  const opt = n => `<option value="${esc(n)}" ${n === selected ? 'selected' : ''}>${esc(n)}</option>`;
+  if (!rest.length) return curated.map(opt).join('');
+  return `<optgroup label="Common">${curated.map(opt).join('')}</optgroup>` +
+         `<optgroup label="All (${rest.length})">${rest.map(opt).join('')}</optgroup>`;
+}
 function sampleRamp(name, t) {
   const s = RAMPS[name] || RAMPS.greys;
   const x = Math.max(0, Math.min(1, t)) * (s.length - 1);
@@ -723,8 +820,6 @@ const CFG = {
   catalog: 'https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/catalog.json',
   defaultTiTiler: window.EOFOREST_CONFIG?.tiTilerUrl || 'http://localhost:8000',
   home: { center: [20, 10], zoom: 3 },
-  colormaps: Object.keys(RAMPS),
-  cmapGradients: Object.fromEntries(Object.keys(RAMPS).map(k => [k, rampCSS(k)])),
   /* data_vars that are grid/CRS carriers rather than renderable rasters */
   skipVars: new Set(['spatial_ref','crs','transverse_mercator','lambert_azimuthal_equal_area','latitude_longitude','polar_stereographic']),
   /* Rail order follows the catalog; `short` is the rail label, `label` the
@@ -810,6 +905,7 @@ const S = {
   cat:       null,
   panelOpen: true,
   legendOpen: true,
+  colormapNames: Object.keys(RAMPS),
 };
 
 const el  = id => document.getElementById(id);
@@ -1367,7 +1463,11 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   }
 
   if (!layer.colormapManual) layer.colormap = automaticColormap(layer);
-  if (resetRange && !layer.rangeKnown) await probeStatistics(layer);
+  if (resetRange) {
+    const declared = metadataClasses(layer);
+    if (!(declared?.length && applyClassRange(layer, declared))) await reconcileRange(layer);
+  }
+  await loadLUT(layer.colormap);   // class swatches need the real LUT
   layer.classes = buildClasses(layer);
 
   /* tilejson reports minzoom 0 for zarr regardless of size, so the real
@@ -1381,27 +1481,93 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   }
 }
 
-/* No declared valid range — derive one from the data. Only ever run against
-   the coarsest pyramid level: /statistics on a full-resolution store would
-   pull the whole array into memory. */
-async function probeStatistics(layer) {
-  if (!layer.pyramidUrl || layer.numPyramidLevels < 2) return;
-  const coarsest = `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
-  try {
-    const qs = new URLSearchParams({ url: coarsest, variable: layer.activeVar });
-    for (const s of selParams(layer)) qs.append('sel', s);
-    const stats = await fetchJSON(`${S.tiTiler}/statistics?${qs}`);
-    const band = stats && typeof stats === 'object' ? Object.values(stats)[0] : null;
-    if (!band) return;
-    const lo = Number(band.percentile_2 ?? band.min);
-    const hi = Number(band.percentile_98 ?? band.max);
-    if (Number.isFinite(lo) && Number.isFinite(hi) && hi > lo) {
-      layer.rMin = +lo.toPrecision(3);
-      layer.rMax = +hi.toPrecision(3);
-      layer.rangeKnown = true;
-    }
-  } catch { /* fall back to manual range */ }
+/* Which store can /statistics safely read? It clips to the full extent and
+   rejects anything over the 1 GB array ceiling BEFORE downsampling to
+   max_size, so a full-resolution global store is off limits. Prefer the
+   coarsest pyramid level; otherwise the native store, but only if it fits. */
+function statisticsSource(layer) {
+  if (layer.pyramidUrl && layer.numPyramidLevels >= 2)
+    return `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
+  const itemsize = DTYPE_BYTES[String(layer.dtype).replace(/^[<>|=]/, '')] ?? 4;
+  const bands = Math.max(1, layer.dimInfo?.length ?? 1);
+  if (layer.width && layer.height &&
+      layer.width * layer.height * itemsize * (selParams(layer).length ? 1 : bands) < READ_BUDGET)
+    return layer.zarrUrl;
+  return null;
 }
+
+/* Measure the actual distribution. Returns null when it can't be read.
+   titiler.xarray only serves POST /statistics, with the area as a GeoJSON
+   Feature; the result comes back in properties.statistics. */
+async function measureStatistics(layer) {
+  const src = statisticsSource(layer);
+  const bb = boundsToLatLng(layer.bounds);
+  if (!src || !bb || !S.tiOk) return null;
+  try {
+    const qs = new URLSearchParams({ url: src, variable: layer.activeVar, max_size: '1024' });
+    for (const s of selParams(layer)) qs.append('sel', s);
+    const [w, s, e, n] = [bb.getWest(), bb.getSouth(), bb.getEast(), bb.getNorth()];
+    const feature = {
+      type: 'Feature', properties: {},
+      geometry: { type: 'Polygon', coordinates: [[[w, s], [e, s], [e, n], [w, n], [w, s]]] },
+    };
+    const r = await fetch(`${S.tiTiler}/statistics?${qs}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(feature),
+    });
+    if (!r.ok) return null;
+    const stats = (await r.json())?.properties?.statistics;
+    const band = stats && typeof stats === 'object' ? Object.values(stats)[0] : null;
+    if (!band) return null;
+    const pick = (...k) => { for (const n of k) if (Number.isFinite(Number(band[n]))) return Number(band[n]); return null; };
+    return {
+      min: pick('min'), max: pick('max'),
+      p2:  pick('percentile_2', 'percentile_2.0'),
+      p98: pick('percentile_98', 'percentile_98.0'),
+    };
+  } catch { return null; }
+}
+
+/* A declared valid_min/valid_max is a validity contract, not a display range:
+   SAATCHI declares 0–1000 Mg/ha while 98 % of its pixels sit below 280, so a
+   declared stretch leaves most of the map in the bottom of the ramp. Display
+   the measured p2–p98 whenever it can be read, kept inside the declared
+   bounds; the declared/STAC/tilejson range is only the fallback. */
+async function reconcileRange(layer) {
+  /* Small integer ranges are codes or masks — a percentile stretch would cut
+     off the rare values. */
+  const isInt = /^u?int|^bool/i.test(layer.dtype || '');
+  if (layer.rangeKnown && isInt && layer.rMax - layer.rMin <= 11) return;
+
+  const st = await measureStatistics(layer);
+  if (!st) return;
+  layer.stats = st;
+
+  let lo = st.p2 ?? st.min, hi = st.p98 ?? st.max;
+  if (layer.rangeKnown) { lo = Math.max(lo, layer.rMin); hi = Math.min(hi, layer.rMax); }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return;
+
+  layer.rMin = +lo.toPrecision(3);
+  layer.rMax = +hi.toPrecision(3);
+  layer.rangeKnown = true;
+  layer.rangeSource = 'measured';
+}
+
+/* Class rasters are coloured by value position in the rescale range, so the
+   range must be exactly the declared class values — never a percentile cut. */
+function applyClassRange(layer, classes) {
+  const values = classes.map(c => c.value);
+  const lo = Math.min(...values), hi = Math.max(...values);
+  if (!(hi > lo)) return false;
+  layer.rMin = lo; layer.rMax = hi;
+  layer.rangeKnown = true;
+  layer.rangeSource = 'classes';
+  return true;
+}
+
+/* Bytes one tile or statistics request may read. The map fetches ~a dozen
+   tiles at once and the server runs up to 8 reads in parallel, so this has
+   to stay far below rio-tiler's 1 GB per-array ceiling. */
+const READ_BUDGET = 1.5e8;
 
 const DTYPE_BYTES = {
   bool:1, int8:1, uint8:1, int16:2, uint16:2, float16:2,
@@ -1424,16 +1590,12 @@ function computeZoomFloor(layer) {
   const lonSpan = Math.max(1e-6, bb.getEast() - bb.getWest());
   const latSpan = Math.max(1e-6, bb.getNorth() - bb.getSouth());
   const pxLon = lonSpan / width, pxLat = latSpan / height;
-  /* Per-tile read budget. The map fetches ~a dozen tiles at once and the
-     server runs up to 8 reads in parallel, so this has to stay far below
-     rio-tiler's 1 GB per-array ceiling. */
-  const BUDGET = 1.5e8;
 
   for (let z = 0; z <= 22; z++) {
     const deg = 360 / 2 ** z;
     const w = Math.min(width,  deg / pxLon);
     const h = Math.min(height, deg / pxLat);
-    if (w * h * bands * itemsize < BUDGET) return z;
+    if (w * h * bands * itemsize < READ_BUDGET) return z;
   }
   return 22;
 }
@@ -1471,6 +1633,10 @@ function metadataClasses(layer) {
 }
 
 function automaticColormap(layer) {
+  /* Declared classes are categories, not magnitudes: a sequential ramp makes
+     neighbouring classes indistinguishable. */
+  const classes = metadataClasses(layer);
+  if (classes?.length > 2) return classes.length <= 10 ? 'tab10' : 'tab20';
   const name = `${layer.activeVar} ${layer.label} ${layer.units}`.toLowerCase();
   if (/(uncertainty|standard deviation|std|error)/.test(name)) return 'blues';
   if (/(loss|deforest|degrad|disturb|change)/.test(name)) return 'ylorbr';
@@ -1493,29 +1659,33 @@ function applyRange(layer, minmax, attrs) {
   } else if (pair && pair.length >= 2 && Number.isFinite(+pair[0]) && Number.isFinite(+pair[1])) {
     lo = +pair[0]; hi = +pair[1];
   }
-  if (lo === null || hi === null || hi <= lo) { layer.rangeKnown = false; return; }
+  if (lo === null || hi === null || hi <= lo) {
+    layer.rangeKnown = false; layer.rangeSource = 'manual'; return;
+  }
   layer.rMin = lo; layer.rMax = hi; layer.rangeKnown = true;
+  layer.rangeSource = (attrs && Number.isFinite(+attrs.valid_min)) ? 'declared'
+    : (Number.isFinite(+(stats.minimum ?? stats.min)) ? 'stac' : 'tilejson');
 }
 
 /* Integer variables spanning a handful of values (masks, class rasters) read
    far better as discrete swatches than as a continuous ramp. */
 function buildClasses(layer) {
-  const declared = metadataClasses(layer);
-  if (declared?.length) {
-    const n = declared.length;
-    return declared.map((item, i) => ({
-      ...item,
-      color: item.color || sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
-    }));
-  }
+  /* A class swatch must show the colour the tile actually gets, which is the
+     LUT sampled at the value's position in the rescale range — not at the
+     class's position in the list. */
   const span = layer.rMax - layer.rMin;
+  const at = v => colorAt(layer.colormap, span > 0 ? (v - layer.rMin) / span : 0);
+
+  const declared = metadataClasses(layer);
+  if (declared?.length)
+    return declared.map(item => ({ ...item, color: item.color || at(item.value) }));
+
   const isInt = /^u?int|^bool/i.test(layer.dtype || '');
   if (!layer.rangeKnown || !isInt || span < 1 || span > 11) return null;
-  const n = span + 1;
-  return Array.from({ length: n }, (_, i) => ({
+  return Array.from({ length: span + 1 }, (_, i) => ({
     value: layer.rMin + i,
     label: String(layer.rMin + i),
-    color: sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
+    color: at(layer.rMin + i),
   }));
 }
 
@@ -1623,7 +1793,10 @@ function buildTileUrl(layer, zoom) {
     colormap_name: layer.colormap,
   });
   for (const s of selParams(layer)) p.append('sel', s);
-  return `${S.tiTiler}/tiles/WebMercatorQuad/{z}/{x}/{y}?${p}`;
+  /* Without an extension TiTiler sends JPEG for gap-free tiles; its artefacts
+     smear class colours into shades no legend swatch shows. */
+  const ext = layer.classes ? '.png' : '';
+  return `${S.tiTiler}/tiles/WebMercatorQuad/{z}/{x}/{y}${ext}?${p}`;
 }
 
 function addLeafletLayer(layer) {
@@ -1782,15 +1955,15 @@ function renderLayerPanel() {
       <div class="fld">
         <div class="fld-lbl"><span>Colour ramp</span></div>
         <select data-id="${esc(layer.id)}" data-prop="colormap">
-          ${CFG.colormaps.map(c => `<option value="${c}" ${c === layer.colormap ? 'selected' : ''}>${c}</option>`).join('')}
+          ${colormapOptions(layer.colormap)}
         </select>
-        <div class="cmap-bar" data-role="ramp" style="background:${CFG.cmapGradients[layer.colormap]}"></div>
+        <div class="cmap-bar" data-role="ramp" style="background:${gradientFor(layer.colormap)}"></div>
       </div>
 
       <div class="fld">
         <div class="fld-lbl">
           <span>Value range${layer.units ? ` (${esc(layer.units)})` : ''}</span>
-          <span class="fld-val">${layer.rangeKnown ? 'from data' : 'manual'}</span>
+          <span class="fld-val">${esc(layer.rangeSource || 'manual')}</span>
         </div>
         <div class="two-up">
           <input type="number" step="any" value="${layer.rMin}" data-id="${esc(layer.id)}" data-prop="rMin" aria-label="minimum">
@@ -1864,13 +2037,18 @@ function onLayerControl(ctrl) {
   if (Number.isNaN(val)) return;
   layer[prop] = val;
   if (prop === 'colormap') layer.colormapManual = true;
+  if (prop === 'rMin' || prop === 'rMax') layer.rangeSource = 'manual';
   if (prop === 'activeVar') { layer.colormapManual = false; layer.extraDims = null; }
 
   /* Null when the control lives in the legend rather than a layer card. */
   const card = ctrl.closest('.lc');
   if (card) {
     if (prop === 'opacity') card.querySelector('[data-role="op"]').textContent = Math.round(val * 100) + '%';
-    if (prop === 'colormap') card.querySelector('[data-role="ramp"]').style.background = CFG.cmapGradients[val];
+    if (prop === 'colormap') {
+      /* Class swatches are sampled from the LUT, so rebuild them once it lands. */
+      loadLUT(val).then(() => { layer.classes = buildClasses(layer); renderLayerPanel(); renderLegend(); });
+      card.querySelector('[data-role="ramp"]').style.background = gradientFor(val);
+    }
     if (prop === 'dimValue' && ctrl.type === 'range') {
       const labels = JSON.parse(ctrl.dataset.labels || '[]');
       const out = card.querySelector('[data-role="dimlabel"]');
@@ -1927,14 +2105,23 @@ function renderLegend() {
                <div class="leg-class">
                  <span class="leg-chip" style="background:${c.color}"></span>
                  <span class="leg-class-lbl">${esc(c.label)}</span>
+                 <span class="leg-class-val">${fmtNum(Number(c.value))}</span>
                </div>`).join('')}
            </div>`
-        : `<div class="leg-ramp" style="background:${rampCSS(layer.colormap)}"></div>
+        : `<div class="leg-ramp" style="background:${gradientFor(layer.colormap)}"></div>
            <div class="leg-ticks">
-             <span>${fmtNum(layer.rMin)}</span>
-             ${layer.units ? `<span class="leg-unit">${esc(layer.units)}</span>` : ''}
-             <span>${fmtNum(layer.rMax)}</span>
+             ${Array.from({ length: 5 }, (_, i) =>
+               `<span>${fmtNum(layer.rMin + (layer.rMax - layer.rMin) * i / 4)}</span>`).join('')}
            </div>`;
+
+      const RANGE_NOTE = {
+        measured: 'range measured from data (p2–p98)',
+        declared: 'range from valid_min / valid_max',
+        stac:     'range from STAC statistics',
+        tilejson: 'range reported by tile server',
+        classes:  'classes from dataset metadata',
+        manual:   'range set manually',
+      };
 
       const varPicker = layer.variables.length > 1
         ? `<select class="leg-var" data-id="${esc(layer.id)}" data-prop="activeVar" title="Switch variable">
@@ -1947,9 +2134,14 @@ function renderLegend() {
           <span class="leg-key" style="background:${layer.color}"></span>
           ${esc(layer.label || layer.activeVar)}
         </div>
-        <div class="leg-ds">${esc(layer.title)}</div>
+        <div class="leg-ds">${esc(layer.title)}${layer.units ? ` · ${esc(layer.units)}` : ''}</div>
         ${varPicker}
         ${body}
+        <div class="leg-nodata">
+          <span class="leg-chip leg-chip-nil"></span>
+          <span class="leg-class-lbl">no data</span>
+        </div>
+        <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}</div>
         ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
       </div>`;
     }).join('') + '</div>';
@@ -2126,7 +2318,7 @@ function initUI() {
   initUI();
   initMap();
   await checkTiTiler();
-  await loadCatalog();
+  await Promise.all([loadColormapNames(), loadCatalog()]);
   syncLayerCount();
 })();
 </script>
