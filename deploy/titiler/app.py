@@ -54,6 +54,47 @@ def _bound_dataset_cache() -> None:
         xarray_io.open_zarr.cache_clear()
 
 
+_titiler_get_variable = xarray_io.get_variable
+
+
+def _trim_overlapping_longitudes(ds, variable: str):
+    """Drop longitude columns outside [-180, 180] on grids spanning > 360 degrees.
+
+    TiTiler maps longitudes > 180 to -180..180 and sorts, then derives the
+    transform from the first coordinate and the spacing. On a grid that
+    overlaps itself (SAATCHI runs -176.5..196.5, all-empty beyond 180) that
+    breaks the regular spacing and shifts every pixel east (12.9 degrees for
+    SAATCHI). Trimming first keeps the grid regular; 0..360 grids without
+    overlap and projected grids are left to TiTiler.
+    """
+    da = ds[variable]
+    x_dim = next((d for d in ("x", *xarray_io.X_DIM_NAMES) if d in da.dims), None)
+    if x_dim is None or x_dim not in ds.coords or ds[x_dim].size < 2:
+        return ds
+    try:
+        crs = da.rio.crs
+    except Exception:  # unreadable grid mapping: treat as TiTiler does
+        crs = None
+    if crs is not None and not crs.is_geographic:
+        return ds
+    xs = ds[x_dim].values
+    span = abs(float(xs[-1] - xs[0])) + abs(float(xs[1] - xs[0]))
+    if span <= 360 + 1e-6 or (xs.min() >= -180 and xs.max() <= 180):
+        return ds
+    inside = np.nonzero((xs >= -180) & (xs <= 180))[0]
+    return ds.isel({x_dim: slice(int(inside[0]), int(inside[-1]) + 1)})
+
+
+def get_variable(ds, variable, sel=None):
+    return _titiler_get_variable(
+        _trim_overlapping_longitudes(ds, variable), variable, sel=sel
+    )
+
+
+# Reader resolves get_variable from the module at call time.
+xarray_io.get_variable = get_variable
+
+
 def validate_remote_url(value: str) -> str:
     """Return an approved public data URL or raise an HTTP 400 response."""
     try:
