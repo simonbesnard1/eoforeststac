@@ -4,7 +4,6 @@ from eoforeststac.catalog.factory import _build_raster_bands, create_collection
 from eoforeststac.core.assets import create_zarr_asset
 from eoforeststac.products.als_biomass_products import (
     ALS_BIOMASS_PRODUCTS_CFG,
-    ALS_BIOMASS_RESOLUTIONS,
     REGIONS,
 )
 
@@ -29,7 +28,7 @@ def create_als_biomass_products_item(version: str) -> list[pystac.Item]:
             "end_datetime": reg["end_datetime"].isoformat(),
             "proj:epsg": reg["proj_epsg"],
             "variables": cfg["summaries"]["variables"],
-            "spatial_resolutions": list(ALS_BIOMASS_RESOLUTIONS.keys()),
+            "spatial_resolutions": "10m",
         }
 
         item = pystac.Item(
@@ -42,23 +41,17 @@ def create_als_biomass_products_item(version: str) -> list[pystac.Item]:
             stac_extensions=cfg.get("stac_extensions", []),
         )
 
-        all_bands = _build_raster_bands(cfg)
-        for res, res_meta in ALS_BIOMASS_RESOLUTIONS.items():
-            res_vars = set(res_meta["variables"])
-            res_bands = [b for b in all_bands if b["name"] in res_vars]
-            asset = create_zarr_asset(
-                href=f"{cfg['base_path']}/{reg['zarr_name']}_{res}_v{version}.zarr",
-                title=f"{res}",
-                roles=["data"],
-                description=(
-                    f"Cloud-optimized Zarr store at {res} resolution for "
-                    f"{reg['label']} (EPSG:{reg['proj_epsg']}). "
-                    f"Variables: {', '.join(res_meta['variables'])}."
-                ),
-            )
-            if res_bands:
-                asset.extra_fields["raster:bands"] = res_bands
-            item.add_asset(f"zarr_{res}", asset)
+        asset = create_zarr_asset(
+            href=f"{cfg['base_path']}/{item_id}",
+            title="Zarr dataset",
+            roles=["data"],
+            description=(
+                f"Cloud-optimized Zarr store at 10 m resolution for "
+                f"{reg['label']} (EPSG:{reg['proj_epsg']})."
+            ),
+        )
+
+        item.add_asset("zarr", asset)
 
         for link_cfg in cfg.get("links", []):
             if link_cfg["rel"] in ["cite-as", "about", "license"]:

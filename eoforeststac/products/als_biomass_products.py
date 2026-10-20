@@ -1,9 +1,6 @@
 import datetime
 from eoforeststac.core.config import S3_HTTP_BASE
 
-ALS_BIOMASS_RESOLUTIONS = {
-}
-
 # ------------------------------------------------------------------
 # Per-region definitions
 # ------------------------------------------------------------------
@@ -100,7 +97,7 @@ ALS_BIOMASS_PRODUCTS_CFG = {
         ],
         "units_by_variable": {
         },
-        "spatial_resolutions": list(ALS_BIOMASS_RESOLUTIONS.keys()),
+        "spatial_resolutions": "10m",
         "proj:epsg": sorted({r["proj_epsg"] for r in REGIONS.values()}),
         "product_family": ["alsdb"],
         "data_format": ["zarr"],
@@ -118,5 +115,4 @@ ALS_BIOMASS_PRODUCTS_CFG = {
         },
     },
     "regions": REGIONS,
-    "resolutions": ALS_BIOMASS_RESOLUTIONS,
 }

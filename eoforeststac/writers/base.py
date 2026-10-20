@@ -22,15 +22,28 @@ class BaseZarrWriter:
         profile: Optional[str] = None,
         region: str = "eu-central-1",
         anon: bool = False,
+        connect_timeout: Optional[int] = None,
+        read_timeout: Optional[int] = None,
+
     ):
         self.bucket = bucket
         self.endpoint_url = endpoint_url
+
+        config_kwargs = {
+            k: v
+            for k, v in {
+                "connect_timeout": connect_timeout,
+                "read_timeout": read_timeout,
+            }.items()
+            if v is not None
+        }
 
         fs_kwargs = {
             "client_kwargs": {
                 "endpoint_url": endpoint_url,
                 "region_name": region,
-            }
+            },
+            "config_kwargs": config_kwargs,
         }
 
         if anon:
