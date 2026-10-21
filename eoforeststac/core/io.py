@@ -73,6 +73,9 @@ def write_text(url: str, text: str):
             Key=key,
             Body=text.encode("utf-8"),
             ContentType="application/json",
+            # Without it browsers cache catalog JSON heuristically for hours,
+            # so a republished catalog keeps showing removed links
+            CacheControl="no-cache",
         )
         return
 
