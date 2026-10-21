@@ -6,10 +6,14 @@ theme's own ``catalog.json``, collections and items, in both the internal
 that the new tree no longer contains (e.g. items moved into site collections)
 are deleted. Zarr stores are never touched: only ``.json`` keys are considered.
 
+With ``--remove``, a theme that is no longer in THEMES is retired instead: its
+link is dropped from the root catalog first, then all of its JSON is deleted.
+
 Dry run by default; pass ``--apply`` to write and delete.
 
-    python scripts/publish_theme.py --theme als-lidar
-    python scripts/publish_theme.py --theme als-lidar --apply
+    python scripts/publish_theme.py --theme uls
+    python scripts/publish_theme.py --theme uls --apply
+    python scripts/publish_theme.py --theme als-lidar --remove --apply
 """
 
 from __future__ import annotations
@@ -92,6 +96,14 @@ def _root_with_theme_link(root: dict, theme_id: str) -> dict | None:
     return {**root, "links": [*links[:pos], new_link, *links[pos:]]}
 
 
+def _root_without_theme_link(root: dict, theme_id: str) -> dict | None:
+    """Return the root catalog dict without its link to ``theme_id``, or None."""
+    href = f"./{theme_id}/catalog.json"
+    links = root.get("links", [])
+    kept = [l for l in links if not (l.get("rel") == "child" and l.get("href") == href)]
+    return None if len(kept) == len(links) else {**root, "links": kept}
+
+
 def _live_json_keys(prefix: str) -> set[str]:
     fs = get_fs(prefix)
     if not fs.exists(prefix):
@@ -107,9 +119,18 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--theme", required=True, help="Theme id, e.g. als-lidar")
     ap.add_argument(
+        "--remove",
+        action="store_true",
+        help="Retire a theme that is no longer in THEMES",
+    )
+    ap.add_argument(
         "--apply", action="store_true", help="Write and delete (default: dry run)"
     )
     args = ap.parse_args()
+    if args.remove and args.theme in THEMES:
+        raise SystemExit(f"'{args.theme}' is still in THEMES; remove it there first")
+    if not args.remove and args.theme not in THEMES:
+        raise SystemExit(f"Unknown theme '{args.theme}' (use --remove to retire it)")
 
     fs = get_fs(BASE_S3_URL)
     variants = [
@@ -118,6 +139,18 @@ def main() -> None:
     ]
     plan = []  # (variant, action, url, doc)
     for name, publish_base, write_base in variants:
+        root_url = f"{write_base.rstrip('/')}/catalog.json"
+        if args.remove:
+            # Unlink first (writes run before deletes), then drop every file
+            new_root = _root_without_theme_link(
+                json.loads(fs.cat(root_url)), args.theme
+            )
+            if new_root is not None:
+                plan.append((name, "unlink", root_url, new_root))
+            live = _live_json_keys(f"{write_base}/{args.theme}")
+            plan.extend((name, "delete", url, None) for url in sorted(live))
+            continue
+
         docs = _theme_docs(args.theme, publish_base, write_base)
         for url, doc in sorted(docs.items()):
             try:
@@ -129,7 +162,6 @@ def main() -> None:
         stale = _live_json_keys(f"{write_base}/{args.theme}") - set(docs)
         plan.extend((name, "delete", url, None) for url in sorted(stale))
         # A new theme also needs a link from the root; written after its files
-        root_url = f"{write_base.rstrip('/')}/catalog.json"
         new_root = _root_with_theme_link(json.loads(fs.cat(root_url)), args.theme)
         if new_root is not None:
             plan.append((name, "link", root_url, new_root))
@@ -139,7 +171,7 @@ def main() -> None:
             print(f"[{name:8}] {action:6} {url}")
     counts = {
         a: sum(1 for p in plan if p[1] == a)
-        for a in ("new", "update", "same", "link", "delete")
+        for a in ("new", "update", "same", "link", "unlink", "delete")
     }
     print("\n" + ", ".join(f"{n} {a}" for a, n in counts.items()))
 
@@ -149,7 +181,7 @@ def main() -> None:
 
     # Write first, delete after, so the theme is never left with dangling links
     for _, action, url, doc in plan:
-        if action in ("new", "update", "link"):
+        if action in ("new", "update", "link", "unlink"):
             write_json(url, doc)
     client = get_s3_client()
     for _, action, url, _ in plan:

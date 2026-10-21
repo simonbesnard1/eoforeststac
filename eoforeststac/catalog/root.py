@@ -85,11 +85,12 @@ from eoforeststac.catalog.gami_ageclass import (
 #     create_gedi_l4d_collection,
 #     create_gedi_l4d_item,
 # )
-from eoforeststac.catalog.als_products import (
-    create_als_products_collection,
-    create_als_products_site_collection,
-    create_als_products_item,
-)
+# ALS products are not exposed until real (non-test) data is ingested
+# from eoforeststac.catalog.als_products import (
+#     create_als_products_collection,
+#     create_als_products_site_collection,
+#     create_als_products_item,
+# )
 from eoforeststac.catalog.uls_products import (
     create_uls_products_collection,
     create_uls_products_site_collection,
@@ -127,14 +128,9 @@ DEFAULT_VERSIONS: Dict[str, Union[List[str], SiteVersions]] = {
     "RESTOR_LANDUSE": ["2.0"],
     # "POTAPOV_LCLUC": ["2020"],
     # "GEDI_L4D": ["2.0"],
-    "ALS_PRODUCTS": {
-        "spain_pnoa": ["1.0"],
-        "brazil_eba": ["1.0"],
-        "spain_test_pnoa": ["1.0"],
-    },
+    # "ALS_PRODUCTS": {"spain_pnoa": ["1.0"], "brazil_eba": ["1.0"]},
     "ULS_PRODUCTS": {
-        "hainich": ["1.0"],
-        "test_region": ["1.0"],
+        "hohes_holz": ["1.0"],
     },
     "ALS_BIOMASS_PRODUCTS": {
         "finland": ["1.0"],
@@ -198,18 +194,20 @@ THEMES: Dict[str, Dict[str, object]] = {
             # "GEDI_L4D",
         ],
     },
-    "als-lidar": {
-        "title": "ALS / ULS / LiDAR",
-        "description": "Gridded products derived from airborne and unmanned laser scanning point clouds.",
+    "uls": {
+        "title": "ULS / UAV LiDAR",
+        "description": (
+            "Tree-level forest inventory metrics from unmanned (UAV) laser scanning, "
+            "aggregated to raster cells per tree species."
+        ),
         "keywords": [
-            "airborne laser scanning",
             "unmanned laser scanning",
             "UAV",
             "lidar",
-            "canopy height",
+            "tree segmentation",
             "forest structure",
         ],
-        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS"],
+        "products": ["ULS_PRODUCTS"],
     },
     "als-biomass": {
         "title": "ALS Biomass",
@@ -311,12 +309,12 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
         #     create_gedi_l4d_collection,
         #     create_gedi_l4d_item,
         # ),
-        ProductSpec(
-            "ALS_PRODUCTS",
-            create_als_products_collection,
-            create_als_products_item,
-            create_als_products_site_collection,
-        ),
+        # ProductSpec(
+        #     "ALS_PRODUCTS",
+        #     create_als_products_collection,
+        #     create_als_products_item,
+        #     create_als_products_site_collection,
+        # ),
         ProductSpec(
             "ULS_PRODUCTS",
             create_uls_products_collection,

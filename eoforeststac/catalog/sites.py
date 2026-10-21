@@ -74,12 +74,15 @@ def create_site_item(
     )
 
     if resolutions:
+        # Stores may be named differently from the site (e.g. ingested under a
+        # test name); store_name overrides the prefix
+        store = reg.get("store_name", reg["zarr_name"])
         all_bands = _build_raster_bands(cfg)
         for res, res_meta in resolutions.items():
             res_vars = set(res_meta["variables"])
             res_bands = [b for b in all_bands if b["name"] in res_vars]
             asset = create_zarr_asset(
-                href=f"{cfg['base_path']}/{reg['zarr_name']}_{res}_v{version}.zarr",
+                href=f"{cfg['base_path']}/{store}_{res}_v{version}.zarr",
                 title=f"{res}",
                 roles=["data"],
                 description=(

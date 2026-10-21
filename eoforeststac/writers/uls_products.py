@@ -24,9 +24,9 @@ class ULSProductsWriter(BaseZarrWriter):
     Example::
 
         writer.write(
-            input_zarr="/data/uls/hainich/10m",
-            output_zarr="s3://bucket/collections/ULS_PRODUCTS/ULS_HAINICH_10m_v1.0.zarr",
-            region="hainich",
+            input_zarr="/data/uls/hohes_holz/10m",
+            output_zarr="s3://bucket/collections/ULS_PRODUCTS/ULS_HOHES_HOLZ_10m_v1.0.zarr",
+            region="hohes_holz",
             resolution="10m",
         )
     """

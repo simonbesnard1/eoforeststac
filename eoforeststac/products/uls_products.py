@@ -99,55 +99,33 @@ ULS_RESOLUTIONS = {
 }
 
 REGIONS = {
-    "hainich": {
-        "label": "Hainich (Germany)",
+    "hohes_holz": {
+        "label": "Hohes Holz (Germany)",
         "description": (
-            "Unmanned laser scanning products derived from UAV-based LiDAR surveys "
-            "over the Hainich ICOS flux tower site in Thuringia, Germany. Processed "
-            "with the ULS R pipeline and stored as analysis-ready Zarr."
+            "Unmanned laser scanning products from UAV-based LiDAR surveys over the "
+            "ICOS ecosystem station Hohes Holz (DE-HoH) in Saxony-Anhalt, Germany. "
+            "Tree-level metrics from automated segmentation, aggregated to raster "
+            "cells per tree species ('All' = every tree), stored as analysis-ready Zarr."
         ),
-        "bbox": [10.408, 51.034, 10.498, 51.124],
+        "bbox": [11.2156, 52.0829, 11.2292, 52.0886],
         "geometry": {
             "type": "Polygon",
             "coordinates": [
                 [
-                    [10.408, 51.034],
-                    [10.408, 51.124],
-                    [10.498, 51.124],
-                    [10.498, 51.034],
-                    [10.408, 51.034],
+                    [11.2156, 52.0829],
+                    [11.2156, 52.0886],
+                    [11.2292, 52.0886],
+                    [11.2292, 52.0829],
+                    [11.2156, 52.0829],
                 ]
             ],
         },
         "proj_epsg": 32632,
         "start_datetime": datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc),
         "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
-        "zarr_name": "ULS_HAINICH",
-    },
-    "test_region": {
-        "label": "Test (Germany)",
-        "description": (
-            "Unmanned laser scanning products derived from UAV-based LiDAR surveys "
-            "over the Test ICOS flux tower site in Thuringia, Germany. Processed "
-            "with the ULS R pipeline and stored as analysis-ready Zarr."
-        ),
-        "bbox": [10.408, 51.034, 10.498, 51.124],
-        "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-                [
-                    [10.408, 51.034],
-                    [10.408, 51.124],
-                    [10.498, 51.124],
-                    [10.498, 51.034],
-                    [10.408, 51.034],
-                ]
-            ],
-        },
-        "proj_epsg": 25832,
-        "start_datetime": datetime.datetime(2022, 1, 1, tzinfo=datetime.timezone.utc),
-        "end_datetime": datetime.datetime(2022, 12, 31, tzinfo=datetime.timezone.utc),
-        "zarr_name": "ULS_TEST_REGION",
+        "zarr_name": "ULS_HOHES_HOLZ",
+        # Ingested under its test name; the stores keep that prefix
+        "store_name": "ULS_TEST_REGION",
     },
 }
 
@@ -158,11 +136,11 @@ ULS_PRODUCTS_CFG = {
     "description": (
         "⚠️ This collection is under active development. Data coverage, variables, "
         "and metadata are subject to change without notice.\n\n"
-        "Gridded products derived from unmanned laser scanning (ULS) point clouds "
-        "collected by UAV-based LiDAR sensors. Products include canopy height model (CHM), "
-        "digital terrain model (DTM), digital surface model (DSM), gap fraction, effective LAI, "
-        "above-ground biomass, and a suite of structural LiDAR metrics (height percentiles, "
-        "canopy cover, point density, foliage height diversity, vegetation complexity index).\n\n"
+        "Gridded forest inventory metrics derived from unmanned laser scanning (ULS) "
+        "point clouds collected by UAV-based LiDAR sensors. Trees are segmented "
+        "automatically and their basal area, diameter at breast height, height, "
+        "crown radius and volume are aggregated to 10, 20 and 100 m cells, per tree "
+        "species where species information is available.\n\n"
         "Each site/campaign is a child collection with its own spatial extent and "
         "CRS, holding one item (set of Zarr stores) per version."
     ),
@@ -199,9 +177,12 @@ ULS_PRODUCTS_CFG = {
     "links": [
         {
             "rel": "cite-as",
-            "href": "https://meta.icos-cp.eu/objects/M1ET1IeG31p-6n4BFjDb3ZO7",
+            "href": "https://meta.icos-cp.eu/resources/stations/ES_DE-HoH",
             "type": "text/html",
-            "title": "ICOS Hainich flux tower metadata",
+            "title": (
+                "ICOS ecosystem station Hohes Holz (DE-HoH) "
+                "(cite the site until a product DOI is available)"
+            ),
         },
     ],
     "stac_extensions": [
