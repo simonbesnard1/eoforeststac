@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from eoforeststac.writers.base import BaseZarrWriter
-from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
+from eoforeststac.core.zarr import DEFAULT_COMPRESSOR, add_display_range
 
 
 class ALSBiomassProductsWriter(BaseZarrWriter):
@@ -274,4 +274,8 @@ class ALSBiomassProductsWriter(BaseZarrWriter):
             gc.collect()
 
         zarr.consolidate_metadata(store)
+
+        # Legend range for the explorer, which cannot measure stores this large
+        ranges = add_display_range(output_zarr, fs=self.s3)
+        print(f"Display range (p2-p98): {ranges}")
         return output_zarr
