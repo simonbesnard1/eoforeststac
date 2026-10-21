@@ -209,7 +209,21 @@ THEMES: Dict[str, Dict[str, object]] = {
             "canopy height",
             "forest structure",
         ],
-        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS", "ALS_BIOMASS_PRODUCTS"],
+        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS"],
+    },
+    "als-biomass": {
+        "title": "ALS Biomass",
+        "description": (
+            "10 m forest biomass maps derived from National Forest Inventory plots "
+            "and airborne laser scanning, per country and ALS campaign year."
+        ),
+        "keywords": [
+            "biomass",
+            "airborne laser scanning",
+            "lidar",
+            "national forest inventory",
+        ],
+        "products": ["ALS_BIOMASS_PRODUCTS"],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",

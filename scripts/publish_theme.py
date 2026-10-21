@@ -21,6 +21,7 @@ import pystac
 
 from eoforeststac.catalog.root import (
     DEFAULT_VERSIONS,
+    THEMES,
     _build_base_tree,
     _iter_collections,
 )
@@ -62,6 +63,35 @@ def _theme_docs(theme_id: str, publish_base: str, write_base: str) -> dict[str, 
     return docs
 
 
+def _root_with_theme_link(root: dict, theme_id: str) -> dict | None:
+    """
+    Return the root catalog dict with a child link to ``theme_id`` added in
+    THEMES order, or None if it is already linked. Nothing else is touched, so
+    hand edits to the root survive.
+    """
+    href = f"./{theme_id}/catalog.json"
+    links = root.get("links", [])
+    if any(l.get("rel") == "child" and l.get("href") == href for l in links):
+        return None
+    order = list(THEMES)
+    rank = {f"./{t}/catalog.json": i for i, t in enumerate(order)}
+    new_link = {
+        "rel": "child",
+        "href": href,
+        "type": "application/json",
+        "title": str(THEMES[theme_id]["title"]),
+    }
+    # Insert before the first child link of a theme that comes later in THEMES
+    pos = len(links)
+    for i, link in enumerate(links):
+        if link.get("rel") == "child" and rank.get(link.get("href"), -1) > order.index(
+            theme_id
+        ):
+            pos = i
+            break
+    return {**root, "links": [*links[:pos], new_link, *links[pos:]]}
+
+
 def _live_json_keys(prefix: str) -> set[str]:
     fs = get_fs(prefix)
     if not fs.exists(prefix):
@@ -98,13 +128,18 @@ def main() -> None:
             plan.append((name, action, url, doc))
         stale = _live_json_keys(f"{write_base}/{args.theme}") - set(docs)
         plan.extend((name, "delete", url, None) for url in sorted(stale))
+        # A new theme also needs a link from the root; written after its files
+        root_url = f"{write_base.rstrip('/')}/catalog.json"
+        new_root = _root_with_theme_link(json.loads(fs.cat(root_url)), args.theme)
+        if new_root is not None:
+            plan.append((name, "link", root_url, new_root))
 
     for name, action, url, _ in plan:
         if action != "same":
             print(f"[{name:8}] {action:6} {url}")
     counts = {
         a: sum(1 for p in plan if p[1] == a)
-        for a in ("new", "update", "same", "delete")
+        for a in ("new", "update", "same", "link", "delete")
     }
     print("\n" + ", ".join(f"{n} {a}" for a, n in counts.items()))
 
@@ -114,7 +149,7 @@ def main() -> None:
 
     # Write first, delete after, so the theme is never left with dangling links
     for _, action, url, doc in plan:
-        if action in ("new", "update"):
+        if action in ("new", "update", "link"):
             write_json(url, doc)
     client = get_s3_client()
     for _, action, url, _ in plan:
