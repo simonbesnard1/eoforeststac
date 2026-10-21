@@ -1080,7 +1080,7 @@ function initMap() {
       const lvl = getPyramidLevel(layer, zoom);
       if (lvl !== layer._lastPyramidLevel) {
         layer._lastPyramidLevel = lvl;
-        layer.leafletLayer.setUrl(buildTileUrl(layer, zoom));
+        setTileUrl(layer, zoom);
       }
     });
     renderLegend();
@@ -1602,32 +1602,70 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   }
 }
 
-/* Which store can /statistics safely read? It clips to the full extent and
-   rejects anything over the 1 GB array ceiling BEFORE downsampling to
-   max_size, so a full-resolution global store is off limits. Prefer the
-   coarsest pyramid level; otherwise the native store, but only if it fits. */
-function statisticsSource(layer) {
-  if (layer.pyramidUrl && layer.numPyramidLevels >= 2)
-    return `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
+/* Levels the pyramid builder finished, counted from 1. Each finished level
+   gets a _SUCCESS marker; an interrupted build leaves levels that exist but
+   are partly or wholly empty (HANSEN's level 1 had no loss_year chunks), which
+   rendered blank maps and empty statistics. Read straight from S3. */
+async function completePyramidLevels(pyramidUrl) {
+  let n = 0;
+  for (let lvl = 1; lvl <= 10; lvl++) {
+    try {
+      const r = await fetch(`${pyramidUrl}/${lvl}/_SUCCESS`, { method: 'HEAD', cache: 'no-store' });
+      if (!r.ok) break;
+      n = lvl;
+    } catch { break; }
+  }
+  return n;
+}
+
+/* Where, and over what area, can /statistics read? rio-tiler clips to the
+   feature and refuses anything over its 1 GB array ceiling BEFORE downsampling
+   to max_size, so the clipped slice must fit STATS_BUDGET. Measure the whole
+   extent at the coarsest level when that fits. Otherwise (HANSEN's coarsest
+   pyramid level is still 720k × 280k px) measure the part of the layer in
+   view, shrunk around its centre until it fits. */
+function statisticsTarget(layer) {
+  const bb = boundsToLatLng(layer.bounds);
+  if (!bb || !layer.width || !layer.height) return null;
   const itemsize = DTYPE_BYTES[String(layer.dtype).replace(/^[<>|=]/, '')] ?? 4;
-  const bands = Math.max(1, layer.dimInfo?.length ?? 1);
-  if (layer.width && layer.height &&
-      layer.width * layer.height * itemsize * (selParams(layer).length ? 1 : bands) < READ_BUDGET)
-    return layer.zarrUrl;
-  return null;
+  const bands = selParams(layer).length ? 1 : Math.max(1, layer.dimInfo?.length ?? 1);
+  const level = layer.pyramidUrl && layer.numPyramidLevels >= 2 ? layer.numPyramidLevels - 1 : 0;
+  const url = level ? `${layer.pyramidUrl}/${level}` : layer.zarrUrl;
+  // Pyramid level k halves the native grid k times
+  const pxLon = (bb.getEast() - bb.getWest()) / (layer.width / 2 ** level);
+  const pxLat = (bb.getNorth() - bb.getSouth()) / (layer.height / 2 ** level);
+  const bytes = (w, s, e, n) => ((e - w) / pxLon) * ((n - s) / pxLat) * bands * itemsize;
+
+  let [w, s, e, n] = [bb.getWest(), bb.getSouth(), bb.getEast(), bb.getNorth()];
+  if (bytes(w, s, e, n) < STATS_BUDGET) return { url, area: [w, s, e, n], whole: true };
+
+  const view = S.map.getBounds();
+  [w, s, e, n] = [Math.max(w, view.getWest()), Math.max(s, view.getSouth()),
+                  Math.min(e, view.getEast()), Math.min(n, view.getNorth())];
+  if (!(e > w && n > s)) {          // layer out of view: use its centre
+    const c = bb.getCenter();
+    [w, s, e, n] = [c.lng, c.lat, c.lng, c.lat];
+  }
+  const cx = (w + e) / 2, cy = (s + n) / 2;
+  // Largest window around the centre that fits, keeping the view's aspect
+  const fit = STATS_BUDGET * 0.9 / (bands * itemsize);          // pixels
+  const aspect = (e - w) / pxLon > 0 && (n - s) / pxLat > 0 ? ((e - w) / pxLon) / ((n - s) / pxLat) : 1;
+  const hPx = Math.min((n - s) / pxLat || Infinity, Math.sqrt(fit / aspect));
+  const wPx = Math.min((e - w) / pxLon || Infinity, hPx * aspect);
+  const hw = (wPx * pxLon) / 2, hh = (hPx * pxLat) / 2;
+  return { url, area: [cx - hw, cy - hh, cx + hw, cy + hh], whole: false };
 }
 
 /* Measure the actual distribution. Returns null when it can't be read.
    titiler.xarray only serves POST /statistics, with the area as a GeoJSON
    Feature; the result comes back in properties.statistics. */
 async function measureStatistics(layer) {
-  const src = statisticsSource(layer);
-  const bb = boundsToLatLng(layer.bounds);
-  if (!src || !bb || !S.tiOk) return null;
+  const target = statisticsTarget(layer);
+  if (!target || !S.tiOk) return null;
   try {
-    const qs = new URLSearchParams({ url: src, variable: layer.activeVar, max_size: '1024' });
+    const qs = new URLSearchParams({ url: target.url, variable: layer.activeVar, max_size: '1024' });
     for (const s of selParams(layer)) qs.append('sel', s);
-    const [w, s, e, n] = [bb.getWest(), bb.getSouth(), bb.getEast(), bb.getNorth()];
+    const [w, s, e, n] = target.area;
     const feature = {
       type: 'Feature', properties: {},
       geometry: { type: 'Polygon', coordinates: [[[w, s], [e, s], [e, n], [w, n], [w, s]]] },
@@ -1644,6 +1682,7 @@ async function measureStatistics(layer) {
       min: pick('min'), max: pick('max'),
       p2:  pick('percentile_2', 'percentile_2.0'),
       p98: pick('percentile_98', 'percentile_98.0'),
+      whole: target.whole,
     };
   } catch { return null; }
 }
@@ -1667,12 +1706,16 @@ async function reconcileRange(layer) {
 
   const st = await measureStatistics(layer);
   if (!st) return;
+  /* A sample of the view is only a stand-in: it must not override a range the
+     dataset declares (HANSEN tree_cover is 0–100 %, a West African window
+     gave 1–12 %). Use it only when nothing else is known. */
+  if (!st.whole && layer.rangeKnown) return;
   layer.stats = st;
 
   let lo = st.p2 ?? st.min, hi = st.p98 ?? st.max;
   if (layer.rangeKnown) { lo = Math.max(lo, layer.rMin); hi = Math.min(hi, layer.rMax); }
   if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return;
-  setDataRange(layer, lo, hi, 'measured');
+  setDataRange(layer, lo, hi, st.whole ? 'measured' : 'measured-view');
 }
 
 function parseRangeAttr(v) {
@@ -1682,10 +1725,19 @@ function parseRangeAttr(v) {
   return Number.isFinite(lo) && Number.isFinite(hi) && hi > lo ? [lo, hi] : null;
 }
 
+/* Three significant digits of the value or of the span, whichever is finer:
+   toPrecision(3) alone turned years 2001–2023 into 2000–2020. */
+function roundRangeEnd(v, span) {
+  if (!Number.isFinite(v) || v === 0) return v;
+  const digits = (x) => 2 - Math.floor(Math.log10(Math.abs(x)));
+  const d = Math.min(12, Math.max(0, digits(v), span > 0 ? digits(span) : 0));
+  return +v.toFixed(d);
+}
+
 /* Kept on the layer so a manual range can be reset back to it. */
 function setDataRange(layer, lo, hi, source) {
-  layer.rMin = +lo.toPrecision(3);
-  layer.rMax = +hi.toPrecision(3);
+  layer.rMin = roundRangeEnd(lo, hi - lo);
+  layer.rMax = roundRangeEnd(hi, hi - lo);
   layer.rangeKnown = true;
   layer.rangeSource = source;
   layer.dataRange = { lo: layer.rMin, hi: layer.rMax, source };
@@ -1707,6 +1759,11 @@ function applyClassRange(layer, classes) {
    tiles at once and the server runs up to 8 reads in parallel, so this has
    to stay far below rio-tiler's 1 GB per-array ceiling. */
 const READ_BUDGET = 1.5e8;
+
+/* One /statistics call runs alone, so it may read more than a tile: CCI's
+   coarsest level (6328 × 3164 float64, 160 MB) must fit, while staying well
+   inside rio-tiler's 1e9-element ceiling and the server's memory. */
+const STATS_BUDGET = 5e8;
 
 const DTYPE_BYTES = {
   bool:1, int8:1, uint8:1, int16:2, uint16:2, float16:2,
@@ -1799,6 +1856,9 @@ function applyRange(layer, minmax, attrs) {
     lo = +pair[0]; hi = +pair[1];
   }
   if (lo === null || hi === null || hi <= lo) {
+    /* Start from the neutral default, not the previous variable's range
+       (switching tree_cover -> loss_year used to keep 0–100). */
+    layer.rMin = 0; layer.rMax = 1;
     layer.rangeKnown = false; layer.rangeSource = 'manual'; return;
   }
   layer.rMin = lo; layer.rMax = hi; layer.rangeKnown = true;
@@ -1858,19 +1918,12 @@ async function activateLayer(col) {
 
   if (S.tiOk) {
     const pyramidUrl = zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
-    try {
-      await fetchJSON(`${S.tiTiler}/info?` + new URLSearchParams({ url: `${pyramidUrl}/1`, variable: layer.activeVar }));
-      let numLevels = 1;
-      for (let lvl = 2; lvl <= 10; lvl++) {
-        try {
-          await fetchJSON(`${S.tiTiler}/info?` + new URLSearchParams({ url: `${pyramidUrl}/${lvl}`, variable: layer.activeVar }));
-          numLevels = lvl;
-        } catch { break; }
-      }
+    const numLevels = await completePyramidLevels(pyramidUrl);
+    if (numLevels) {                // otherwise no (finished) pyramid for this dataset
       layer.pyramidUrl = pyramidUrl;
       layer.numPyramidLevels = numLevels + 1;
       layer.minZoom = 0;
-    } catch { /* no pyramid built for this dataset */ }
+    }
 
     await fetchVariableMeta(layer);
   }
@@ -1952,6 +2005,14 @@ function addLeafletLayer(layer) {
   layer.leafletLayer = L.tileLayer(buildTileUrl(layer, zoom), opts).addTo(S.map);
 }
 
+/* Leaflet's redraw (run by setUrl) clamps only to the native zoom range, not
+   to minZoom, so redrawing below the layer's zoom floor requested tiles far
+   too large to read (HTTP 500 on every variable switch at low zoom). Below
+   the floor just swap the URL; Leaflet uses it once the map zooms in. */
+function setTileUrl(layer, zoom) {
+  layer.leafletLayer.setUrl(buildTileUrl(layer, zoom), zoom < layer.minZoom);
+}
+
 async function updateLeafletLayer(id, { refreshMeta = false } = {}) {
   const layer = S.layers.get(id);
   if (!layer?.leafletLayer) return;
@@ -1966,7 +2027,7 @@ async function updateLeafletLayer(id, { refreshMeta = false } = {}) {
   layer.leafletLayer.options.minZoom = layer.minZoom;
   const bb = boundsToLatLng(layer.bounds);
   if (bb) layer.leafletLayer.options.bounds = bb;
-  layer.leafletLayer.setUrl(buildTileUrl(layer, zoom));
+  setTileUrl(layer, zoom);
   layer.leafletLayer.setOpacity(layer.opacity);
   updateFootprint(layer);
   renderLegend();
@@ -2272,6 +2333,7 @@ function renderLegend() {
       const RANGE_NOTE = {
         measured: 'range measured from data (p2–p98)',
         data:     'range from data statistics (p2–p98)',
+        'measured-view': 'range measured in current view (p2–p98)',
         declared: 'range from valid_min / valid_max',
         stac:     'range from STAC statistics',
         tilejson: 'range reported by tile server',
