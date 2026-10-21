@@ -180,6 +180,9 @@ svg{display:block}
 }
 .ghost-btn:hover{color:var(--text);background:var(--panel-2)}
 .ghost-btn.danger:hover{color:var(--danger)}
+.range-reset{margin-top:6px;padding:0;font-size:11.5px;color:var(--accent);text-align:left}
+.range-reset:hover{text-decoration:underline}
+.range-reset[hidden]{display:none}
 
 /* Search */
 .search-box{padding:11px 14px;border-bottom:1px solid var(--line);position:relative}
@@ -1651,10 +1654,16 @@ async function measureStatistics(layer) {
    the measured p2–p98 whenever it can be read, kept inside the declared
    bounds; the declared/STAC/tilejson range is only the fallback. */
 async function reconcileRange(layer) {
+  layer.dataRange = null;
   /* Small integer ranges are codes or masks — a percentile stretch would cut
      off the rare values. */
   const isInt = /^u?int|^bool/i.test(layer.dtype || '');
   if (layer.rangeKnown && isInt && layer.rMax - layer.rMin <= 11) return;
+
+  /* Stores too large to measure here (ALS 1 m, ALS biomass countries) carry
+     a p2–p98 computed from the data at ingestion. */
+  const stored = parseRangeAttr(layer.attrs?.display_range);
+  if (stored) { setDataRange(layer, stored[0], stored[1], 'data'); return; }
 
   const st = await measureStatistics(layer);
   if (!st) return;
@@ -1663,11 +1672,23 @@ async function reconcileRange(layer) {
   let lo = st.p2 ?? st.min, hi = st.p98 ?? st.max;
   if (layer.rangeKnown) { lo = Math.max(lo, layer.rMin); hi = Math.min(hi, layer.rMax); }
   if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return;
+  setDataRange(layer, lo, hi, 'measured');
+}
 
+function parseRangeAttr(v) {
+  if (typeof v === 'string') { try { v = JSON.parse(v); } catch { return null; } }
+  if (!Array.isArray(v) || v.length < 2) return null;
+  const [lo, hi] = v.map(Number);
+  return Number.isFinite(lo) && Number.isFinite(hi) && hi > lo ? [lo, hi] : null;
+}
+
+/* Kept on the layer so a manual range can be reset back to it. */
+function setDataRange(layer, lo, hi, source) {
   layer.rMin = +lo.toPrecision(3);
   layer.rMax = +hi.toPrecision(3);
   layer.rangeKnown = true;
-  layer.rangeSource = 'measured';
+  layer.rangeSource = source;
+  layer.dataRange = { lo: layer.rMin, hi: layer.rMax, source };
 }
 
 /* Class rasters are coloured by value position in the rescale range, so the
@@ -2083,12 +2104,15 @@ function renderLayerPanel() {
       <div class="fld">
         <div class="fld-lbl">
           <span>Value range${layer.units ? ` (${esc(layer.units)})` : ''}</span>
-          <span class="fld-val">${esc(layer.rangeSource || 'manual')}</span>
+          <span class="fld-val" data-role="rsrc">${esc(layer.rangeSource || 'manual')}</span>
         </div>
         <div class="two-up">
           <input type="number" step="any" value="${layer.rMin}" data-id="${esc(layer.id)}" data-prop="rMin" aria-label="minimum">
           <input type="number" step="any" value="${layer.rMax}" data-id="${esc(layer.id)}" data-prop="rMax" aria-label="maximum">
         </div>
+        ${layer.dataRange
+          ? `<button class="range-reset" data-act="reset-range" data-id="${esc(layer.id)}" ${layer.rangeSource === 'manual' ? '' : 'hidden'}>Reset to data range (${fmtNum(layer.dataRange.lo)} – ${fmtNum(layer.dataRange.hi)})</button>`
+          : ''}
       </div>
 
       <div class="fld">
@@ -2125,7 +2149,13 @@ function renderLayerPanel() {
       const layer = S.layers.get(btn.dataset.id);
       if (!layer) return;
       if (btn.dataset.act === 'zoom') zoomToLayer(layer);
-      else {
+      else if (btn.dataset.act === 'reset-range') {
+        if (!layer.dataRange) return;
+        layer.rMin = layer.dataRange.lo; layer.rMax = layer.dataRange.hi;
+        layer.rangeSource = layer.dataRange.source;
+        layer.classes = buildClasses(layer);
+        updateLeafletLayer(layer.id); renderLayerPanel(); renderLegend();
+      } else {
         removeLayer(layer.id);
         el(`ds-${layer.id}`)?.classList.remove('on');
         const sw = document.querySelector(`.sw input[data-id="${CSS.escape(layer.id)}"]`);
@@ -2164,6 +2194,11 @@ function onLayerControl(ctrl) {
   const card = ctrl.closest('.lc');
   if (card) {
     if (prop === 'opacity') card.querySelector('[data-role="op"]').textContent = Math.round(val * 100) + '%';
+    if (prop === 'rMin' || prop === 'rMax') {
+      card.querySelector('[data-role="rsrc"]').textContent = 'manual';
+      const reset = card.querySelector('[data-act="reset-range"]');
+      if (reset) reset.hidden = false;
+    }
     if (prop === 'colormap') {
       /* Class swatches are sampled from the LUT, so rebuild them once it lands. */
       loadLUT(val).then(() => { layer.classes = buildClasses(layer); renderLayerPanel(); renderLegend(); });
@@ -2236,6 +2271,7 @@ function renderLegend() {
 
       const RANGE_NOTE = {
         measured: 'range measured from data (p2–p98)',
+        data:     'range from data statistics (p2–p98)',
         declared: 'range from valid_min / valid_max',
         stac:     'range from STAC statistics',
         tilejson: 'range reported by tile server',
