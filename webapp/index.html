@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <title>EOForestSTAC Explorer</title>
+<link rel="icon" type="image/png" href="favicon.png">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Explore cloud-hosted forest Earth observation datasets from the EOForestSTAC catalog.">
@@ -194,24 +195,6 @@ svg{display:block}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Theme accordion */
-.grp{border-bottom:1px solid var(--line)}
-.grp-btn{
-  width:100%;display:flex;align-items:center;gap:9px;
-  padding:11px 14px;text-align:left;transition:background .14s;
-}
-.grp-btn:hover{background:var(--panel-2)}
-.grp-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-.grp-name{
-  flex:1;font-size:11px;font-weight:600;letter-spacing:.07em;
-  text-transform:uppercase;color:var(--text-2);
-}
-.grp-n{font-family:var(--mono);font-size:10px;color:var(--text-3)}
-.grp-btn .ico-sm{color:var(--text-3);transition:transform .2s}
-.grp-btn.open .ico-sm{transform:rotate(180deg)}
-.grp-list{display:none;padding-bottom:4px}
-.grp-list.open{display:block}
-
 /* Dataset row */
 .ds{
   display:flex;align-items:flex-start;gap:11px;
@@ -223,19 +206,6 @@ svg{display:block}
 .ds.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent)}
 .ds-main{flex:1;min-width:0}
 .ds-name{font-size:12.5px;font-weight:500;line-height:1.35;margin-bottom:3px}
-.ds-meta{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
-.chip{
-  font-family:var(--mono);font-size:9.5px;line-height:1;
-  padding:3px 5px;border-radius:3px;
-  background:var(--panel-3);color:var(--text-3);
-}
-.ds.on .chip{color:var(--text-2)}
-/* Multi-site products: product sub-header with its site rows indented */
-.ds-sub{
-  padding:10px 14px 4px 17px;border-top:1px solid var(--line);
-  font-size:11px;font-weight:600;color:var(--text-2);line-height:1.35;
-}
-.ds.ds-site{padding-left:30px}
 .ds-zoom,.ds-cfg{
   opacity:0;transition:opacity .14s,color .14s,background .14s;
   width:22px;height:22px;border-radius:3px;color:var(--text-3);
@@ -336,6 +306,49 @@ input[type=range]::-moz-range-thumb{
 }
 .btn:hover{opacity:.85}
 .set-note{font-size:11px;color:var(--text-3);line-height:1.6;margin-top:8px}
+/* Area download */
+.dl-tools{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.dl-tool{
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px;cursor:pointer;
+  border:1px solid var(--line);border-radius:8px;font-size:11px;color:var(--text-2);background:var(--panel);
+  transition:border-color .14s,color .14s,background .14s;
+}
+.dl-tool:hover{border-color:var(--accent);color:var(--accent)}
+.dl-tool.on{border-color:var(--accent);color:var(--accent);background:var(--accent-w)}
+.dl-area{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:11.5px;color:var(--text-2)}
+.dl-area span{flex:1;min-width:0}
+.dl-link{font-size:11px;color:var(--text-3);text-decoration:underline;cursor:pointer}
+.dl-link:hover{color:var(--danger)}
+.dl-zoom{
+  display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;
+  border:1px solid var(--line);font-size:11px;color:var(--text-2);background:var(--panel);
+  transition:border-color .14s,color .14s;
+}
+.dl-zoom:hover{border-color:var(--accent);color:var(--accent)}
+.dl-row{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-top:1px solid var(--line)}
+.dl-row:first-child{border-top:0}
+.dl-row input{width:auto;margin-top:2px;accent-color:var(--accent)}
+.dl-row-main{flex:1;min-width:0}
+.dl-row-name{font-size:12px;line-height:1.35;color:var(--text)}
+.dl-row-meta{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:2px}
+.dl-row-meta.err{color:var(--danger);font-family:inherit}
+.dl-actions{display:flex;gap:7px;margin-top:10px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:var(--panel-2);color:var(--text);border:1px solid var(--line)}
+.dl-bar{height:6px;border-radius:3px;background:var(--panel-3);overflow:hidden;margin-top:10px}
+.dl-bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+/* Magenta is absent from the green/blue/yellow ramps the layers use; the
+   white halo keeps it visible over dark data and satellite basemaps. */
+.dl-shape{
+  stroke:#e6007e;fill:#e6007e;fill-opacity:.07;stroke-width:3.5;stroke-dasharray:10 6;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1px #fff);
+}
+#map.dl-drawing,#map.dl-drawing .leaflet-interactive{cursor:crosshair}
+.dlg-code{
+  width:100%;min-height:300px;font-family:var(--mono);font-size:11.5px;line-height:1.5;
+  background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px;resize:vertical;color:var(--text);
+}
+.set-note a{color:var(--accent);font-weight:500}
 .set-note code{
   font-family:var(--mono);font-size:10.5px;background:var(--panel-2);
   padding:1px 5px;border-radius:3px;color:var(--text-2);
@@ -394,10 +407,11 @@ input[type=range]::-moz-range-thumb{
 }
 .leg-ramp{height:9px;border-radius:2px;border:1px solid var(--line)}
 .leg-ticks{
-  display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-top:4px;
-  font-family:var(--mono);font-size:9.5px;color:var(--text-3);
+  display:flex;justify-content:space-between;align-items:baseline;gap:4px;margin-top:4px;
+  font-family:var(--mono);font-size:9px;color:var(--text-3);
   font-variant-numeric:tabular-nums;
 }
+.leg-ticks span:not(:first-child):not(:last-child){opacity:.72}
 .leg-unit{flex:1;text-align:center;opacity:.8;overflow:hidden;text-overflow:ellipsis}
 .leg-var{
   width:100%;margin-bottom:8px;padding:4px 22px 4px 7px;
@@ -407,9 +421,23 @@ input[type=range]::-moz-range-thumb{
 .leg-classes{display:flex;flex-direction:column;gap:3px}
 .leg-class{display:flex;align-items:center;gap:7px;min-width:0}
 .leg-chip{width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid var(--line)}
+.leg-chip-nil{
+  background:repeating-linear-gradient(45deg,var(--panel-3) 0 3px,transparent 3px 6px);
+}
 .leg-class-lbl{
-  font-size:10.5px;color:var(--text-2);
+  flex:1;font-size:10.5px;color:var(--text-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.leg-class-val{
+  font-family:var(--mono);font-size:9.5px;color:var(--text-3);
+  flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.leg-nodata{
+  display:flex;align-items:center;gap:7px;
+  margin-top:7px;padding-top:7px;border-top:1px solid var(--line);
+}
+.leg-prov{
+  margin-top:6px;font-size:9.5px;line-height:1.4;color:var(--text-3);
 }
 .leg-pills{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
 .leg-lvl{
@@ -483,24 +511,59 @@ input[type=range]::-moz-range-thumb{
 :root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45)}
 body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#2f6b3c,#579050);box-shadow:0 4px 12px rgba(47,107,60,.2)}.brand-mark svg{width:22px;height:22px}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:46px;height:46px;flex-shrink:0;object-fit:contain}.bn-eo{color:#3f8a2e}.bn-stac{color:#2b5d9a}:root[data-theme="dark"] .bn-eo{color:#86b052}:root[data-theme="dark"] .bn-stac{color:#7aa7dd}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
 .top-nav{display:flex;align-items:center;gap:4px;margin-left:auto}.top-nav a{color:var(--text-2);text-decoration:none;font-size:12.5px;font-weight:500;padding:8px 10px;border-radius:7px;transition:.15s background,.15s color}.top-nav a:hover{background:var(--panel-2);color:var(--accent)}.header-pill{display:flex;align-items:center;gap:7px;margin-left:5px;padding:7px 10px;border-radius:18px;background:var(--accent-w);color:var(--accent);font-size:11px;font-weight:600}.header-pill::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
-#app{height:calc(100vh - var(--header-h))}#rail{align-items:stretch;padding:12px 9px;background:var(--rail);border-right:1px solid var(--line);gap:4px}.rail-logo{display:none}.rail-btn{width:100%;height:42px;margin:0;padding:0 11px;border-radius:8px;justify-content:flex-start;gap:10px;color:rgba(255,255,255,.62);font-size:12.5px;font-weight:500}.rail-btn:hover{color:#fff;background:rgba(255,255,255,.07)}.rail-btn.active{color:#a8ce70;background:rgba(134,176,82,.14)}.rail-btn.active::before{left:-9px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}.rail-label{display:block;white-space:nowrap}.rail-badge{position:static;margin-left:auto}.rail-status{margin:10px 12px 3px}.rail-btn[data-tip]:hover::after{display:none}
+#app{height:calc(100vh - var(--header-h))}#rail{align-items:stretch;padding:12px 9px;background:var(--rail);border-right:1px solid var(--line);gap:4px}.rail-logo{display:none}.rail-btn{width:100%;height:42px;margin:0;padding:0 11px;border-radius:8px;justify-content:flex-start;gap:10px;color:rgba(255,255,255,.62);font-size:12.5px;font-weight:500}.rail-btn:hover{color:#fff;background:rgba(255,255,255,.07)}.rail-btn.active{color:#a8ce70;background:rgba(134,176,82,.14)}.rail-btn.active::before{left:-9px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0}.rail-label{display:block;white-space:nowrap}.rail-badge{position:absolute;left:22px;right:auto;top:5px;min-width:14px;height:14px;font-size:8.5px;box-shadow:0 0 0 2px var(--rail)}.rail-status{margin:10px 12px 3px}.rail-btn[data-tip]:hover::after{display:none}
 #panel{box-shadow:4px 0 18px rgba(34,58,42,.04)}.pnl-head{height:64px;padding:0 19px}.pnl-title{font-size:17px;letter-spacing:-.01em}.pnl-sub{font-size:10px}.search-box{padding:14px 18px 16px;border-bottom:0}.search-box .ico-sm{left:30px}#ds-search{height:39px;padding-left:34px;border-radius:9px;background:var(--panel-2)}
-.catalog-intro{padding:18px 19px 10px}.catalog-eyebrow{font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}.catalog-intro h2{font-size:19px;line-height:1.25;letter-spacing:-.02em;margin-bottom:7px}.catalog-intro p{font-size:12.5px;line-height:1.55;color:var(--text-2)}
-.grp{margin:6px 10px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}.grp-btn{padding:12px 13px}.grp-dot{width:9px;height:9px;border-radius:50%}.grp-name{font-size:10.5px}.ds{padding:11px 13px 11px 16px;border-top:1px solid var(--line)}.ds-name{font-size:13px;line-height:1.4}.chip{border-radius:10px;padding:3px 7px}
+/* Category rail: one button per STAC theme, GNW-style. */
+.rail-sec{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38);padding:12px 11px 4px}
+.rail-sec.first{padding-top:2px}
+#rail-cats{display:contents}
+.rail-label{overflow:hidden;text-overflow:ellipsis}
+/* Catalog: one category at a time; search spans all categories. */
+.grp{margin:2px 10px 10px}
+.grp-h{display:none;align-items:center;gap:8px;padding:8px 4px 7px;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-2)}
+#catalog.searching .grp-h{display:flex}
+.grp-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.grp-list{display:block;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel)}
+.ds{padding:11px 10px 11px 14px;border-top:1px solid var(--line)}.ds:first-child{border-top:0}
+.ds-name{font-size:13px;line-height:1.4;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ds-facts{font-size:11.5px;line-height:1.4;color:var(--text-3)}
+.ds.on .ds-facts{color:var(--text-2)}
+.ds .sw{margin-top:2px}
+.ds-info{width:22px;height:22px;border-radius:50%;color:var(--text-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .14s,background .14s}
+.ds-info:hover{color:var(--accent);background:var(--panel-3)}
+/* Multi-site products: product sub-header with its site rows indented */
+.ds-sub{padding:10px 10px 4px 14px;border-top:1px solid var(--line);font-size:11px;font-weight:600;line-height:1.35;color:var(--text-2)}
+.ds-sub:first-child{border-top:0}
+.ds.ds-site{padding-left:26px}
+/* Dataset info dialog */
+#ds-info-dlg{margin:auto;border:1px solid var(--line);border-radius:14px;width:min(580px,calc(100vw - 32px));max-height:min(82vh,760px);background:var(--panel);color:var(--text);box-shadow:var(--shadow-lg);overflow:hidden}
+#ds-info-dlg[open]{display:flex;flex-direction:column}
+#ds-info-dlg::backdrop{background:rgba(16,23,19,.45)}
+.dlg-head{display:flex;gap:12px;align-items:flex-start;padding:18px 18px 14px 22px;border-bottom:1px solid var(--line)}
+.dlg-head > div{flex:1;min-width:0}
+.dlg-eyebrow{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.dlg-title{font-size:16px;font-weight:600;line-height:1.35;letter-spacing:-.01em}
+.dlg-body{flex:1;overflow-y:auto;padding:16px 22px 22px}
+.dlg-body p{font-size:13px;line-height:1.6;color:var(--text-2);margin-bottom:10px;white-space:pre-line}
+.dlg-facts{display:grid;grid-template-columns:max-content 1fr;gap:7px 16px;font-size:12.5px;margin:16px 0;padding:14px 16px;border-radius:10px;background:var(--panel-2)}
+.dlg-facts dt{color:var(--text-3)}.dlg-facts dd{overflow-wrap:anywhere}
+.dlg-links{display:flex;flex-wrap:wrap;gap:8px}
+.dlg-links a{font-size:12px;font-weight:500;padding:7px 11px;border-radius:8px;background:var(--accent-w);color:var(--accent);text-decoration:none}
+.dlg-links a:hover{text-decoration:underline}
 .lc{margin:10px;border:1px solid var(--line);border-radius:10px;padding:15px;background:var(--panel);box-shadow:var(--shadow)}.lc-name{font-size:13.5px}.fld-lbl,.set-h{letter-spacing:.04em;text-transform:none;font-size:11px;font-weight:600}.bm-grid{gap:12px;padding:18px}.bm-opt{border-width:1px;border-radius:9px}.bm-thumb{height:64px}.opt-row,.set-sec{padding:15px 18px}.btn{padding:8px 14px;border-radius:8px}
 #tools{top:18px;right:18px;border-radius:10px}.tool{width:38px;height:38px}#legend,#inspector{border-radius:10px}
 #map-empty{position:absolute;z-index:450;left:50%;top:46%;transform:translate(-50%,-50%);width:min(360px,calc(100% - 40px));padding:22px 24px;text-align:center;background:var(--attrib-bg);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);backdrop-filter:blur(10px);pointer-events:none}.map-empty-icon{width:40px;height:40px;margin:0 auto 11px;border-radius:50%;display:grid;place-items:center;background:var(--accent-w);color:var(--accent)}#map-empty h2{font-size:17px;margin-bottom:6px;letter-spacing:-.015em}#map-empty p{font-size:12.5px;line-height:1.5;color:var(--text-2)}
-@media(max-width:900px){:root{--rail-w:58px;--panel-w:310px}#site-header{padding:0 16px}.brand-tagline,.top-nav{display:none}#rail{align-items:center;padding:10px 7px}.rail-btn{width:42px;padding:0;justify-content:center}.rail-label{display:none}.rail-status{margin:9px auto}.rail-btn[data-tip]:hover::after{display:block}}
-@media(max-width:700px){:root{--header-h:56px}#site-header{padding:0 12px}.brand-mark{width:32px;height:32px}.brand-name{font-size:15px}.header-pill{margin-left:auto;font-size:10px}#panel{left:var(--rail-w)}#map-empty{top:42%}}
+@media(max-width:900px){:root{--rail-w:58px;--panel-w:310px}#site-header{padding:0 16px}.brand-tagline,.top-nav{display:none}#rail{align-items:center;padding:10px 7px}.rail-btn{width:42px;padding:0;justify-content:center}.rail-label{display:none}.rail-sec{font-size:0;padding:0;height:1px;margin:7px 4px;background:rgba(255,255,255,.12)}.rail-sec.first{display:none}.rail-badge{position:absolute;top:3px;right:3px;margin:0}.rail-status{margin:9px auto}.rail-btn[data-tip]:hover::after{display:block}}
+@media(max-width:700px){:root{--header-h:56px}#site-header{padding:0 12px}.brand-mark{width:38px;height:38px}.brand-name{font-size:15px}.header-pill{margin-left:auto;font-size:10px}#panel{left:var(--rail-w)}#map-empty{top:42%}}
 </style>
 </head>
 <body>
 <header id="site-header">
   <a class="brand" href="../" aria-label="EOForestSTAC home">
-    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 6.8 9h3.1l-4.6 6.2h5V22h3.4v-6.8h5L14.1 9h3.1L12 2Z"/></svg></span>
-    <span class="brand-copy"><span class="brand-name">EOForestSTAC</span><span class="brand-tagline">Global forest Earth observation explorer</span></span>
+    <img class="brand-mark" src="logo-mark.png" width="46" height="46" alt="">
+    <span class="brand-copy"><span class="brand-name"><span class="bn-eo">EO</span>Forest<span class="bn-stac">STAC</span></span><span class="brand-tagline">Global forest Earth observation explorer</span></span>
   </a>
   <nav class="top-nav" aria-label="Main navigation">
     <a href="../">Catalog</a>
@@ -517,17 +580,21 @@ body{font-size:14px;background:var(--bg)}
   <nav id="rail" aria-label="Explorer tools">
     <div class="rail-logo" title="EOForestSTAC">🌲</div>
 
-    <button class="rail-btn active" data-view="data" data-tip="Datasets" aria-label="Datasets" aria-pressed="true">
-      <svg class="ico" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 12c0 1.7 4 3 9 3s9-1.3 9-3"/></svg><span class="rail-label">Datasets</span>
-    </button>
+    <div class="rail-sec first">Datasets</div>
+    <div id="rail-cats"></div>
 
+    <div class="rail-sec">Map</div>
     <button class="rail-btn" data-view="layers" data-tip="Active layers" aria-label="Active layers" aria-pressed="false">
-      <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="rail-label">Active layers</span>
+      <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span class="rail-label">Layers</span>
       <span class="rail-badge" id="rail-badge" hidden>0</span>
     </button>
 
     <button class="rail-btn" data-view="basemap" data-tip="Basemap" aria-label="Basemap and view" aria-pressed="false">
       <svg class="ico" viewBox="0 0 24 24"><polygon points="1 6 8 3 16 6 23 3 23 18 16 21 8 18 1 21 1 6"/><line x1="8" y1="3" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="21"/></svg><span class="rail-label">Basemap</span>
+    </button>
+
+    <button class="rail-btn" data-view="download" data-tip="Download data" aria-label="Download data for an area" aria-pressed="false">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="rail-label">Download</span>
     </button>
 
     <div class="rail-spacer"></div>
@@ -540,6 +607,20 @@ body{font-size:14px;background:var(--bg)}
     </button>
     <div class="rail-status wait" id="rail-status" title="Checking TiTiler…" role="status" aria-label="Checking tile server connection"></div>
   </nav>
+
+  <!-- ─── Dataset info dialog ───────────────────────────────────── -->
+  <dialog id="ds-info-dlg" aria-labelledby="dlg-title">
+    <div class="dlg-head">
+      <div>
+        <div class="dlg-eyebrow" id="dlg-eyebrow"></div>
+        <h2 class="dlg-title" id="dlg-title"></h2>
+      </div>
+      <button class="ghost-btn" id="dlg-close" title="Close" aria-label="Close">
+        <svg class="ico-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="dlg-body" id="dlg-body"></div>
+  </dialog>
 
   <!-- ─── Panel ─────────────────────────────────────────────────── -->
   <aside id="panel">
@@ -555,14 +636,9 @@ body{font-size:14px;background:var(--bg)}
 
       <!-- Datasets -->
       <section class="pnl-view active" id="view-data">
-        <div class="catalog-intro">
-          <div class="catalog-eyebrow">Data explorer</div>
-          <h2>Explore global forest datasets</h2>
-          <p>Switch on a product to visualize it, compare layers, and inspect values anywhere on the map.</p>
-        </div>
         <div class="search-box">
           <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
-          <input id="ds-search" type="search" placeholder="Search datasets…" autocomplete="off">
+          <input id="ds-search" type="search" placeholder="Search all datasets…" autocomplete="off" aria-label="Search all datasets">
         </div>
         <div id="catalog">
           <div class="state"><div class="spinner"></div>Loading STAC catalog…</div>
@@ -590,6 +666,49 @@ body{font-size:14px;background:var(--bg)}
             <div class="opt-desc">Fly to a dataset's bounding box when you switch it on.</div>
           </div>
           <label class="sw"><input type="checkbox" id="autozoom-sw" checked><span class="sw-t"></span></label>
+        </div>
+      </section>
+
+      <!-- Area download -->
+      <section class="pnl-view" id="view-download">
+        <div class="set-sec">
+          <div class="set-h">1 · Area</div>
+          <div class="dl-tools">
+            <button class="dl-tool" data-draw="rect" title="Drag on the map">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5"/></svg>Rectangle
+            </button>
+            <button class="dl-tool" data-draw="poly" title="Click vertices; double-click to finish">
+              <svg class="ico" viewBox="0 0 24 24"><polygon points="12 3 21 9.5 17.5 20 6.5 20 3 9.5"/></svg>Polygon
+            </button>
+            <label class="dl-tool" title="GeoJSON Polygon or MultiPolygon, EPSG:4326">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>GeoJSON
+              <input type="file" id="dl-file" accept=".geojson,.json,application/geo+json" hidden>
+            </label>
+          </div>
+          <div class="set-note" id="dl-area-note">Draw an area on the map or upload a GeoJSON polygon.</div>
+        </div>
+        <div class="set-sec">
+          <div class="set-h">2 · Layers</div>
+          <div id="dl-layers"></div>
+          <div class="opt-row" style="padding:10px 0 0;border:0">
+            <div class="opt-txt">
+              <div class="opt-name">All time steps</div>
+              <div class="opt-desc">Otherwise only the step shown on the map.</div>
+            </div>
+            <label class="sw"><input type="checkbox" id="dl-alltime"><span class="sw-t"></span></label>
+          </div>
+        </div>
+        <div class="set-sec">
+          <div class="set-h">3 · Download</div>
+          <div class="set-note" id="dl-summary" style="margin-top:0">Native resolution, clipped to the area: GeoTIFF for single maps, NetCDF when time or other dimensions remain. The zip includes a README with licenses and citations.</div>
+          <div class="dl-actions">
+            <button class="btn" id="dl-go" disabled>Download zip</button>
+            <button class="btn btn-ghost" id="dl-code" disabled>Python code</button>
+          </div>
+          <div id="dl-progress" hidden>
+            <div class="dl-bar"><span id="dl-bar"></span></div>
+            <div class="set-note" id="dl-status" aria-live="polite"></div>
+          </div>
         </div>
       </section>
 
@@ -699,6 +818,88 @@ const RAMPS = {
   spectral:['#9e0142','#f46d43','#ffffbf','#66c2a5','#5e4fa2'],
 };
 const rampCSS = n => `linear-gradient(to right,${(RAMPS[n] || RAMPS.greys).join(',')})`;
+
+/* RAMPS above are only a fallback. The tiles are coloured by rio-tiler's own
+   256-entry lookup table, so a hand-written 5-stop approximation puts the wrong
+   colours in the legend. Fetch the real LUT and key the legend off that. */
+const LUT = new Map();          // colormap name -> [[r,g,b,a] x 256]
+const LUT_INFLIGHT = new Map(); // name -> promise, so concurrent layers share one fetch
+
+function loadLUT(name) {
+  if (LUT.has(name)) return Promise.resolve(LUT.get(name));
+  if (LUT_INFLIGHT.has(name)) return LUT_INFLIGHT.get(name);
+  if (!S.tiOk) return Promise.resolve(null);
+
+  const p = (async () => {
+    try {
+      const raw = await fetchJSON(`${S.tiTiler}/colorMaps/${encodeURIComponent(name)}?f=json`);
+      /* Sequential maps come back keyed 0..255; interval maps as
+         [[[lo,hi],[r,g,b,a]], ...]. Normalise both to 256 stops. */
+      let stops = null;
+      if (Array.isArray(raw)) {
+        stops = Array.from({ length: 256 }, (_, i) => {
+          const hit = raw.find(e => Array.isArray(e?.[0]) && i >= e[0][0] && i <= e[0][1]);
+          return (hit || raw[raw.length - 1])?.[1] || [0, 0, 0, 0];
+        });
+      } else if (raw && typeof raw === 'object') {
+        stops = Array.from({ length: 256 }, (_, i) => raw[i] || raw[String(i)] || [0, 0, 0, 0]);
+      }
+      if (stops) LUT.set(name, stops);
+      return stops;
+    } catch { return null; }
+    finally { LUT_INFLIGHT.delete(name); }
+  })();
+  LUT_INFLIGHT.set(name, p);
+  return p;
+}
+
+const rgba = c => `rgba(${c[0]},${c[1]},${c[2]},${(c[3] ?? 255) / 255})`;
+
+/* Exact colour for a normalised position, straight out of the server LUT. */
+function colorAt(name, t) {
+  const lut = LUT.get(name);
+  if (!lut) return sampleRamp(name, t);
+  const i = Math.max(0, Math.min(255, Math.round(Math.max(0, Math.min(1, t)) * 255)));
+  return rgba(lut[i]);
+}
+
+/* Build the gradient from the LUT. 48 stops is visually exact for smooth maps
+   and keeps hard edges of stepped maps roughly in place. */
+function gradientFor(name) {
+  const lut = LUT.get(name);
+  if (!lut) { loadLUT(name).then(s => { if (s) renderLegend(); }); return rampCSS(name); }
+  const N = 48;
+  const stops = Array.from({ length: N }, (_, k) => {
+    const t = k / (N - 1);
+    return `${rgba(lut[Math.round(t * 255)])} ${(t * 100).toFixed(1)}%`;
+  });
+  return `linear-gradient(to right,${stops.join(',')})`;
+}
+
+/* The server knows which colormaps it supports — 211 of them — so don't ship
+   a guessed subset in the client. */
+async function loadColormapNames() {
+  if (!S.tiOk) return;
+  try {
+    /* Without f=json this endpoint negotiates to HTML. */
+    const res = await fetchJSON(`${S.tiTiler}/colorMaps?f=json`);
+    const list = res?.colormaps ?? res?.colorMaps ?? res;
+    const names = (Array.isArray(list) ? list : [])
+      .map(c => (typeof c === 'string' ? c : c?.id ?? c?.name))
+      .filter(Boolean);
+    if (names.length) S.colormapNames = names;
+  } catch { /* keep the built-in list */ }
+}
+
+/* Curated names first, then everything else the server offers. */
+function colormapOptions(selected) {
+  const curated = Object.keys(RAMPS).filter(n => S.colormapNames.includes(n));
+  const rest = S.colormapNames.filter(n => !curated.includes(n)).sort();
+  const opt = n => `<option value="${esc(n)}" ${n === selected ? 'selected' : ''}>${esc(n)}</option>`;
+  if (!rest.length) return curated.map(opt).join('');
+  return `<optgroup label="Common">${curated.map(opt).join('')}</optgroup>` +
+         `<optgroup label="All (${rest.length})">${rest.map(opt).join('')}</optgroup>`;
+}
 function sampleRamp(name, t) {
   const s = RAMPS[name] || RAMPS.greys;
   const x = Math.max(0, Math.min(1, t)) * (s.length - 1);
@@ -713,17 +914,23 @@ const CFG = {
   catalog: 'https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/catalog.json',
   defaultTiTiler: window.EOFOREST_CONFIG?.tiTilerUrl || 'http://localhost:8000',
   home: { center: [20, 10], zoom: 3 },
-  colormaps: Object.keys(RAMPS),
-  cmapGradients: Object.fromEntries(Object.keys(RAMPS).map(k => [k, rampCSS(k)])),
   /* data_vars that are grid/CRS carriers rather than renderable rasters */
   skipVars: new Set(['spatial_ref','crs','transverse_mercator','lambert_azimuthal_equal_area','latitude_longitude','polar_stereographic']),
+  /* Rail order follows the catalog; `short` is the rail label, `label` the
+     panel title. Icons are 24×24 stroke paths. */
   themeInfo: {
-    'biomass-carbon':       { label:'Biomass & Carbon',  cls:'bc' },
-    'disturbance-change':   { label:'Disturbance',       cls:'dc' },
-    'structure-demography': { label:'Structure',         cls:'sd' },
-    'als-lidar':            { label:'LiDAR / ALS',       cls:'al' },
-    'land-use-land-cover':  { label:'Land Use',          cls:'lu' },
+    'biomass-carbon':       { label:'Biomass & Carbon',       short:'Biomass',     cls:'bc',
+      icon:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>' },
+    'disturbance-change':   { label:'Disturbance & Change',   short:'Disturbance', cls:'dc',
+      icon:'<polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/>' },
+    'structure-demography': { label:'Structure & Demography', short:'Structure',   cls:'sd',
+      icon:'<path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/>' },
+    'als-lidar':            { label:'ALS / ULS / LiDAR',      short:'LiDAR',       cls:'al',
+      icon:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/>' },
+    'land-use-land-cover':  { label:'Land Use & Land Cover',  short:'Land use',    cls:'lu',
+      icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>' },
   },
+  themeIconFallback: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
 };
 
 /* Key-free tile services. Esri's ArcGIS Online basemaps and OSM need no token. */
@@ -789,8 +996,11 @@ const S = {
   showLabels:localStorage.getItem('labels') !== '0',
   autoZoom:  localStorage.getItem('autozoom') !== '0',
   view:      'data',
+  cat:       null,
   panelOpen: true,
   legendOpen: true,
+  dl: { drawing: null, geometry: null, shape: null, excluded: new Set(), estimate: null, polling: null },
+  colormapNames: Object.keys(RAMPS),
 };
 
 const el  = id => document.getElementById(id);
@@ -955,6 +1165,8 @@ async function loadCatalog() {
       root.links.filter(l => l.rel === 'child').map(tl => loadTheme(tl, CFG.catalog))
     );
     S.catalog = { themes: themes.filter(t => t && t.collections.length) };
+    if (!S.catalog.themes.some(t => t.id === S.cat)) S.cat = firstThemeId();
+    renderRailCats();
     renderCatalog();
   } catch (e) {
     host.innerHTML = `<div class="state">
@@ -1009,14 +1221,113 @@ async function loadCollection(link, base) {
       variables: item.properties?.variables || [],
       summaries: col.summaries || {},
       bbox: Array.isArray(item.bbox) && item.bbox.length >= 4 ? item.bbox.slice(0, 4).map(Number) : null,
+      description: col.description || '',
+      license: col.license || '',
+      providers: Array.isArray(col.providers) ? col.providers : [],
+      keywords: Array.isArray(col.keywords) ? col.keywords : [],
+      links: col.links || [],
+      facts: collectionFacts(col),
       zarrs,
     };
   } catch { return null; }
 }
 
+/* The one-line "annual 2005–2024 · 100 m · global · ESA CCI" summary, built
+   from standard STAC fields so new collections need no UI changes. */
+function collectionFacts(col) {
+  const s = col.summaries || {};
+  const [t0, t1] = (col.extent?.temporal?.interval?.[0] || []).map(d => d ? String(d).slice(0, 4) : '');
+  const span = !t0 ? '' : (!t1 || t1 === t0) ? t0 : t1 === '9999' ? `since ${t0}` : `${t0}–${t1}`;
+  const cadence = String(s.temporal_resolution?.[0] || '').split(' (')[0];
+  return {
+    time: !cadence || /^static/i.test(cadence) ? span : [cadence, span].filter(Boolean).join(' '),
+    gsd: formatGsd(Number(s['eo:gsd']?.[0])),
+    region: regionLabel(col.extent?.spatial?.bbox?.[0]),
+    provider: shortProvider(col.providers?.[0]?.name),
+  };
+}
+
+function formatGsd(m) {
+  if (!m) return '';
+  if (m >= 100000) return `${+(m / 111320).toFixed(2)}°`;
+  if (m >= 1000) return `${+(m / 1000).toFixed(1)} km`;
+  return `${+m.toFixed(1)} m`;
+}
+
+function regionLabel(b) {
+  if (!Array.isArray(b) || b.length < 4) return '';
+  const [w, s, e, n] = b.map(Number);
+  if (e - w >= 350 && n - s >= 140) return 'global';
+  if (e - w >= 350 && Math.max(Math.abs(s), Math.abs(n)) <= 35) return 'pan-tropical';
+  if (w >= -40 && e <= 50 && s >= 30 && n <= 75) return 'Europe';
+  if (w >= -90 && e <= -30 && s >= -60 && n <= 15) return 'South America';
+  return 'regional';
+}
+
+/* "ESA Climate Change Initiative (CCI)" → "ESA CCI", "University of Maryland
+   (GLAD), …" → "GLAD", "GFZ Helmholtz Centre Potsdam" → "GFZ". */
+function shortProvider(name) {
+  if (!name) return '';
+  const lead = name.match(/^[A-Z]{2,}(?:-[A-Z]{2,})?(?=\s|$)/)?.[0];
+  const acro = name.match(/\(([A-Z]{2,8})\)/)?.[1];
+  if (lead && acro) return `${lead} ${acro}`;
+  return acro || lead || name.split(/\s[–—-]\s|,|\s\(/)[0].trim();
+}
+
+/* Resolution already shows in the facts line, so drop a trailing "(30 m)". */
+function shortTitle(title) {
+  return title.replace(/\s*\((?:[\d.]+\s?(?:m|km|deg|°)|multi-resolution)\)\s*$/i, '');
+}
+
 /* ══════════════════════════════════════════════════════════════════
    CATALOG UI
 ══════════════════════════════════════════════════════════════════ */
+function themeInfo(theme) {
+  const label = theme?.title || theme?.id || '';
+  return CFG.themeInfo[theme?.id] || { label, short: label, cls: 'bc', icon: CFG.themeIconFallback };
+}
+
+function firstThemeId() {
+  return S.catalog?.themes[0]?.id ?? Object.keys(CFG.themeInfo)[0];
+}
+
+function themeOf(colId) {
+  return S.catalog?.themes.find(t => t.collections.some(c => c.id === colId)) || null;
+}
+
+/* Before the catalog arrives the rail shows the configured themes, so the
+   layout doesn't jump; afterwards it follows the catalog's own order. */
+function renderRailCats() {
+  const themes = S.catalog?.themes?.length ? S.catalog.themes : Object.keys(CFG.themeInfo).map(id => ({ id }));
+  const host = el('rail-cats');
+  host.innerHTML = themes.map(t => {
+    const info = themeInfo(t);
+    return `<button class="rail-btn" data-view="data" data-cat="${esc(t.id)}" data-tip="${esc(info.label)}" aria-label="${esc(info.label)}" aria-pressed="false">
+      <svg class="ico" viewBox="0 0 24 24">${info.icon}</svg><span class="rail-label">${esc(info.short)}</span>
+      <span class="rail-badge" hidden>0</span>
+    </button>`;
+  }).join('');
+  host.querySelectorAll('.rail-btn').forEach(b => {
+    b.addEventListener('click', () => showView('data', b.dataset.cat));
+  });
+  syncRail();
+}
+
+function syncRail() {
+  document.querySelectorAll('.rail-btn[data-view]').forEach(b => {
+    const active = b.dataset.view === S.view && (!b.dataset.cat || b.dataset.cat === S.cat);
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', String(active));
+  });
+  document.querySelectorAll('#rail-cats .rail-btn').forEach(b => {
+    const theme = S.catalog?.themes.find(t => t.id === b.dataset.cat);
+    const n = theme ? theme.collections.filter(c => S.layers.has(c.id)).length : 0;
+    const badge = b.querySelector('.rail-badge');
+    badge.textContent = n;
+    badge.hidden = n === 0;
+  });
+}
+
 function renderCatalog() {
   const host = el('catalog');
   if (!S.catalog?.themes?.length) {
@@ -1024,38 +1335,20 @@ function renderCatalog() {
     return;
   }
 
-  let total = 0;
   host.innerHTML = S.catalog.themes.map(theme => {
-    const info = CFG.themeInfo[theme.id] || { label: theme.title || theme.id, cls: 'bc' };
-    total += theme.collections.length;
+    const info = themeInfo(theme);
     return `<div class="grp" data-grp="${esc(theme.id)}">
-      <button class="grp-btn open" data-list="list-${esc(theme.id)}" aria-expanded="true">
-        <span class="grp-dot" style="background:var(--${info.cls})"></span>
-        <span class="grp-name">${esc(info.label)}</span>
-        <span class="grp-n">${theme.collections.length}</span>
-        <svg class="ico-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      <div class="grp-list open" id="list-${esc(theme.id)}">
-        ${theme.collections.map((col, i) => {
-          const prev = theme.collections[i - 1];
-          const sub = col.parent && col.parent.id !== prev?.parent?.id
-            ? `<div class="ds-sub" data-parent="${esc(col.parent.id)}">${esc(col.parent.title)}</div>`
-            : '';
-          return sub + renderDatasetRow(col);
-        }).join('')}
-      </div>
+      <div class="grp-h"><span class="grp-dot" style="background:var(--${info.cls})"></span>${esc(info.label)}</div>
+      <div class="grp-list">${theme.collections.map((col, i) => {
+        const prev = theme.collections[i - 1];
+        const sub = col.parent && col.parent.id !== prev?.parent?.id
+          ? `<div class="ds-sub" data-parent="${esc(col.parent.id)}">${esc(shortTitle(col.parent.title))}</div>`
+          : '';
+        return sub + renderDatasetRow(col);
+      }).join('')}</div>
     </div>`;
   }).join('');
 
-  el('pnl-sub').textContent = `${total} datasets`;
-
-  host.querySelectorAll('.grp-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const open = el(btn.dataset.list).classList.toggle('open');
-      btn.classList.toggle('open', open);
-      btn.setAttribute('aria-expanded', String(open));
-    });
-  });
   host.querySelectorAll('.sw input').forEach(inp => {
     inp.addEventListener('change', () => toggleDataset(inp.dataset.id, inp.checked));
   });
@@ -1078,21 +1371,23 @@ function renderCatalog() {
       );
     });
   });
+  host.querySelectorAll('.ds-info').forEach(btn => {
+    btn.addEventListener('click', () => openDatasetInfo(btn.dataset.id));
+  });
+  applyCatalogFilter();
 }
 
 function renderDatasetRow(col) {
   const on = S.layers.has(col.id);
-  const chips = [];
-  if (col.version) chips.push(`v${col.version}`);
-  if (col.variables.length) chips.push(`${col.variables.length} var${col.variables.length > 1 ? 's' : ''}`);
-  if (col.zarrs.length > 1) chips.push(`${col.zarrs.length} assets`);
-  const site = col.parent
-    ? `data-parent="${esc(col.parent.id)}" data-parent-title="${esc(col.parent.title)}"`
-    : '';
-  return `<div class="ds ${on ? 'on' : ''} ${col.parent ? 'ds-site' : ''}" id="ds-${esc(col.id)}" ${site}>
+  const f = col.facts;
+  const facts = [f.time, f.gsd, f.region, f.provider].filter(Boolean).join(' · ');
+  const search = [col.title, col.id, col.parent?.title || '', ...col.providers.map(p => p.name), ...col.keywords].join(' ').toLowerCase();
+  const site = col.parent ? `data-parent="${esc(col.parent.id)}"` : '';
+  return `<div class="ds ${on ? 'on' : ''} ${col.parent ? 'ds-site' : ''}" id="ds-${esc(col.id)}" data-search="${esc(search)}" ${site}>
+    <label class="sw"><input type="checkbox" data-id="${esc(col.id)}" aria-label="Show ${esc(col.title)}" ${on ? 'checked' : ''}><span class="sw-t"></span></label>
     <div class="ds-main">
-      <div class="ds-name">${esc(col.siteLabel || col.title)}</div>
-      ${chips.length ? `<div class="ds-meta">${chips.map(c => `<span class="chip">${esc(c)}</span>`).join('')}</div>` : ''}
+      <div class="ds-name" title="${esc(col.title)}">${esc(col.siteLabel || shortTitle(col.title))}</div>
+      ${facts ? `<div class="ds-facts" title="${esc(facts)}">${esc(facts)}</div>` : ''}
     </div>
     <button class="ds-zoom" data-id="${esc(col.id)}" title="Zoom to extent" aria-label="Zoom to ${esc(col.title)} extent">
       <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
@@ -1100,7 +1395,9 @@ function renderDatasetRow(col) {
     <button class="ds-cfg" data-id="${esc(col.id)}" title="Variable & display settings" aria-label="Display settings for ${esc(col.title)}">
       <svg class="ico-sm" viewBox="0 0 24 24"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="9" cy="8" r="2.4"/><circle cx="16" cy="16" r="2.4"/></svg>
     </button>
-    <label class="sw"><input type="checkbox" data-id="${esc(col.id)}" aria-label="Show ${esc(col.title)}" ${on ? 'checked' : ''}><span class="sw-t"></span></label>
+    <button class="ds-info" data-id="${esc(col.id)}" title="About this dataset" aria-label="About ${esc(col.title)}">
+      <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="11" x2="12" y2="16.5"/><line x1="12" y1="7.5" x2="12" y2="7.6"/></svg>
+    </button>
   </div>`;
 }
 
@@ -1111,14 +1408,17 @@ function findCollection(id) {
   return null;
 }
 
-function filterCatalog(q) {
-  q = q.trim().toLowerCase();
-  document.querySelectorAll('.grp').forEach(grp => {
+/* Without a query only the selected category is shown (its name is the panel
+   title); a query searches every category and labels each group of hits. */
+function applyCatalogFilter() {
+  const host = el('catalog');
+  const q = el('ds-search').value.trim().toLowerCase();
+  host.classList.toggle('searching', q !== '');
+  let hits = 0;
+  host.querySelectorAll('.grp').forEach(grp => {
     let shown = 0;
     grp.querySelectorAll('.ds').forEach(row => {
-      const hit = !q || row.querySelector('.ds-name').textContent.toLowerCase().includes(q)
-                     || row.id.slice(3).toLowerCase().includes(q)
-                     || (row.dataset.parentTitle || '').toLowerCase().includes(q);
+      const hit = !q || row.dataset.search.includes(q);
       row.hidden = !hit;
       if (hit) shown++;
     });
@@ -1126,9 +1426,48 @@ function filterCatalog(q) {
       sub.hidden = ![...grp.querySelectorAll('.ds-site')]
         .some(row => row.dataset.parent === sub.dataset.parent && !row.hidden);
     });
-    grp.hidden = q !== '' && shown === 0;
-    if (q) { grp.querySelector('.grp-list').classList.add('open'); grp.querySelector('.grp-btn').classList.add('open'); }
+    grp.hidden = q ? shown === 0 : grp.dataset.grp !== S.cat;
+    if (!grp.hidden) hits += shown;
   });
+  host.querySelector('.cat-empty')?.remove();
+  if (q && S.catalog?.themes.length && !hits) {
+    host.insertAdjacentHTML('beforeend', `<div class="state cat-empty">No datasets match “${esc(q)}”.</div>`);
+  }
+  syncPanelHead(hits);
+}
+
+const LINK_LABELS = { 'cite-as': 'Cite / DOI', about: 'Source', license: 'License terms', describedby: 'Documentation' };
+
+function openDatasetInfo(id) {
+  const col = findCollection(id);
+  if (!col) return;
+  const info = themeInfo(themeOf(id));
+  const s = col.summaries;
+  const units = s.units_by_variable || {};
+  const vars = (Array.isArray(s.variables) && s.variables.length ? s.variables : col.variables)
+    .map(v => typeof v === 'string' ? v : v?.name).filter(Boolean)
+    .map(v => units[v] ? `${v} (${units[v]})` : v);
+  const rows = [
+    ['Time', col.facts.time],
+    ['Resolution', col.facts.gsd],
+    ['Extent', col.facts.region],
+    ['Variables', vars.join(', ')],
+    ['Provider', col.providers.map(p => p.name).filter(Boolean).join('; ')],
+    ['License', col.license],
+    ['Version', col.version],
+  ].filter(([, v]) => v);
+  const links = col.links.filter(l => LINK_LABELS[l.rel] && /^https?:\/\//i.test(l.href || ''));
+
+  el('dlg-eyebrow').innerHTML = `<span class="grp-dot" style="background:var(--${info.cls})"></span>${esc(info.label)}`;
+  el('dlg-title').textContent = col.title;
+  el('dlg-body').innerHTML =
+    (col.description ? `<p>${esc(col.description.trim())}</p>` : '') +
+    `<dl class="dlg-facts">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>` +
+    (links.length ? `<div class="dlg-links">${links.map(l =>
+      `<a href="${esc(l.href)}" target="_blank" rel="noopener noreferrer" title="${esc(l.title || l.href)}">${esc(LINK_LABELS[l.rel])} ↗</a>`
+    ).join('')}</div>` : '');
+  el('dlg-body').scrollTop = 0;
+  el('ds-info-dlg').showModal();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1190,11 +1529,26 @@ async function fetchVariables(zarrUrl, fallback = []) {
 async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   if (!S.tiOk) return;
   const qs = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
+  for (const s of extraSels(layer)) qs.append('sel', s);
 
   const [info, tj] = await Promise.all([
     fetchJSON(`${S.tiTiler}/info?${qs}`).catch(() => null),
     fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`).catch(() => null),
   ]);
+
+  /* /info refuses variables with more than one extra dimension (GAMI is
+     members × time × y × x). Pin every extra dimension but the time-like one
+     and ask again; the remaining one becomes the usual slider. */
+  if (!info && !layer.extraDims) {
+    const res = await fetchJSON(`${S.tiTiler}/dataset/dims?` +
+      new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar })).catch(() => null);
+    const dims = res?.dims || [];
+    if (dims.length >= 2) {
+      const main = dims.find(d => d.values.some(v => /^\d{4}-\d{2}-\d{2}/.test(v))) || dims[0];
+      layer.extraDims = dims.filter(d => d !== main).map(d => ({ name: d.name, values: d.values, index: 0 }));
+      return fetchVariableMeta(layer, { resetRange });
+    }
+  }
 
   if (info) {
     layer.dimInfo = parseDimInfo(info);
@@ -1225,7 +1579,11 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   }
 
   if (!layer.colormapManual) layer.colormap = automaticColormap(layer);
-  if (resetRange && !layer.rangeKnown) await probeStatistics(layer);
+  if (resetRange) {
+    const declared = metadataClasses(layer);
+    if (!(declared?.length && applyClassRange(layer, declared))) await reconcileRange(layer);
+  }
+  await loadLUT(layer.colormap);   // class swatches need the real LUT
   layer.classes = buildClasses(layer);
 
   /* tilejson reports minzoom 0 for zarr regardless of size, so the real
@@ -1239,28 +1597,93 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   }
 }
 
-/* No declared valid range — derive one from the data. Only ever run against
-   the coarsest pyramid level: /statistics on a full-resolution store would
-   pull the whole array into memory. */
-async function probeStatistics(layer) {
-  if (!layer.pyramidUrl || layer.numPyramidLevels < 2) return;
-  const coarsest = `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
-  try {
-    const qs = new URLSearchParams({ url: coarsest, variable: layer.activeVar });
-    const sel = selParam(layer);
-    if (sel) qs.set('sel', sel);
-    const stats = await fetchJSON(`${S.tiTiler}/statistics?${qs}`);
-    const band = stats && typeof stats === 'object' ? Object.values(stats)[0] : null;
-    if (!band) return;
-    const lo = Number(band.percentile_2 ?? band.min);
-    const hi = Number(band.percentile_98 ?? band.max);
-    if (Number.isFinite(lo) && Number.isFinite(hi) && hi > lo) {
-      layer.rMin = +lo.toPrecision(3);
-      layer.rMax = +hi.toPrecision(3);
-      layer.rangeKnown = true;
-    }
-  } catch { /* fall back to manual range */ }
+/* Which store can /statistics safely read? It clips to the full extent and
+   rejects anything over the 1 GB array ceiling BEFORE downsampling to
+   max_size, so a full-resolution global store is off limits. Prefer the
+   coarsest pyramid level; otherwise the native store, but only if it fits. */
+function statisticsSource(layer) {
+  if (layer.pyramidUrl && layer.numPyramidLevels >= 2)
+    return `${layer.pyramidUrl}/${layer.numPyramidLevels - 1}`;
+  const itemsize = DTYPE_BYTES[String(layer.dtype).replace(/^[<>|=]/, '')] ?? 4;
+  const bands = Math.max(1, layer.dimInfo?.length ?? 1);
+  if (layer.width && layer.height &&
+      layer.width * layer.height * itemsize * (selParams(layer).length ? 1 : bands) < READ_BUDGET)
+    return layer.zarrUrl;
+  return null;
 }
+
+/* Measure the actual distribution. Returns null when it can't be read.
+   titiler.xarray only serves POST /statistics, with the area as a GeoJSON
+   Feature; the result comes back in properties.statistics. */
+async function measureStatistics(layer) {
+  const src = statisticsSource(layer);
+  const bb = boundsToLatLng(layer.bounds);
+  if (!src || !bb || !S.tiOk) return null;
+  try {
+    const qs = new URLSearchParams({ url: src, variable: layer.activeVar, max_size: '1024' });
+    for (const s of selParams(layer)) qs.append('sel', s);
+    const [w, s, e, n] = [bb.getWest(), bb.getSouth(), bb.getEast(), bb.getNorth()];
+    const feature = {
+      type: 'Feature', properties: {},
+      geometry: { type: 'Polygon', coordinates: [[[w, s], [e, s], [e, n], [w, n], [w, s]]] },
+    };
+    const r = await fetch(`${S.tiTiler}/statistics?${qs}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(feature),
+    });
+    if (!r.ok) return null;
+    const stats = (await r.json())?.properties?.statistics;
+    const band = stats && typeof stats === 'object' ? Object.values(stats)[0] : null;
+    if (!band) return null;
+    const pick = (...k) => { for (const n of k) if (Number.isFinite(Number(band[n]))) return Number(band[n]); return null; };
+    return {
+      min: pick('min'), max: pick('max'),
+      p2:  pick('percentile_2', 'percentile_2.0'),
+      p98: pick('percentile_98', 'percentile_98.0'),
+    };
+  } catch { return null; }
+}
+
+/* A declared valid_min/valid_max is a validity contract, not a display range:
+   SAATCHI declares 0–1000 Mg/ha while 98 % of its pixels sit below 280, so a
+   declared stretch leaves most of the map in the bottom of the ramp. Display
+   the measured p2–p98 whenever it can be read, kept inside the declared
+   bounds; the declared/STAC/tilejson range is only the fallback. */
+async function reconcileRange(layer) {
+  /* Small integer ranges are codes or masks — a percentile stretch would cut
+     off the rare values. */
+  const isInt = /^u?int|^bool/i.test(layer.dtype || '');
+  if (layer.rangeKnown && isInt && layer.rMax - layer.rMin <= 11) return;
+
+  const st = await measureStatistics(layer);
+  if (!st) return;
+  layer.stats = st;
+
+  let lo = st.p2 ?? st.min, hi = st.p98 ?? st.max;
+  if (layer.rangeKnown) { lo = Math.max(lo, layer.rMin); hi = Math.min(hi, layer.rMax); }
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return;
+
+  layer.rMin = +lo.toPrecision(3);
+  layer.rMax = +hi.toPrecision(3);
+  layer.rangeKnown = true;
+  layer.rangeSource = 'measured';
+}
+
+/* Class rasters are coloured by value position in the rescale range, so the
+   range must be exactly the declared class values — never a percentile cut. */
+function applyClassRange(layer, classes) {
+  const values = classes.map(c => c.value);
+  const lo = Math.min(...values), hi = Math.max(...values);
+  if (!(hi > lo)) return false;
+  layer.rMin = lo; layer.rMax = hi;
+  layer.rangeKnown = true;
+  layer.rangeSource = 'classes';
+  return true;
+}
+
+/* Bytes one tile or statistics request may read. The map fetches ~a dozen
+   tiles at once and the server runs up to 8 reads in parallel, so this has
+   to stay far below rio-tiler's 1 GB per-array ceiling. */
+const READ_BUDGET = 1.5e8;
 
 const DTYPE_BYTES = {
   bool:1, int8:1, uint8:1, int16:2, uint16:2, float16:2,
@@ -1283,13 +1706,12 @@ function computeZoomFloor(layer) {
   const lonSpan = Math.max(1e-6, bb.getEast() - bb.getWest());
   const latSpan = Math.max(1e-6, bb.getNorth() - bb.getSouth());
   const pxLon = lonSpan / width, pxLat = latSpan / height;
-  const BUDGET = 0.6e9;   // headroom under the 1 GB ceiling
 
   for (let z = 0; z <= 22; z++) {
     const deg = 360 / 2 ** z;
     const w = Math.min(width,  deg / pxLon);
     const h = Math.min(height, deg / pxLat);
-    if (w * h * bands * itemsize < BUDGET) return z;
+    if (w * h * bands * itemsize < READ_BUDGET) return z;
   }
   return 22;
 }
@@ -1327,6 +1749,10 @@ function metadataClasses(layer) {
 }
 
 function automaticColormap(layer) {
+  /* Declared classes are categories, not magnitudes: a sequential ramp makes
+     neighbouring classes indistinguishable. */
+  const classes = metadataClasses(layer);
+  if (classes?.length > 2) return classes.length <= 10 ? 'tab10' : 'tab20';
   const name = `${layer.activeVar} ${layer.label} ${layer.units}`.toLowerCase();
   if (/(uncertainty|standard deviation|std|error)/.test(name)) return 'blues';
   if (/(loss|deforest|degrad|disturb|change)/.test(name)) return 'ylorbr';
@@ -1349,29 +1775,33 @@ function applyRange(layer, minmax, attrs) {
   } else if (pair && pair.length >= 2 && Number.isFinite(+pair[0]) && Number.isFinite(+pair[1])) {
     lo = +pair[0]; hi = +pair[1];
   }
-  if (lo === null || hi === null || hi <= lo) { layer.rangeKnown = false; return; }
+  if (lo === null || hi === null || hi <= lo) {
+    layer.rangeKnown = false; layer.rangeSource = 'manual'; return;
+  }
   layer.rMin = lo; layer.rMax = hi; layer.rangeKnown = true;
+  layer.rangeSource = (attrs && Number.isFinite(+attrs.valid_min)) ? 'declared'
+    : (Number.isFinite(+(stats.minimum ?? stats.min)) ? 'stac' : 'tilejson');
 }
 
 /* Integer variables spanning a handful of values (masks, class rasters) read
    far better as discrete swatches than as a continuous ramp. */
 function buildClasses(layer) {
-  const declared = metadataClasses(layer);
-  if (declared?.length) {
-    const n = declared.length;
-    return declared.map((item, i) => ({
-      ...item,
-      color: item.color || sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
-    }));
-  }
+  /* A class swatch must show the colour the tile actually gets, which is the
+     LUT sampled at the value's position in the rescale range — not at the
+     class's position in the list. */
   const span = layer.rMax - layer.rMin;
+  const at = v => colorAt(layer.colormap, span > 0 ? (v - layer.rMin) / span : 0);
+
+  const declared = metadataClasses(layer);
+  if (declared?.length)
+    return declared.map(item => ({ ...item, color: item.color || at(item.value) }));
+
   const isInt = /^u?int|^bool/i.test(layer.dtype || '');
   if (!layer.rangeKnown || !isInt || span < 1 || span > 11) return null;
-  const n = span + 1;
-  return Array.from({ length: n }, (_, i) => ({
+  return Array.from({ length: span + 1 }, (_, i) => ({
     value: layer.rMin + i,
     label: String(layer.rMin + i),
-    color: sampleRamp(layer.colormap, n === 1 ? 0 : i / (n - 1)),
+    color: at(layer.rMin + i),
   }));
 }
 
@@ -1389,7 +1819,7 @@ async function activateLayer(col) {
     colormapManual: false,
     rMin: 0, rMax: 1, rangeKnown: false, classes: null,
     opacity: 0.9,
-    dimInfo: null, dimValue: 0,
+    dimInfo: null, dimValue: 0, extraDims: null,
     nativeMinZoom: 4, minZoom: 4, maxZoom: 18,
     bounds: col.bbox,
     summaries: col.summaries || {},
@@ -1455,6 +1885,18 @@ function selParam(layer) {
   return `${di.name}=${timeLike ? 'nearest::' : ''}${s}`;
 }
 
+function extraSels(layer) {
+  return (layer.extraDims || []).map(d => {
+    const v = String(d.values[d.index]);
+    return `${d.name}=${/^\d{4}-\d{2}-\d{2}/.test(v) ? 'nearest::' : ''}${v}`;
+  });
+}
+
+/* Every `sel` a request needs: pinned extra dimensions plus the slider's. */
+function selParams(layer) {
+  return [...extraSels(layer), selParam(layer)].filter(Boolean);
+}
+
 function buildTileUrl(layer, zoom) {
   const zarr = getEffectiveZarrUrl(layer, zoom ?? S.map.getZoom());
   /* No `nodata` override: xarray already decodes the zarr fill_value to NaN,
@@ -1466,9 +1908,11 @@ function buildTileUrl(layer, zoom) {
     rescale: `${layer.rMin},${layer.rMax}`,
     colormap_name: layer.colormap,
   });
-  const sel = selParam(layer);
-  if (sel) p.set('sel', sel);
-  return `${S.tiTiler}/tiles/WebMercatorQuad/{z}/{x}/{y}?${p}`;
+  for (const s of selParams(layer)) p.append('sel', s);
+  /* Without an extension TiTiler sends JPEG for gap-free tiles; its artefacts
+     smear class colours into shades no legend swatch shows. */
+  const ext = layer.classes ? '.png' : '';
+  return `${S.tiTiler}/tiles/WebMercatorQuad/{z}/{x}/{y}${ext}?${p}`;
 }
 
 function addLeafletLayer(layer) {
@@ -1503,6 +1947,7 @@ async function updateLeafletLayer(id, { refreshMeta = false } = {}) {
   layer.leafletLayer.setOpacity(layer.opacity);
   updateFootprint(layer);
   renderLegend();
+  if (S.view === 'download') refreshDownload();
 }
 
 function removeLayer(id) {
@@ -1548,8 +1993,10 @@ function syncLayerCount() {
   const badge = el('rail-badge');
   badge.textContent = n;
   badge.hidden = n === 0;
+  syncRail();
   el('map-empty').hidden = n !== 0;
   el('t-fit').disabled = ![...S.layers.values()].some(l => boundsToLatLng(l.bounds));
+  if (S.view === 'download') refreshDownload();
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1586,6 +2033,14 @@ function renderLayerPanel() {
       }
     }
 
+    const extraFld = (layer.extraDims || []).map((d, i) => `<div class="fld">
+        <div class="fld-lbl"><span>${esc(d.name)}</span></div>
+        <select data-id="${esc(layer.id)}" data-prop="extra:${i}">
+          ${d.values.map((v, j) => `<option value="${j}" ${j === d.index ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+        </select>
+      </div>`).join('');
+    dimFld = extraFld + dimFld;
+
     const varFld = `<div class="fld">
         <div class="fld-lbl">
           <span>Variable</span>
@@ -1618,15 +2073,15 @@ function renderLayerPanel() {
       <div class="fld">
         <div class="fld-lbl"><span>Colour ramp</span></div>
         <select data-id="${esc(layer.id)}" data-prop="colormap">
-          ${CFG.colormaps.map(c => `<option value="${c}" ${c === layer.colormap ? 'selected' : ''}>${c}</option>`).join('')}
+          ${colormapOptions(layer.colormap)}
         </select>
-        <div class="cmap-bar" data-role="ramp" style="background:${CFG.cmapGradients[layer.colormap]}"></div>
+        <div class="cmap-bar" data-role="ramp" style="background:${gradientFor(layer.colormap)}"></div>
       </div>
 
       <div class="fld">
         <div class="fld-lbl">
           <span>Value range${layer.units ? ` (${esc(layer.units)})` : ''}</span>
-          <span class="fld-val">${layer.rangeKnown ? 'from data' : 'manual'}</span>
+          <span class="fld-val">${esc(layer.rangeSource || 'manual')}</span>
         </div>
         <div class="two-up">
           <input type="number" step="any" value="${layer.rMin}" data-id="${esc(layer.id)}" data-prop="rMin" aria-label="minimum">
@@ -1685,19 +2140,33 @@ function onLayerControl(ctrl) {
   const layer = S.layers.get(id);
   if (!layer) return;
 
+  if (prop.startsWith('extra:')) {
+    const dim = layer.extraDims?.[parseInt(prop.slice(6), 10)];
+    if (!dim) return;
+    dim.index = parseInt(ctrl.value, 10);
+    clearTimeout(_debounce);
+    _debounce = setTimeout(() => { updateLeafletLayer(id); renderLegend(); }, 180);
+    return;
+  }
+
   let val = ctrl.value;
   if (prop === 'rMin' || prop === 'rMax' || prop === 'opacity') val = parseFloat(val);
   if (prop === 'dimValue') val = parseInt(val, 10);
   if (Number.isNaN(val)) return;
   layer[prop] = val;
   if (prop === 'colormap') layer.colormapManual = true;
-  if (prop === 'activeVar') layer.colormapManual = false;
+  if (prop === 'rMin' || prop === 'rMax') layer.rangeSource = 'manual';
+  if (prop === 'activeVar') { layer.colormapManual = false; layer.extraDims = null; }
 
   /* Null when the control lives in the legend rather than a layer card. */
   const card = ctrl.closest('.lc');
   if (card) {
     if (prop === 'opacity') card.querySelector('[data-role="op"]').textContent = Math.round(val * 100) + '%';
-    if (prop === 'colormap') card.querySelector('[data-role="ramp"]').style.background = CFG.cmapGradients[val];
+    if (prop === 'colormap') {
+      /* Class swatches are sampled from the LUT, so rebuild them once it lands. */
+      loadLUT(val).then(() => { layer.classes = buildClasses(layer); renderLayerPanel(); renderLegend(); });
+      card.querySelector('[data-role="ramp"]').style.background = gradientFor(val);
+    }
     if (prop === 'dimValue' && ctrl.type === 'range') {
       const labels = JSON.parse(ctrl.dataset.labels || '[]');
       const out = card.querySelector('[data-role="dimlabel"]');
@@ -1744,6 +2213,7 @@ function renderLegend() {
       const pills = [];
       if (zoom < layer.minZoom)          pills.push(`no tiles below z${layer.minZoom}`);
       else if (layer.pyramidUrl && lvl > 0) pills.push(`overview L${lvl}`);
+      for (const d of layer.extraDims || []) pills.push(`${d.name} ${d.values[d.index]}`);
       if (layer.dimInfo && layer.dimInfo.length > 1)
         pills.push(`${layer.dimInfo.name} ${layer.dimInfo.values[layer.dimValue] ?? layer.dimValue}`);
 
@@ -1753,14 +2223,23 @@ function renderLegend() {
                <div class="leg-class">
                  <span class="leg-chip" style="background:${c.color}"></span>
                  <span class="leg-class-lbl">${esc(c.label)}</span>
+                 <span class="leg-class-val">${fmtNum(Number(c.value))}</span>
                </div>`).join('')}
            </div>`
-        : `<div class="leg-ramp" style="background:${rampCSS(layer.colormap)}"></div>
+        : `<div class="leg-ramp" style="background:${gradientFor(layer.colormap)}"></div>
            <div class="leg-ticks">
-             <span>${fmtNum(layer.rMin)}</span>
-             ${layer.units ? `<span class="leg-unit">${esc(layer.units)}</span>` : ''}
-             <span>${fmtNum(layer.rMax)}</span>
+             ${Array.from({ length: 5 }, (_, i) =>
+               `<span>${fmtNum(layer.rMin + (layer.rMax - layer.rMin) * i / 4)}</span>`).join('')}
            </div>`;
+
+      const RANGE_NOTE = {
+        measured: 'range measured from data (p2–p98)',
+        declared: 'range from valid_min / valid_max',
+        stac:     'range from STAC statistics',
+        tilejson: 'range reported by tile server',
+        classes:  'classes from dataset metadata',
+        manual:   'range set manually',
+      };
 
       const varPicker = layer.variables.length > 1
         ? `<select class="leg-var" data-id="${esc(layer.id)}" data-prop="activeVar" title="Switch variable">
@@ -1773,9 +2252,14 @@ function renderLegend() {
           <span class="leg-key" style="background:${layer.color}"></span>
           ${esc(layer.label || layer.activeVar)}
         </div>
-        <div class="leg-ds">${esc(layer.title)}</div>
+        <div class="leg-ds">${esc(layer.title)}${layer.units ? ` · ${esc(layer.units)}` : ''}</div>
         ${varPicker}
         ${body}
+        <div class="leg-nodata">
+          <span class="leg-chip leg-chip-nil"></span>
+          <span class="leg-class-lbl">no data</span>
+        </div>
+        <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}</div>
         ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
       </div>`;
     }).join('') + '</div>';
@@ -1795,6 +2279,7 @@ function renderLegend() {
    PIXEL INSPECTOR
 ══════════════════════════════════════════════════════════════════ */
 async function onMapClick(e) {
+  if (S.dl.drawing) return;
   const { lat, lng } = e.latlng;
   const lon = L.Util.wrapNum(lng, [-180, 180], true);
   el('inspector').hidden = false;
@@ -1808,8 +2293,7 @@ async function onMapClick(e) {
   const rows = await Promise.all([...S.layers.values()].map(async layer => {
     try {
       const p = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
-      const sel = selParam(layer);
-      if (sel) p.set('sel', sel);
+      for (const s of selParams(layer)) p.append('sel', s);
       const r = await fetch(`${S.tiTiler}/point/${lon.toFixed(6)},${lat.toFixed(6)}?${p}`);
       if (!r.ok) return { layer, val: null };
       const d = await r.json();
@@ -1828,30 +2312,387 @@ async function onMapClick(e) {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   PANEL / RAIL WIRING
+   AREA DOWNLOAD
+   Draw or upload an area, size every active layer server-side, then run
+   a background job that zips native-resolution cut-outs (POST /download,
+   poll GET /download/{id}, fetch /download/{id}/file).
 ══════════════════════════════════════════════════════════════════ */
-const VIEW_TITLES = { data: 'Datasets', layers: 'Active layers', basemap: 'Basemap & view', settings: 'Settings' };
+const fmtBytes = b => b >= 1e9 ? `${(b / 1e9).toFixed(2)} GB`
+  : b >= 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1e3))} kB`;
 
-/* Clicking the rail button you're already on collapses the panel;
-   openView() is the non-toggling form used when code needs a view shown. */
-function showView(view) {
-  if (S.view === view && S.panelOpen) { setPanelOpen(false); return; }
-  openView(view);
+/* Leaflet longitudes keep counting past ±180 once the map has wrapped. */
+function normalizeRing(latlngs) {
+  const mean = latlngs.reduce((a, p) => a + p.lng, 0) / latlngs.length;
+  const shift = Math.round(mean / 360) * 360;
+  const ring = latlngs.map(p => [
+    +Math.max(-180, Math.min(180, p.lng - shift)).toFixed(6),
+    +Math.max(-90, Math.min(90, p.lat)).toFixed(6),
+  ]);
+  ring.push([...ring[0]]);
+  return ring;
 }
 
-function openView(view) {
-  S.view = view;
-  setPanelOpen(true);
-  document.querySelectorAll('.rail-btn[data-view]').forEach(b => {
-    const active = b.dataset.view === view;
-    b.classList.toggle('active', active);
-    b.setAttribute('aria-pressed', String(active));
+function cancelDraw() {
+  const d = S.dl.drawing;
+  if (!d) return;
+  d.off.forEach(([ev, fn]) => S.map.off(ev, fn));
+  d.preview?.remove();
+  S.map.dragging.enable();
+  S.map.doubleClickZoom.enable();
+  el('map').classList.remove('dl-drawing');
+  document.querySelectorAll('.dl-tool[data-draw]').forEach(b => b.classList.remove('on'));
+  /* Let the click that ended the drawing finish before the inspector listens again. */
+  setTimeout(() => { S.dl.drawing = null; }, 0);
+}
+
+function startDraw(kind) {
+  cancelDraw();
+  setTimeout(() => {
+    const d = { kind, off: [], preview: null, points: [] };
+    S.dl.drawing = d;
+    el('map').classList.add('dl-drawing');
+    document.querySelector(`.dl-tool[data-draw="${kind}"]`)?.classList.add('on');
+    S.map.doubleClickZoom.disable();
+    const on = (ev, fn) => { S.map.on(ev, fn); d.off.push([ev, fn]); };
+
+    if (kind === 'rect') {
+      S.map.dragging.disable();
+      let start = null;
+      on('mousedown', e => {
+        start = e.latlng;
+        d.preview = L.rectangle([start, start], { className: 'dl-shape', interactive: false }).addTo(S.map);
+      });
+      on('mousemove', e => { if (start) d.preview.setBounds(L.latLngBounds(start, e.latlng)); });
+      on('mouseup', e => {
+        if (!start) return;
+        const b = L.latLngBounds(start, e.latlng);
+        cancelDraw();
+        if (S.map.latLngToContainerPoint(b.getNorthWest()).distanceTo(S.map.latLngToContainerPoint(b.getSouthEast())) < 6) return;
+        setArea({ type: 'Polygon', coordinates: [normalizeRing([b.getSouthWest(), b.getSouthEast(), b.getNorthEast(), b.getNorthWest()])] });
+      });
+    } else {
+      const redraw = cursor => {
+        const pts = cursor ? [...d.points, cursor] : d.points;
+        if (!d.preview) d.preview = L.polyline(pts, { className: 'dl-shape', interactive: false }).addTo(S.map);
+        else d.preview.setLatLngs(pts);
+      };
+      const finish = () => {
+        const pts = d.points;
+        cancelDraw();
+        if (pts.length >= 3) setArea({ type: 'Polygon', coordinates: [normalizeRing(pts)] });
+      };
+      on('click', e => {
+        const px = S.map.latLngToContainerPoint(e.latlng);
+        const near = p => S.map.latLngToContainerPoint(p).distanceTo(px) < 8;
+        if (d.points.length >= 3 && near(d.points[0])) return finish();
+        if (d.points.length && near(d.points[d.points.length - 1])) return;   // dblclick's 2nd click
+        d.points.push(e.latlng);
+        redraw();
+      });
+      on('mousemove', e => { if (d.points.length) redraw(e.latlng); });
+      on('dblclick', finish);
+    }
+  }, 0);
+}
+
+function collectPolygons(obj, out = []) {
+  if (!obj || typeof obj !== 'object') return out;
+  if (obj.type === 'FeatureCollection') (obj.features || []).forEach(f => collectPolygons(f, out));
+  else if (obj.type === 'Feature') collectPolygons(obj.geometry, out);
+  else if (obj.type === 'GeometryCollection') (obj.geometries || []).forEach(g => collectPolygons(g, out));
+  else if (obj.type === 'Polygon') out.push(obj.coordinates);
+  else if (obj.type === 'MultiPolygon') out.push(...obj.coordinates);
+  return out;
+}
+
+async function loadAreaFile(file) {
+  try {
+    const polygons = collectPolygons(JSON.parse(await file.text()))
+      .map(rings => rings.map(ring => ring.map(p => [+p[0], +p[1]])));
+    if (!polygons.length) throw new Error('no Polygon or MultiPolygon found');
+    setArea(polygons.length === 1
+      ? { type: 'Polygon', coordinates: polygons[0] }
+      : { type: 'MultiPolygon', coordinates: polygons }, { fit: true });
+  } catch (err) {
+    el('dl-area-note').textContent = `Could not read ${file.name}: ${err.message}`;
+  }
+}
+
+function setArea(geometry, { fit = false } = {}) {
+  S.dl.shape?.remove();
+  S.dl.geometry = geometry;
+  S.dl.shape = geometry
+    ? L.geoJSON(geometry, { style: () => ({ className: 'dl-shape' }), interactive: false }).addTo(S.map)
+    : null;
+  if (fit) zoomToArea();
+  refreshDownload();
+}
+
+function zoomToArea() {
+  if (S.dl.shape) S.map.flyToBounds(S.dl.shape.getBounds(), { padding: [56, 56], maxZoom: 14, duration: 0.9 });
+}
+
+function areaLabel(geometry) {
+  const b = L.geoJSON(geometry).getBounds();
+  const kmPerDeg = 111.32;
+  const w = (b.getEast() - b.getWest()) * kmPerDeg * Math.cos(b.getCenter().lat * Math.PI / 180);
+  const h = (b.getNorth() - b.getSouth()) * kmPerDeg;
+  const kind = geometry.type === 'MultiPolygon' ? `${geometry.coordinates.length} polygons` : 'Area';
+  return `${kind} · ${w.toFixed(w < 10 ? 1 : 0)} × ${h.toFixed(h < 10 ? 1 : 0)} km`;
+}
+
+function dlLayers() {
+  return [...S.layers.values()].filter(l => !S.dl.excluded.has(l.id));
+}
+
+function dlPayload(layer) {
+  const col = findCollection(layer.id);
+  const allTimes = el('dl-alltime').checked;
+  const sel = allTimes ? extraSels(layer) : selParams(layer);
+  const shown = !allTimes && selParam(layer) ? String(layer.dimInfo.values[layer.dimValue]).slice(0, 10) : '';
+  const cite = (col?.links || []).find(l => l.rel === 'cite-as' && /^https?:\/\//i.test(l.href || ''))?.href || '';
+  return {
+    url: layer.zarrUrl,
+    variable: layer.activeVar,
+    sel,
+    name: [layer.id, layer.activeVar, shown].filter(Boolean).join('_'),
+    title: layer.title,
+    license: col?.license || '',
+    citation: cite,
+    providers: (col?.providers || []).map(p => p.name).filter(Boolean).join('; '),
+  };
+}
+
+async function postJSON(path, body) {
+  const r = await fetch(`${S.tiTiler}${path}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof data.detail === 'string' ? data.detail : `HTTP ${r.status}`);
+  return data;
+}
+
+let _dlEstimateTimer, _dlEstimateSeq = 0;
+/* What a download would request right now. An estimate is only valid for
+   the exact request it sized: layers finish activating, get switched on or
+   off, and change time step or variable after the area is drawn. */
+function dlSignature() {
+  if (!S.dl.geometry) return null;
+  return JSON.stringify({ geometry: S.dl.geometry, layers: dlLayers().map(dlPayload) });
+}
+
+function refreshDownload({ estimate = true } = {}) {
+  const g = S.dl.geometry;
+  if (S.dl.estimate && S.dl.estimate.sig !== dlSignature()) S.dl.estimate.stale = true;
+  el('dl-area-note').innerHTML = g
+    ? `<div class="dl-area"><span>${esc(areaLabel(g))}</span>
+         <button class="dl-zoom" id="dl-zoom" title="Zoom the map to the download area">
+           <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>Zoom to area
+         </button>
+         <a class="dl-link" id="dl-clear">clear</a></div>`
+    : 'Draw an area on the map or upload a GeoJSON polygon.';
+  el('dl-clear')?.addEventListener('click', () => setArea(null));
+  el('dl-zoom')?.addEventListener('click', zoomToArea);
+
+  const layers = [...S.layers.values()];
+  const est = S.dl.estimate;
+  el('dl-layers').innerHTML = layers.length
+    ? layers.map(l => {
+        const e = est?.byName?.[dlPayload(l).name];
+        const meta = !g ? '' : !e ? 'sizing…'
+          : e.error ? `<span class="err">${esc(e.error)}</span>`
+          : `${fmtBytes(e.bytes)} · ${e.format} · ${Object.values(e.dims).join('×')}`;
+        return `<label class="dl-row">
+          <input type="checkbox" data-dl="${esc(l.id)}" ${S.dl.excluded.has(l.id) ? '' : 'checked'}>
+          <div class="dl-row-main">
+            <div class="dl-row-name">${esc(l.title)}</div>
+            <div class="dl-row-meta${e?.error ? ' err' : ''}">${esc(l.label || l.activeVar)}${meta ? ` · ${meta}` : ''}</div>
+          </div>
+        </label>`;
+      }).join('')
+    : '<div class="set-note" style="margin-top:0">No active layers. Switch datasets on to include them.</div>';
+  el('dl-layers').querySelectorAll('input[data-dl]').forEach(inp => inp.addEventListener('change', () => {
+    if (inp.checked) S.dl.excluded.delete(inp.dataset.dl); else S.dl.excluded.add(inp.dataset.dl);
+    scheduleEstimate();
+  }));
+
+  const ok = est && g && est.total > 0 && est.total <= est.max && !est.stale;
+  el('dl-go').disabled = !ok || !!S.dl.polling;
+  el('dl-code').disabled = !(est && g && est.layers.some(x => !x.error));
+  if (g && est && !est.stale) {
+    el('dl-summary').textContent = est.total > est.max
+      ? `${fmtBytes(est.total)} selected — over the ${fmtBytes(est.max)} limit. Shrink the area, untick layers, or use the Python code.`
+      : `${fmtBytes(est.total)} uncompressed (limit ${fmtBytes(est.max)}).`;
+  }
+  if (estimate && (!est || est.stale)) scheduleEstimate();
+}
+
+function scheduleEstimate() {
+  if (S.dl.estimate) S.dl.estimate.stale = true;
+  clearTimeout(_dlEstimateTimer);
+  _dlEstimateTimer = setTimeout(runEstimate, 350);
+}
+
+async function runEstimate() {
+  const seq = ++_dlEstimateSeq;
+  const layers = dlLayers();
+  if (!S.dl.geometry || !layers.length) { S.dl.estimate = null; refreshDownload({ estimate: false }); return; }
+  const payload = layers.map(dlPayload);
+  const sig = dlSignature();
+  try {
+    const res = await postJSON('/download/estimate', { geometry: S.dl.geometry, layers: payload });
+    if (seq !== _dlEstimateSeq) return;
+    const byName = Object.fromEntries(res.layers.map(x => [x.name, x]));
+    S.dl.estimate = { layers: res.layers, byName, payload, sig, total: res.total_bytes, max: res.max_bytes, stale: false };
+  } catch (err) {
+    if (seq !== _dlEstimateSeq) return;
+    S.dl.estimate = null;
+    el('dl-summary').textContent = `Could not size the request: ${err.message}`;
+  }
+  refreshDownload({ estimate: false });
+}
+
+async function startDownload() {
+  const est = S.dl.estimate;
+  if (!est || est.sig !== dlSignature()) { refreshDownload(); return; }
+  const layers = est.payload.filter(p => !est.byName[p.name]?.error);
+  el('dl-progress').hidden = false;
+  el('dl-bar').style.width = '0%';
+  el('dl-status').textContent = 'Starting…';
+  try {
+    const { id } = await postJSON('/download', { geometry: S.dl.geometry, layers });
+    S.dl.polling = id;
+    refreshDownload({ estimate: false });
+    for (;;) {
+      await new Promise(r => setTimeout(r, 1500));
+      const st = await fetchJSON(`${S.tiTiler}/download/${id}`);
+      el('dl-bar').style.width = `${Math.round(st.progress * 100)}%`;
+      el('dl-status').textContent = `${st.message} · ${Math.round(st.progress * 100)}%`;
+      if (st.status === 'error') throw new Error(st.message);
+      if (st.status === 'done') {
+        /* A synthetic link click seconds after the user's own click is not a
+           user gesture, and Firefox silently drops it. Navigating to the
+           attachment starts the download without leaving the page; the link
+           is the manual fallback. */
+        const url = `${S.tiTiler}/download/${id}/file`;
+        el('dl-status').innerHTML = `Ready · ${fmtBytes(st.size)} zip. ` +
+          `If the download did not start, <a href="${esc(url)}" download>save the zip</a> (kept for 2 hours).`;
+        window.location.assign(url);
+        break;
+      }
+    }
+  } catch (err) {
+    el('dl-status').textContent = `Download failed: ${err.message}`;
+  } finally {
+    S.dl.polling = null;
+    refreshDownload({ estimate: false });
+  }
+}
+
+const pyStr = v => JSON.stringify(String(v));
+const pyVal = v => /^-?\d+(\.\d+)?$/.test(String(v)) ? String(v) : pyStr(v);
+
+function pythonSnippet() {
+  const est = S.dl.estimate;
+  const lines = [
+    '# EOForestSTAC area subset: bounding box of the drawn area, native grid.',
+    '# pip install xarray zarr fsspec aiohttp   (rioxarray + shapely for the polygon mask)',
+    'import xarray as xr',
+    '',
+    `area = ${JSON.stringify(S.dl.geometry)}  # EPSG:4326`,
+    '',
+  ];
+  for (const p of est.payload) {
+    const e = est.byName[p.name];
+    if (!e || e.error) continue;
+    lines.push(`# ${p.title}${p.license ? ` (license: ${p.license})` : ''}`);
+    if (p.citation) lines.push(`# cite: ${p.citation}`);
+    lines.push(`ds = xr.open_zarr(${pyStr(p.url)}, chunks={})`);
+    lines.push(`da = ds[${pyStr(p.variable)}]`);
+    for (const s of p.sel) {
+      const [dim, raw] = [s.slice(0, s.indexOf('=')), s.slice(s.indexOf('=') + 1)];
+      const nearest = raw.startsWith('nearest::');
+      const value = nearest ? raw.slice(9) : raw;
+      lines.push(`da = da.sel(${dim}=${pyVal(value)}${nearest ? ', method="nearest"' : ''})`);
+    }
+    const [y0, y1] = e.y_range, [x0, x1] = e.x_range;
+    lines.push(`da = da.sel(${e.y_dim}=slice(${y0}, ${y1}), ${e.x_dim}=slice(${x0}, ${x1}))  # ${e.crs}`);
+    lines.push(`# da = da.rio.write_crs(${pyStr(e.crs)}).rio.clip([area], crs="EPSG:4326")  # polygon mask`);
+    lines.push(`da.to_netcdf(${pyStr(`${p.name}.nc`)})`, '');
+  }
+  return lines.join('\n');
+}
+
+/* The page is served over plain http on the intranet, where the async
+   clipboard API is unavailable, so show the code with a select-and-copy box. */
+function showPythonSnippet() {
+  el('dlg-eyebrow').textContent = 'Download';
+  el('dlg-title').textContent = 'Python code for this area';
+  el('dlg-body').innerHTML = `<p>Reads the same native data straight from the Zarr stores, with no size limit.</p>
+    <textarea class="dlg-code" id="dl-snippet" readonly spellcheck="false"></textarea>
+    <div class="dl-actions"><button class="btn" id="dl-copy">Copy</button></div>`;
+  el('dl-snippet').value = pythonSnippet();
+  el('dl-copy').addEventListener('click', async () => {
+    const ta = el('dl-snippet');
+    ta.select();
+    try { await navigator.clipboard.writeText(ta.value); } catch { document.execCommand('copy'); }
+    el('dl-copy').textContent = 'Copied';
+  });
+  el('ds-info-dlg').showModal();
+}
+
+function initDownload() {
+  document.querySelectorAll('.dl-tool[data-draw]').forEach(b => b.addEventListener('click', () => {
+    if (S.dl.drawing?.kind === b.dataset.draw) cancelDraw(); else startDraw(b.dataset.draw);
+  }));
+  el('dl-file').addEventListener('change', e => { if (e.target.files[0]) loadAreaFile(e.target.files[0]); e.target.value = ''; });
+  el('dl-alltime').addEventListener('change', scheduleEstimate);
+  el('dl-go').addEventListener('click', startDownload);
+  el('dl-code').addEventListener('click', showPythonSnippet);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') cancelDraw(); });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   PANEL / RAIL WIRING
+══════════════════════════════════════════════════════════════════ */
+const VIEW_TITLES = { data: 'Datasets', layers: 'Active layers', basemap: 'Basemap & view', download: 'Download data', settings: 'Settings' };
+
+/* Clicking the rail button you're already on collapses the panel;
+   openView() is the non-toggling form used when code needs a view shown.
+   The 'data' view is shown per category (`cat`, a STAC theme id). */
+function showView(view, cat) {
+  const same = S.view === view && (view !== 'data' || !cat || cat === S.cat);
+  if (same && S.panelOpen) { setPanelOpen(false); return; }
+  openView(view, cat);
+}
+
+function openView(view, cat) {
+  S.view = view;
+  if (view === 'data') S.cat = cat || S.cat || firstThemeId();
+  setPanelOpen(true);
+  syncRail();
   document.querySelectorAll('.pnl-view').forEach(v => v.classList.toggle('active', v.id === `view-${view}`));
-  el('pnl-title').textContent = VIEW_TITLES[view];
-  el('pnl-sub').textContent = view === 'data' && S.catalog
-    ? `${S.catalog.themes.reduce((n, t) => n + t.collections.length, 0)} datasets`
-    : view === 'layers' ? `${S.layers.size} active` : '';
+  if (view === 'data') applyCatalogFilter();
+  else syncPanelHead();
+  if (view === 'download') refreshDownload();
+}
+
+function syncPanelHead(hits = 0) {
+  let title = VIEW_TITLES[S.view], sub = '';
+  if (S.view === 'data') {
+    const theme = S.catalog?.themes.find(t => t.id === S.cat);
+    if (el('ds-search').value.trim()) {
+      title = 'Search results';
+      sub = `${hits} found`;
+    } else {
+      title = themeInfo(theme || { id: S.cat }).label;
+      sub = theme ? `${theme.collections.length} datasets` : '';
+    }
+  } else if (S.view === 'layers') {
+    sub = `${S.layers.size} active`;
+  }
+  el('pnl-title').textContent = title;
+  el('pnl-sub').textContent = sub;
 }
 
 function setPanelOpen(open) {
@@ -1878,17 +2719,24 @@ function initUI() {
   el('labels-sw').checked = S.showLabels;
   el('autozoom-sw').checked = S.autoZoom;
   renderBasemapGrid();
+  renderRailCats();
+  initDownload();
 
-  document.querySelectorAll('.rail-btn[data-view]').forEach(b => {
+  document.querySelectorAll('.rail-btn[data-view]:not([data-cat])').forEach(b => {
     b.addEventListener('click', () => showView(b.dataset.view));
   });
+  openView('data');
+
+  const dlg = el('ds-info-dlg');
+  el('dlg-close').addEventListener('click', () => dlg.close());
+  dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
   el('pnl-close').addEventListener('click', () => setPanelOpen(false));
 
   el('theme-btn').addEventListener('click', () => {
     applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   });
 
-  el('ds-search').addEventListener('input', e => filterCatalog(e.target.value));
+  el('ds-search').addEventListener('input', applyCatalogFilter);
 
   el('labels-sw').addEventListener('change', e => setLabels(e.target.checked));
   el('autozoom-sw').addEventListener('change', e => {
@@ -1920,7 +2768,7 @@ function initUI() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') el('inspector').hidden = true;
     if (e.key === '/' && document.activeElement !== el('ds-search')) {
-      e.preventDefault(); showView('data'); el('ds-search').focus();
+      e.preventDefault(); openView('data'); el('ds-search').focus();
     }
   });
 }
@@ -1932,7 +2780,7 @@ function initUI() {
   initUI();
   initMap();
   await checkTiTiler();
-  await loadCatalog();
+  await Promise.all([loadColormapNames(), loadCatalog()]);
   syncLayerCount();
 })();
 </script>

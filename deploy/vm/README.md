@@ -6,10 +6,11 @@ container is not published on the host.
 
 ## Install
 
-On `rz-vm558.gfz.de`, as the `forest` user:
+On `rz-vm225.gfz.de` (139.17.67.110), as the `sbesnard` user (member of the
+`docker` group):
 
 ```bash
-cd /webdata/user/eoforeststac
+mkdir -p ~/eoforeststac && cd ~/eoforeststac
 git clone https://github.com/simonbesnard1/eoforeststac.git app
 cd app
 docker compose -f deploy/vm/compose.yaml build --pull
@@ -28,25 +29,38 @@ Rootless Docker or Podman is preferred when supported by the VM.
 Keep the service bound to localhost and create an SSH tunnel from the client:
 
 ```bash
-ssh -L 8080:127.0.0.1:8080 forest@rz-vm558.gfz.de
+ssh -L 8080:127.0.0.1:8080 sbesnard@rz-vm225.gfz.de
 ```
 
 Then open <http://localhost:8080>. Do not change `BIND_ADDRESS` to `0.0.0.0`
 without coordinating firewall exposure with GFZ IT.
 
-## Apache reverse proxy
+## Host reverse proxy (Caddy) and firewall
 
-The Apache administrator can proxy a dedicated hostname to:
+The site is intranet-only. Caddy on the host listens on port 80 and proxies
+to `127.0.0.1:8080`; its config is [`Caddyfile`](Caddyfile), installed as
+`/etc/caddy/Caddyfile`:
 
-```apache
-ProxyPreserveHost On
-ProxyPass        / http://127.0.0.1:8080/
-ProxyPassReverse / http://127.0.0.1:8080/
+```bash
+sudo cp deploy/vm/Caddyfile /etc/caddy/Caddyfile
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
 ```
 
-A dedicated hostname is preferable. If Apache must publish a subpath such as
-`/eoforeststac/`, path rewriting must also preserve `/api/`; test all tile and
-catalog requests before publication.
+`ufw` allows SSH from anywhere and 80/443 only from GFZ ranges:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw allow OpenSSH
+sudo ufw allow from 139.17.0.0/16 to any port 80,443 proto tcp
+sudo ufw allow from 10.0.0.0/8    to any port 80,443 proto tcp
+sudo ufw --force enable
+```
+
+Pending with GFZ IT: the DNS alias `eoforeststac.gfz.de` and a TLS
+certificate. Once issued, place the certificate and key in
+`/etc/caddy/certs/` (readable by the `caddy` user) and switch the Caddyfile
+to the TLS block documented at its top.
 
 ## Operations
 

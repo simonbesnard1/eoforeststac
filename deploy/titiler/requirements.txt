@@ -1,3 +1,7 @@
 titiler-xarray==2.3.0
 httpx>=0.28,<0.29
 uvicorn[standard]>=0.35,<0.36
+# Area downloads: chunked writes and NetCDF output.
+dask>=2025.1,<2027
+h5netcdf>=1.6,<2
+h5py>=3.12,<4

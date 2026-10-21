@@ -22,7 +22,6 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import dask
-import numpy as np
 import s3fs
 import xarray as xr
 import zarr
@@ -35,29 +34,34 @@ _SPATIAL_CANDIDATES = (
 _REDUCERS = {"mean", "max", "first"}
 
 
-def first_valid(values: np.ndarray, axis: int | tuple[int, ...] | None = None) -> np.ndarray:
-    """Select the first non-null value across xarray's coarsening axes."""
-    if axis is None:
-        axes = tuple(range(values.ndim))
-    elif isinstance(axis, int):
-        axes = (axis,)
-    else:
-        axes = axis
-    axes = tuple(item if item >= 0 else values.ndim + item for item in axes)
-    destinations = tuple(range(values.ndim - len(axes), values.ndim))
-    moved = np.moveaxis(values, axes, destinations)
-    flat = moved.reshape(*moved.shape[: -len(axes)], -1)
-    valid = ~np.isnan(flat)
-    positions = valid.argmax(axis=-1)
-    selected = np.take_along_axis(flat, positions[..., None], axis=-1)[..., 0]
-    return np.where(valid.any(axis=-1), selected, np.nan)
+def first_valid_2x2(coarsened: Any, y_dim: str, x_dim: str) -> xr.DataArray:
+    """Select the first non-null value of each 2x2 window, in row-major order.
+
+    Built from element-wise ``where`` so it stays lazy and chunk-local under
+    dask. A generic ``Coarsen.reduce`` with ``np.take_along_axis`` has no dask
+    implementation and silently materializes the whole variable in memory.
+    """
+    windows = coarsened.construct({y_dim: (y_dim, "_wy"), x_dim: (x_dim, "_wx")})
+    result = windows.isel(_wy=0, _wx=0, drop=True)
+    for wy, wx in ((0, 1), (1, 0), (1, 1)):
+        result = result.where(result.notnull(), windows.isel(_wy=wy, _wx=wx, drop=True))
+    # construct() reshapes the spatial coordinates into windows; use the
+    # window-centre coordinates that the mean/max reducers produce.
+    return result.drop_vars([y_dim, x_dim], errors="ignore").assign_coords(
+        {
+            dim: coarsened.obj[dim].coarsen({dim: 2}, boundary="pad").mean().values
+            for dim in (y_dim, x_dim)
+        }
+    )
 
 
 def make_s3(profile: str | None = None) -> s3fs.S3FileSystem:
     """Create an authenticated S3 client for the GFZ-compatible endpoint."""
     kwargs: dict[str, Any] = {
         "client_kwargs": {
-            "endpoint_url": os.environ.get("AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de")
+            "endpoint_url": os.environ.get(
+                "AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de"
+            )
         }
     }
     profile = profile or os.environ.get("AWS_PROFILE")
@@ -109,9 +113,13 @@ def parse_reducers(values: list[str]) -> dict[str, str]:
         try:
             variable, reducer = value.rsplit("=", 1)
         except ValueError as exc:
-            raise ValueError(f"Reducer must use VARIABLE=METHOD syntax: {value}") from exc
+            raise ValueError(
+                f"Reducer must use VARIABLE=METHOD syntax: {value}"
+            ) from exc
         if reducer not in _REDUCERS:
-            raise ValueError(f"Unsupported reducer {reducer!r}; choose from {sorted(_REDUCERS)}")
+            raise ValueError(
+                f"Unsupported reducer {reducer!r}; choose from {sorted(_REDUCERS)}"
+            )
         reducers[variable] = reducer
     return reducers
 
@@ -136,7 +144,9 @@ def reducer_plan(
 ) -> dict[str, str]:
     unknown = set(overrides) - set(ds.data_vars)
     if unknown:
-        raise ValueError(f"Reducer overrides reference unknown variables: {sorted(unknown)}")
+        raise ValueError(
+            f"Reducer overrides reference unknown variables: {sorted(unknown)}"
+        )
     return {
         name: overrides.get(name, infer_reducer(name, variable.attrs))
         for name, variable in ds.data_vars.items()
@@ -159,14 +169,16 @@ def coarsen_level(
                 output_vars[name] = variable
                 continue
 
-            coarsened = variable.coarsen({y_dim: 2, x_dim: 2}, boundary="pad", coord_func="mean")
+            coarsened = variable.coarsen(
+                {y_dim: 2, x_dim: 2}, boundary="pad", coord_func="mean"
+            )
             method = reducers[name]
             if method == "mean":
                 result = coarsened.mean(skipna=True)
             elif method == "max":
                 result = coarsened.max(skipna=True)
             else:
-                result = coarsened.reduce(first_valid)
+                result = first_valid_2x2(coarsened, y_dim, x_dim)
 
             if output_dtype:
                 result = result.astype(output_dtype)
@@ -216,7 +228,9 @@ def prepare_root(
                 {
                     "version": "0.4",
                     "name": "EOForestSTAC visualization pyramid",
-                    "datasets": [{"path": str(level)} for level in range(1, levels + 1)],
+                    "datasets": [
+                        {"path": str(level)} for level in range(1, levels + 1)
+                    ],
                     "metadata": {
                         "native_source": source_url,
                         "native_level": 0,
@@ -230,7 +244,9 @@ def prepare_root(
 
 def build_pyramid(args: argparse.Namespace) -> None:
     source_url = normalize_s3_url(args.url)
-    output_url = normalize_s3_url(args.out or source_url.removesuffix(".zarr") + "_pyramid.zarr")
+    output_url = normalize_s3_url(
+        args.out or source_url.removesuffix(".zarr") + "_pyramid.zarr"
+    )
     if source_url == output_url:
         raise ValueError("Source and output stores must be different")
 
@@ -285,7 +301,9 @@ def build_pyramid(args: argparse.Namespace) -> None:
             s3.rm(level_prefix, recursive=True)
 
         print(f"Level {level}: constructing 2x overview")
-        overview = coarsen_level(parent, y_dim, x_dim, reducers, output_dtype=output_dtype)
+        overview = coarsen_level(
+            parent, y_dim, x_dim, reducers, output_dtype=output_dtype
+        )
         chunks = {y_dim: args.chunk_size, x_dim: args.chunk_size}
         for dim in overview.dims:
             if dim not in chunks:

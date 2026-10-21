@@ -51,18 +51,26 @@ services:
       GDAL_HTTP_VERSION: "2"
       VSI_CACHE: "TRUE"
       VSI_CACHE_SIZE: "268435456"
+      MAX_READ_THREADS: "8"
+      MAX_OPEN_DATASETS: "12"
+      MALLOC_ARENA_MAX: "2"
+      DOWNLOAD_DIR: /downloads
+      MAX_DOWNLOAD_BYTES: "5000000000"
     restart: unless-stopped
     init: true
     read_only: true
     tmpfs:
       - /tmp:size=512m,mode=1777
+    volumes:
+      # Area-download zips (up to 5 GB each) live on disk, not in memory.
+      - downloads:/downloads
     cap_drop:
       - ALL
     security_opt:
       - no-new-privileges:true
     pids_limit: 256
-    mem_limit: 2800m
-    cpus: 2.0
+    mem_limit: 10g
+    cpus: 6.0
     ulimits:
       nofile:
         soft: 8192
@@ -75,6 +83,9 @@ services:
     networks:
       - backend
       - egress
+
+volumes:
+  downloads: {}
 
 networks:
   backend:

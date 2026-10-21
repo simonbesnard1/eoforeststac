@@ -14,10 +14,11 @@ COPY deploy/titiler/requirements.txt ./requirements.txt
 RUN python -m pip install --upgrade pip && \
     python -m pip install --requirement requirements.txt
 
-COPY deploy/titiler/app.py ./app.py
+COPY deploy/titiler/app.py deploy/titiler/download.py ./
 
 RUN groupadd --system --gid 10001 eoforest && \
-    useradd --system --uid 10001 --gid eoforest --no-create-home eoforest
+    useradd --system --uid 10001 --gid eoforest --no-create-home eoforest && \
+    install -d -o 10001 -g 10001 /downloads
 
 USER 10001:10001
 

@@ -54,7 +54,11 @@ def discover_collections(catalog_url: str) -> dict[str, dict[str, str]]:
             collection_url = urljoin(theme_url, collection_link["href"])
             collection = read_json(collection_url)
             item_link = next(
-                (link for link in collection.get("links", []) if link.get("rel") == "item"),
+                (
+                    link
+                    for link in collection.get("links", [])
+                    if link.get("rel") == "item"
+                ),
                 None,
             )
             if not item_link:
@@ -92,7 +96,9 @@ def select_products(
 
     missing = selected - {product["collection"] for product, _ in jobs}
     if missing:
-        raise RuntimeError(f"Selected collections are absent from manifest: {sorted(missing)}")
+        raise RuntimeError(
+            f"Selected collections are absent from manifest: {sorted(missing)}"
+        )
     return jobs
 
 
@@ -118,7 +124,9 @@ def make_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--output-dtype", default="float32")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--list", action="store_true", help="List resolved jobs and exit")
+    parser.add_argument(
+        "--list", action="store_true", help="List resolved jobs and exit"
+    )
     parser.add_argument("--overwrite-incomplete", action="store_true")
     parser.add_argument(
         "--continue-on-error",

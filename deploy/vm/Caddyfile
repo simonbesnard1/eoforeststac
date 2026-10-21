@@ -1,0 +1,21 @@
+# Host reverse proxy for rz-vm225.gfz.de (eoforeststac.gfz.de).
+# Installed as /etc/caddy/Caddyfile. Intranet only: ufw limits 80/443 to GFZ
+# address ranges.
+#
+# Plain HTTP until GFZ IT issues a certificate. Then replace the block below
+# with:
+#
+#   eoforeststac.gfz.de, rz-vm225.gfz.de {
+#       tls /etc/caddy/certs/eoforeststac.crt /etc/caddy/certs/eoforeststac.key
+#       encode zstd gzip
+#       reverse_proxy 127.0.0.1:8080
+#   }
+
+{
+	auto_https off
+}
+
+:80 {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8080
+}

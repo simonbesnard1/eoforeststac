@@ -45,11 +45,49 @@
       "reducers": {"canopy_height": "mean"}
     },
     {
-      "collection": "WANG_FORESTAGE",
+      "collection": "LIU_BIOMASS",
       "reducers": {
-        "natural_forest_age": "mean",
-        "planted_forest_age": "mean"
+        "aboveground_biomass": "mean",
+        "canopy_cover": "mean",
+        "canopy_height": "mean"
       }
+    },
+    {
+      "collection": "ROBINSON_CR",
+      "reducers": {
+        "age_at_max_rate": "mean",
+        "cr_a": "mean",
+        "cr_a_error": "mean",
+        "cr_b": "mean",
+        "cr_b_error": "mean",
+        "cr_k": "mean",
+        "cr_k_error": "mean",
+        "max_rate": "mean",
+        "max_removal_potential_benefit_25": "mean"
+      }
+    },
+    {
+      "collection": "EFDA",
+      "reducers": {
+        "disturbance_agent": "first",
+        "disturbance_occurrence": "max"
+      }
+    },
+    {
+      "collection": "RADD_EUROPE",
+      "reducers": {
+        "alert_yydoy": "max",
+        "disturbance_occurrence": "max",
+        "forest_mask": "first"
+      }
+    },
+    {
+      "collection": "FORESTPATHS_GENUS",
+      "reducers": {"genus": "first"}
+    },
+    {
+      "collection": "RESTOR_LANDUSE",
+      "reducers": {"lulc": "first"}
     }
   ]
 }
