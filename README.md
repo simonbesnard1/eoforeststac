@@ -40,24 +40,16 @@ The recommended starting point for new users is the interactive **STAC Browser**
 
 The browser lets you browse all collections and versions by theme, inspect spatial footprints on a map, view dataset metadata and provenance, and copy asset URLs directly for use in Python.
 
-The raster explorer is available at
-**[simonbesnard1.github.io/eoforeststac/explorer/](https://simonbesnard1.github.io/eoforeststac/explorer/)**.
-It adds interactive Zarr rendering, layer styling, and pixel inspection when the
-TiTiler service is connected.
+The raster explorer adds interactive Zarr rendering, layer styling, pixel
+inspection and area downloads. It runs on a GFZ virtual machine together with its
+TiTiler tile service and is reachable from the GFZ network at
+**http://eoforeststac.gfz.de**.
 
-### Hosting the explorer
+### Hosting
 
-GitHub Pages publishes both applications through `.github/workflows/deploy.yml`.
-Set the repository Actions variable `TITILER_URL` to the HTTPS URL of the deployed
-tile service (without a trailing slash), for example
-`https://eoforeststac-titiler.onrender.com`.
-
-The root `render.yaml` is a Render Blueprint for that service. After pushing the
-repository, connect it in **Render → New → Blueprint**. The Blueprint builds
-`deploy/titiler/Dockerfile`, checks `/healthz`, restricts remote reads to the GFZ
-catalog storage path, and permits browser requests from this repository's GitHub
-Pages origin. The free Render plan is suitable for evaluation but sleeps when idle;
-a paid instance with additional memory is recommended for sustained raster use.
+GitHub Pages publishes the STAC Browser through `.github/workflows/deploy.yml`.
+The explorer and TiTiler are deployed with Docker Compose on the VM; see
+[deploy/vm/README.md](deploy/vm/README.md).
 
 For local development:
 
