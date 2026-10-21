@@ -533,6 +533,10 @@ body{font-size:14px;background:var(--bg)}
 .ds .sw{margin-top:2px}
 .ds-info{width:22px;height:22px;border-radius:50%;color:var(--text-3);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:color .14s,background .14s}
 .ds-info:hover{color:var(--accent);background:var(--panel-3)}
+/* Multi-site products: product sub-header with its site rows indented */
+.ds-sub{padding:10px 10px 4px 14px;border-top:1px solid var(--line);font-size:11px;font-weight:600;line-height:1.35;color:var(--text-2)}
+.ds-sub:first-child{border-top:0}
+.ds.ds-site{padding-left:26px}
 /* Dataset info dialog */
 #ds-info-dlg{margin:auto;border:1px solid var(--line);border-radius:14px;width:min(580px,calc(100vw - 32px));max-height:min(82vh,760px);background:var(--panel);color:var(--text);box-shadow:var(--shadow-lg);overflow:hidden}
 #ds-info-dlg[open]{display:flex;flex-direction:column}
@@ -1180,14 +1184,23 @@ async function loadTheme(link, base) {
     const cols = await Promise.all(
       theme.links.filter(l => l.rel === 'child').map(cl => loadCollection(cl, url))
     );
-    return { id: theme.id, title: link.title || theme.title, collections: cols.filter(Boolean) };
+    return { id: theme.id, title: link.title || theme.title, collections: cols.flat().filter(Boolean) };
   } catch { return null; }
 }
 
+// Returns one dataset, or for a multi-site product (ALS, ULS, …) an array with
+// one dataset per site collection, each tagged with its parent product.
 async function loadCollection(link, base) {
   try {
     const url = resolveUrl(base, link.href);
     const col = await fetchJSON(url, { viaTiTiler: true });
+    const childLinks = col.links.filter(l => l.rel === 'child');
+    if (childLinks.length) {
+      const sites = await Promise.all(childLinks.map(cl => loadCollection(cl, url)));
+      return sites.flat().filter(Boolean).map(s => ({
+        ...s, parent: { id: col.id, title: col.title || col.id },
+      }));
+    }
     const itemLinks = col.links.filter(l => l.rel === 'item');
     if (!itemLinks.length) return null;
     const item = await fetchJSON(resolveUrl(url, itemLinks[0].href), { viaTiTiler: true });
@@ -1203,6 +1216,7 @@ async function loadCollection(link, base) {
     return {
       id: col.id,
       title: col.title || col.id,
+      siteLabel: col.site?.label || '',
       version: item.properties?.version || '',
       variables: item.properties?.variables || [],
       summaries: col.summaries || {},
@@ -1325,7 +1339,13 @@ function renderCatalog() {
     const info = themeInfo(theme);
     return `<div class="grp" data-grp="${esc(theme.id)}">
       <div class="grp-h"><span class="grp-dot" style="background:var(--${info.cls})"></span>${esc(info.label)}</div>
-      <div class="grp-list">${theme.collections.map(renderDatasetRow).join('')}</div>
+      <div class="grp-list">${theme.collections.map((col, i) => {
+        const prev = theme.collections[i - 1];
+        const sub = col.parent && col.parent.id !== prev?.parent?.id
+          ? `<div class="ds-sub" data-parent="${esc(col.parent.id)}">${esc(shortTitle(col.parent.title))}</div>`
+          : '';
+        return sub + renderDatasetRow(col);
+      }).join('')}</div>
     </div>`;
   }).join('');
 
@@ -1361,11 +1381,12 @@ function renderDatasetRow(col) {
   const on = S.layers.has(col.id);
   const f = col.facts;
   const facts = [f.time, f.gsd, f.region, f.provider].filter(Boolean).join(' · ');
-  const search = [col.title, col.id, ...col.providers.map(p => p.name), ...col.keywords].join(' ').toLowerCase();
-  return `<div class="ds ${on ? 'on' : ''}" id="ds-${esc(col.id)}" data-search="${esc(search)}">
+  const search = [col.title, col.id, col.parent?.title || '', ...col.providers.map(p => p.name), ...col.keywords].join(' ').toLowerCase();
+  const site = col.parent ? `data-parent="${esc(col.parent.id)}"` : '';
+  return `<div class="ds ${on ? 'on' : ''} ${col.parent ? 'ds-site' : ''}" id="ds-${esc(col.id)}" data-search="${esc(search)}" ${site}>
     <label class="sw"><input type="checkbox" data-id="${esc(col.id)}" aria-label="Show ${esc(col.title)}" ${on ? 'checked' : ''}><span class="sw-t"></span></label>
     <div class="ds-main">
-      <div class="ds-name" title="${esc(col.title)}">${esc(shortTitle(col.title))}</div>
+      <div class="ds-name" title="${esc(col.title)}">${esc(col.siteLabel || shortTitle(col.title))}</div>
       ${facts ? `<div class="ds-facts" title="${esc(facts)}">${esc(facts)}</div>` : ''}
     </div>
     <button class="ds-zoom" data-id="${esc(col.id)}" title="Zoom to extent" aria-label="Zoom to ${esc(col.title)} extent">
@@ -1400,6 +1421,10 @@ function applyCatalogFilter() {
       const hit = !q || row.dataset.search.includes(q);
       row.hidden = !hit;
       if (hit) shown++;
+    });
+    grp.querySelectorAll('.ds-sub').forEach(sub => {
+      sub.hidden = ![...grp.querySelectorAll('.ds-site')]
+        .some(row => row.dataset.parent === sub.dataset.parent && !row.hidden);
     });
     grp.hidden = q ? shown === 0 : grp.dataset.grp !== S.cat;
     if (!grp.hidden) hits += shown;
