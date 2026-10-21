@@ -35,7 +35,7 @@
   --shadow:    0 2px 14px rgba(0,0,0,.45);
   --shadow-lg: 0 6px 32px rgba(0,0,0,.5);
   /* theme accents */
-  --bc:#97bd3d; --dc:#f88b2f; --sd:#4a9fd8; --al:#a583d8; --lu:#d8b63a;
+  --bc:#97bd3d; --dc:#f88b2f; --sd:#4a9fd8; --al:#a583d8; --lu:#d8b63a; --ab:#e07a94;
   --sans: 'Fira Sans', system-ui, -apple-system, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
   --rail-w: 58px;
@@ -51,7 +51,7 @@
     --alert:#d96f10; --danger:#c23b30;
     --map-void:#dfe4dd; --attrib-bg:rgba(255,255,255,.78);
     --shadow:0 1px 8px rgba(0,0,0,.12); --shadow-lg:0 4px 22px rgba(0,0,0,.16);
-    --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10;
+    --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10; --ab:#b4466b;
   }
 }
 :root[data-theme="light"] {
@@ -62,7 +62,7 @@
   --alert:#d96f10; --danger:#c23b30;
   --map-void:#dfe4dd; --attrib-bg:rgba(255,255,255,.78);
   --shadow:0 1px 8px rgba(0,0,0,.12); --shadow-lg:0 4px 22px rgba(0,0,0,.16);
-  --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10;
+  --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10; --ab:#b4466b;
 }
 
 /* ═══ Reset ══════════════════════════════════════════════════════════ */
@@ -506,8 +506,8 @@ input[type=range]::-moz-range-thumb{
 </style>
 <style>
 /* 2026 visual refresh: a calm, map-first forest monitoring interface. */
-:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px}
-:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22}
+:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px}
+:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a}
 :root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45)}
 body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
@@ -927,6 +927,8 @@ const CFG = {
       icon:'<path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/>' },
     'als-lidar':            { label:'ALS / ULS / LiDAR',      short:'LiDAR',       cls:'al',
       icon:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/>' },
+    'als-biomass':          { label:'ALS Biomass',            short:'ALS biomass', cls:'ab',
+      icon:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>' },
     'land-use-land-cover':  { label:'Land Use & Land Cover',  short:'Land use',    cls:'lu',
       icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>' },
   },
