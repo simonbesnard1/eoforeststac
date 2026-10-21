@@ -2371,7 +2371,13 @@ function renderLegend() {
   el('leg-toggle').style.transform = S.legendOpen ? '' : 'rotate(180deg)';
 
   leg.querySelectorAll('.leg-var').forEach(sel => {
-    sel.addEventListener('change', () => onLayerControl(sel));
+    sel.addEventListener('change', () => {
+      /* The dropdown has closed by now. Release focus, or the guard above
+         keeps skipping every rebuild and the legend stays on the old
+         variable (title, ramp and range). */
+      sel.blur();
+      onLayerControl(sel);
+    });
   });
 }
 
