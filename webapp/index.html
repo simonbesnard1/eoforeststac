@@ -230,6 +230,12 @@ svg{display:block}
   background:var(--panel-3);color:var(--text-3);
 }
 .ds.on .chip{color:var(--text-2)}
+/* Multi-site products: product sub-header with its site rows indented */
+.ds-sub{
+  padding:10px 14px 4px 17px;border-top:1px solid var(--line);
+  font-size:11px;font-weight:600;color:var(--text-2);line-height:1.35;
+}
+.ds.ds-site{padding-left:30px}
 .ds-zoom,.ds-cfg{
   opacity:0;transition:opacity .14s,color .14s,background .14s;
   width:22px;height:22px;border-radius:3px;color:var(--text-3);
@@ -966,14 +972,23 @@ async function loadTheme(link, base) {
     const cols = await Promise.all(
       theme.links.filter(l => l.rel === 'child').map(cl => loadCollection(cl, url))
     );
-    return { id: theme.id, title: link.title || theme.title, collections: cols.filter(Boolean) };
+    return { id: theme.id, title: link.title || theme.title, collections: cols.flat().filter(Boolean) };
   } catch { return null; }
 }
 
+// Returns one dataset, or for a multi-site product (ALS, ULS, …) an array with
+// one dataset per site collection, each tagged with its parent product.
 async function loadCollection(link, base) {
   try {
     const url = resolveUrl(base, link.href);
     const col = await fetchJSON(url, { viaTiTiler: true });
+    const childLinks = col.links.filter(l => l.rel === 'child');
+    if (childLinks.length) {
+      const sites = await Promise.all(childLinks.map(cl => loadCollection(cl, url)));
+      return sites.flat().filter(Boolean).map(s => ({
+        ...s, parent: { id: col.id, title: col.title || col.id },
+      }));
+    }
     const itemLinks = col.links.filter(l => l.rel === 'item');
     if (!itemLinks.length) return null;
     const item = await fetchJSON(resolveUrl(url, itemLinks[0].href), { viaTiTiler: true });
@@ -989,6 +1004,7 @@ async function loadCollection(link, base) {
     return {
       id: col.id,
       title: col.title || col.id,
+      siteLabel: col.site?.label || '',
       version: item.properties?.version || '',
       variables: item.properties?.variables || [],
       summaries: col.summaries || {},
@@ -1020,7 +1036,13 @@ function renderCatalog() {
         <svg class="ico-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="grp-list open" id="list-${esc(theme.id)}">
-        ${theme.collections.map(renderDatasetRow).join('')}
+        ${theme.collections.map((col, i) => {
+          const prev = theme.collections[i - 1];
+          const sub = col.parent && col.parent.id !== prev?.parent?.id
+            ? `<div class="ds-sub" data-parent="${esc(col.parent.id)}">${esc(col.parent.title)}</div>`
+            : '';
+          return sub + renderDatasetRow(col);
+        }).join('')}
       </div>
     </div>`;
   }).join('');
@@ -1064,9 +1086,12 @@ function renderDatasetRow(col) {
   if (col.version) chips.push(`v${col.version}`);
   if (col.variables.length) chips.push(`${col.variables.length} var${col.variables.length > 1 ? 's' : ''}`);
   if (col.zarrs.length > 1) chips.push(`${col.zarrs.length} assets`);
-  return `<div class="ds ${on ? 'on' : ''}" id="ds-${esc(col.id)}">
+  const site = col.parent
+    ? `data-parent="${esc(col.parent.id)}" data-parent-title="${esc(col.parent.title)}"`
+    : '';
+  return `<div class="ds ${on ? 'on' : ''} ${col.parent ? 'ds-site' : ''}" id="ds-${esc(col.id)}" ${site}>
     <div class="ds-main">
-      <div class="ds-name">${esc(col.title)}</div>
+      <div class="ds-name">${esc(col.siteLabel || col.title)}</div>
       ${chips.length ? `<div class="ds-meta">${chips.map(c => `<span class="chip">${esc(c)}</span>`).join('')}</div>` : ''}
     </div>
     <button class="ds-zoom" data-id="${esc(col.id)}" title="Zoom to extent" aria-label="Zoom to ${esc(col.title)} extent">
@@ -1092,9 +1117,14 @@ function filterCatalog(q) {
     let shown = 0;
     grp.querySelectorAll('.ds').forEach(row => {
       const hit = !q || row.querySelector('.ds-name').textContent.toLowerCase().includes(q)
-                     || row.id.slice(3).toLowerCase().includes(q);
+                     || row.id.slice(3).toLowerCase().includes(q)
+                     || (row.dataset.parentTitle || '').toLowerCase().includes(q);
       row.hidden = !hit;
       if (hit) shown++;
+    });
+    grp.querySelectorAll('.ds-sub').forEach(sub => {
+      sub.hidden = ![...grp.querySelectorAll('.ds-site')]
+        .some(row => row.dataset.parent === sub.dataset.parent && !row.hidden);
     });
     grp.hidden = q !== '' && shown === 0;
     if (q) { grp.querySelector('.grp-list').classList.add('open'); grp.querySelector('.grp-btn').classList.add('open'); }

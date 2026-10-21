@@ -1,69 +1,18 @@
 import pystac
 
-from eoforeststac.catalog.factory import _build_raster_bands, create_collection
-from eoforeststac.core.assets import create_zarr_asset
-from eoforeststac.products.als_biomass_products import (
-    ALS_BIOMASS_PRODUCTS_CFG,
-    REGIONS,
-)
+from eoforeststac.catalog.factory import create_collection
+from eoforeststac.catalog.sites import create_site_collection, create_site_item
+from eoforeststac.products.als_biomass_products import ALS_BIOMASS_PRODUCTS_CFG
 
 
 def create_als_biomass_products_collection():
     return create_collection(ALS_BIOMASS_PRODUCTS_CFG)
 
 
-def create_als_biomass_products_item(version: str) -> list[pystac.Item]:
-    """Return one STAC Item per region, each with one Zarr asset per resolution."""
-    cfg = ALS_BIOMASS_PRODUCTS_CFG
-    items = []
-    for region_id, reg in REGIONS.items():
-        item_id = f"{reg['zarr_name']}_v{version}"
-        item_href = f"{cfg['base_path']}/{item_id}/item.json"
+def create_als_biomass_products_site_collection(site_id: str) -> pystac.Collection:
+    return create_site_collection(ALS_BIOMASS_PRODUCTS_CFG, site_id)
 
-        properties = {
-            "product_name": cfg["title"],
-            "version": version,
-            "region": region_id,
-            "start_datetime": reg["start_datetime"].isoformat(),
-            "end_datetime": reg["end_datetime"].isoformat(),
-            "proj:epsg": reg["proj_epsg"],
-            "variables": cfg["summaries"]["variables"],
-            "spatial_resolutions": "10m",
-        }
 
-        item = pystac.Item(
-            id=item_id,
-            geometry=reg["geometry"],
-            bbox=reg["bbox"],
-            datetime=reg["end_datetime"],
-            properties=properties,
-            href=item_href,
-            stac_extensions=cfg.get("stac_extensions", []),
-        )
-
-        asset = create_zarr_asset(
-            href=f"{cfg['base_path']}/{item_id}",
-            title="Zarr dataset",
-            roles=["data"],
-            description=(
-                f"Cloud-optimized Zarr store at 10 m resolution for "
-                f"{reg['label']} (EPSG:{reg['proj_epsg']})."
-            ),
-        )
-
-        item.add_asset("zarr", asset)
-
-        for link_cfg in cfg.get("links", []):
-            if link_cfg["rel"] in ["cite-as", "about", "license"]:
-                item.add_link(
-                    pystac.Link(
-                        rel=link_cfg["rel"],
-                        target=link_cfg["href"],
-                        media_type=link_cfg.get("type"),
-                        title=link_cfg.get("title"),
-                    )
-                )
-
-        items.append(item)
-
-    return items
+def create_als_biomass_products_item(site_id: str, version: str) -> pystac.Item:
+    """Return the item for one site and version, with a single 10 m Zarr asset."""
+    return create_site_item(ALS_BIOMASS_PRODUCTS_CFG, site_id, version)

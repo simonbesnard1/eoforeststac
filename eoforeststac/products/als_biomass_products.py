@@ -36,6 +36,7 @@ REGIONS = {
 # ------------------------------------------------------------------
 ALS_BIOMASS_PRODUCTS_CFG = {
     "id": "ALS_BIOMASS_PRODUCTS",
+    "short_title": "ALS Biomass Products",
     "title": "ALS Biomass Products",
     "description": (
         "⚠️ This collection is under active development. Data coverage, variables, "
