@@ -24,7 +24,6 @@ class BaseZarrWriter:
         anon: bool = False,
         connect_timeout: Optional[int] = None,
         read_timeout: Optional[int] = None,
-
     ):
         self.bucket = bucket
         self.endpoint_url = endpoint_url
