@@ -153,6 +153,7 @@ REGIONS = {
 
 ULS_PRODUCTS_CFG = {
     "id": "ULS_PRODUCTS",
+    "short_title": "ULS Products",
     "title": "ULS Products – UAV laser scanning gridded products [Experimental]",
     "description": (
         "⚠️ This collection is under active development. Data coverage, variables, "
@@ -162,8 +163,8 @@ ULS_PRODUCTS_CFG = {
         "digital terrain model (DTM), digital surface model (DSM), gap fraction, effective LAI, "
         "above-ground biomass, and a suite of structural LiDAR metrics (height percentiles, "
         "canopy cover, point density, foliage height diversity, vegetation complexity index).\n\n"
-        "Each site/campaign is a separate STAC item with its own spatial extent, CRS, "
-        "and Zarr store."
+        "Each site/campaign is a child collection with its own spatial extent and "
+        "CRS, holding one item (set of Zarr stores) per version."
     ),
     "bbox": [-10.0, 35.0, 32.0, 70.0],
     "geometry": {

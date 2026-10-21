@@ -12,9 +12,10 @@ class ZarrProvider(BaseProvider):
     Generic STAC-driven Zarr provider.
 
     Most collections have one item per version (e.g. GAMI_v2.1).
-    Multi-region collections (ALS_PRODUCTS, ULS_PRODUCTS) have one item per
-    region+version (e.g. ALS_SPAIN_PNOA_v1.0). Use the ``region`` parameter
-    to select a specific region for those collections.
+    Multi-region collections (ALS_PRODUCTS, ULS_PRODUCTS) have one child
+    collection per region (e.g. ALS_SPAIN_PNOA), each with one item per
+    version (e.g. ALS_SPAIN_PNOA_v1.0). Either pass the parent collection with
+    ``region=...``, or the region collection id directly as ``collection_id``.
     """
 
     # ------------------------------------------------------------------
@@ -27,7 +28,9 @@ class ZarrProvider(BaseProvider):
         if collection is None:
             return []
         suffix = f"_v{version}"
-        return [i for i in collection.get_items() if i.id.endswith(suffix)]
+        return [
+            i for i in collection.get_items(recursive=True) if i.id.endswith(suffix)
+        ]
 
     def list_regions(self, collection_id: str, version: str) -> List[str]:
         """
@@ -60,7 +63,7 @@ class ZarrProvider(BaseProvider):
 
         if region is None:
             # Standard single-item pattern: COLLECTION_v{version}
-            item = collection.get_item(f"{collection_id}{suffix}")
+            item = collection.get_item(f"{collection_id}{suffix}", recursive=True)
             if item is not None:
                 return item
 
@@ -76,7 +79,7 @@ class ZarrProvider(BaseProvider):
             all_versions = sorted(
                 {
                     i.id.rsplit("_v", 1)[-1]
-                    for i in collection.get_items()
+                    for i in collection.get_items(recursive=True)
                     if "_v" in i.id
                 }
             )
@@ -89,13 +92,13 @@ class ZarrProvider(BaseProvider):
 
         else:
             # Multi-region: try exact match first (region == zarr_name, e.g. ALS_SPAIN_PNOA)
-            item = collection.get_item(f"{region}{suffix}")
+            item = collection.get_item(f"{region}{suffix}", recursive=True)
             if item is not None:
                 return item
 
             # Fuzzy: search all versioned items for a case-insensitive substring match
             needle = region.upper()
-            versioned = [i for i in collection.get_items() if i.id.endswith(suffix)]
+            versioned = self._items_for_version(collection_id, version)
             matches = [i for i in versioned if needle in i.id.upper()]
 
             if len(matches) == 1:

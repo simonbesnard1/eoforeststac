@@ -11,6 +11,7 @@ from eoforeststac.catalog.root import (
     DEFAULT_VERSIONS,
     THEMES,
     _build_base_tree,
+    _iter_collections,
     _product_specs,
 )
 
@@ -32,7 +33,8 @@ def catalog_tree():
 
 
 @pytest.fixture(scope="module")
-def all_collections(catalog_tree):
+def product_collections(catalog_tree):
+    """Top-level product collections (direct children of the themes)."""
     root, _ = catalog_tree
     cols = []
     for child in root.get_children():
@@ -40,6 +42,13 @@ def all_collections(catalog_tree):
             if isinstance(c, pystac.Collection):
                 cols.append(c)
     return cols
+
+
+@pytest.fixture(scope="module")
+def all_collections(catalog_tree):
+    """Product collections plus site sub-collections of multi-site products."""
+    root, _ = catalog_tree
+    return _iter_collections(root)
 
 
 @pytest.fixture(scope="module")
@@ -102,8 +111,8 @@ class TestCatalogStructure:
 
 
 class TestCollections:
-    def test_collections_exist(self, all_collections):
-        assert len(all_collections) == len(DEFAULT_VERSIONS)
+    def test_collections_exist(self, product_collections):
+        assert len(product_collections) == len(DEFAULT_VERSIONS)
 
     @pytest.mark.network
     def test_collection_validates(self, all_collections):
@@ -384,10 +393,58 @@ class TestConsistency:
 
     def test_default_versions_produce_items(self, all_collections):
         for col in all_collections:
+            # Parent collections of multi-site products hold sites, not items
+            if any(isinstance(c, pystac.Collection) for c in col.get_children()):
+                continue
             items = list(col.get_items())
             assert (
                 items
             ), f"Collection '{col.id}' has no items despite being in DEFAULT_VERSIONS"
+
+
+class TestMultiSiteProducts:
+    """Multi-site products expose product -> site collection -> versioned items."""
+
+    @staticmethod
+    def _multi_site_specs():
+        return [s for s in _product_specs() if s.site_collection_factory is not None]
+
+    def test_multi_site_versions_are_per_site(self):
+        for spec in self._multi_site_specs():
+            versions = DEFAULT_VERSIONS[spec.product_id]
+            assert isinstance(
+                versions, dict
+            ), f"'{spec.product_id}' versions must map site ids to version lists"
+
+    def test_one_site_collection_per_site(self, catalog_tree):
+        root, _ = catalog_tree
+        for spec in self._multi_site_specs():
+            parent = root.get_child(spec.product_id, recursive=True)
+            sites = [
+                c for c in parent.get_children() if isinstance(c, pystac.Collection)
+            ]
+            assert len(sites) == len(DEFAULT_VERSIONS[spec.product_id])
+            assert not list(parent.get_items()), f"'{parent.id}' should hold no items"
+
+    def test_site_items_match_site_versions(self, catalog_tree):
+        root, _ = catalog_tree
+        for spec in self._multi_site_specs():
+            for site_id, site_versions in DEFAULT_VERSIONS[spec.product_id].items():
+                site_col = spec.site_collection_factory(site_id)
+                site = root.get_child(site_col.id, recursive=True)
+                assert site is not None, f"Site collection '{site_col.id}' missing"
+                got = sorted(i.properties["version"] for i in site.get_items())
+                assert got == sorted(site_versions)
+
+    def test_parent_extent_covers_sites(self, catalog_tree):
+        root, _ = catalog_tree
+        for spec in self._multi_site_specs():
+            parent = root.get_child(spec.product_id, recursive=True)
+            union = parent.extent.spatial.bboxes[0]
+            for site in parent.get_children():
+                b = site.extent.spatial.bboxes[0]
+                assert union[0] <= b[0] and union[1] <= b[1]
+                assert union[2] >= b[2] and union[3] >= b[3]
 
 
 # ------------------------------------------------------------------

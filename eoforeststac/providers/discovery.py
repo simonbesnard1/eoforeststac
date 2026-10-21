@@ -108,6 +108,7 @@ class DiscoveryProvider(BaseProvider):
                     "description": col.description or "",
                     "versions": versions,
                     "n_versions": len(versions),
+                    "sites": list(self.list_sites(col.id)),
                 }
             )
 
@@ -126,17 +127,43 @@ class DiscoveryProvider(BaseProvider):
         return sorted(set(ids))
 
     # ------------------------------------------------------------
-    # Versions (unchanged)
+    # Sites (multi-site products such as ALS_PRODUCTS, ULS_PRODUCTS)
+    # ------------------------------------------------------------
+    def list_sites(self, collection_id: str) -> Dict[str, str]:
+        """
+        List the site/country sub-collections of a multi-site product.
+
+        Returns
+        -------
+        dict
+            {site_collection_id: site_title}, empty for single-site products.
+            Pass a site collection id to list_versions() to see its versions.
+        """
+        collection = self.get_collection(collection_id)
+        if collection is None:
+            raise KeyError(f"Collection '{collection_id}' not found.")
+        return {
+            c.id: (c.title or c.id)
+            for c in collection.get_children()
+            if isinstance(c, pystac.Collection)
+        }
+
+    # ------------------------------------------------------------
+    # Versions
     # ------------------------------------------------------------
     def list_versions(
         self, collection_id: str, asset_key: Optional[str] = None
     ) -> List[str]:
+        """
+        List versions of a collection. For a multi-site product this is the
+        union over its sites; pass a site collection id for one site only.
+        """
         collection = self.get_collection(collection_id)
         if collection is None:
             raise KeyError(f"Collection '{collection_id}' not found.")
 
         versions: List[str] = []
-        for item in collection.get_items():
+        for item in collection.get_items(recursive=True):
             version = item.properties.get("version")
             if version is None:
                 version = self._parse_version_from_item_id(item.id, collection_id)

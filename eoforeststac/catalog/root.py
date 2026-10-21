@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Mapping, Optional, Tuple
+from typing import Callable, Dict, List, Mapping, Optional, Tuple, Union
 
 import pystac
 
 from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_BASE
 from eoforeststac.core.io import write_json
 from eoforeststac.catalog.writer import write_collection, write_item
+from eoforeststac.catalog.sites import update_extent_from_sites
 
 # Import collection/item builders
 from eoforeststac.catalog.cci_biomass import (
@@ -86,18 +87,29 @@ from eoforeststac.catalog.gami_ageclass import (
 # )
 from eoforeststac.catalog.als_products import (
     create_als_products_collection,
+    create_als_products_site_collection,
     create_als_products_item,
 )
 from eoforeststac.catalog.uls_products import (
     create_uls_products_collection,
+    create_uls_products_site_collection,
     create_uls_products_item,
+)
+
+from eoforeststac.catalog.als_biomass_products import (
+    create_als_biomass_products_collection,
+    create_als_biomass_products_site_collection,
+    create_als_biomass_products_item,
 )
 
 # ---------------------------------------------------------------------
 # Defaults
 # ---------------------------------------------------------------------
 
-DEFAULT_VERSIONS: Dict[str, List[str]] = {
+# Multi-site products (ALS, ULS, ...) map each site to its own versions,
+# since sites are reprocessed independently.
+SiteVersions = Dict[str, List[str]]
+DEFAULT_VERSIONS: Dict[str, Union[List[str], SiteVersions]] = {
     "CCI_BIOMASS": ["6.0", "7.0"],
     "SAATCHI_BIOMASS": ["2.0"],
     "JRC_TMF": ["2024"],
@@ -115,13 +127,29 @@ DEFAULT_VERSIONS: Dict[str, List[str]] = {
     "RESTOR_LANDUSE": ["2.0"],
     # "POTAPOV_LCLUC": ["2020"],
     # "GEDI_L4D": ["2.0"],
-    "ALS_PRODUCTS": ["1.0"],
-    "ULS_PRODUCTS": ["1.0"],
+    "ALS_PRODUCTS": {
+        "spain_pnoa": ["1.0"],
+        "brazil_eba": ["1.0"],
+        "spain_test_pnoa": ["1.0"],
+    },
+    "ULS_PRODUCTS": {
+        "hainich": ["1.0"],
+        "test_region": ["1.0"],
+    },
+    "ALS_BIOMASS_PRODUCTS": {
+        "finland": ["1.0"],
+        "ireland": ["1.0"],
+        "italy": ["1.0"],
+        "netherlands": ["1.0"],
+        "spain": ["1.0"],
+        "sweden": ["1.0"],
+    },
 }
 
 ItemFactory = Callable[[str], pystac.Item]
-MultiItemFactory = Callable[[str], List[pystac.Item]]
+SiteItemFactory = Callable[[str, str], pystac.Item]
 CollectionFactory = Callable[[], pystac.Collection]
+SiteCollectionFactory = Callable[[str], pystac.Collection]
 
 # ---------------------------------------------------------------------
 # Themes (atlas-style structure)
@@ -181,7 +209,7 @@ THEMES: Dict[str, Dict[str, object]] = {
             "canopy height",
             "forest structure",
         ],
-        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS"],
+        "products": ["ALS_PRODUCTS", "ULS_PRODUCTS", "ALS_BIOMASS_PRODUCTS"],
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -196,9 +224,17 @@ THEMES: Dict[str, Dict[str, object]] = {
 
 @dataclass(frozen=True)
 class ProductSpec:
+    """
+    Builders for one product.
+
+    Multi-site products set ``site_collection_factory``; their
+    ``item_factory`` then takes ``(site_id, version)`` instead of ``version``.
+    """
+
     product_id: str
     collection_factory: CollectionFactory
-    item_factory: ItemFactory
+    item_factory: Union[ItemFactory, SiteItemFactory]
+    site_collection_factory: Optional[SiteCollectionFactory] = None
 
 
 def _product_specs() -> Tuple[ProductSpec, ...]:
@@ -265,17 +301,25 @@ def _product_specs() -> Tuple[ProductSpec, ...]:
             "ALS_PRODUCTS",
             create_als_products_collection,
             create_als_products_item,
+            create_als_products_site_collection,
         ),
         ProductSpec(
             "ULS_PRODUCTS",
             create_uls_products_collection,
             create_uls_products_item,
+            create_uls_products_site_collection,
+        ),
+        ProductSpec(
+            "ALS_BIOMASS_PRODUCTS",
+            create_als_biomass_products_collection,
+            create_als_biomass_products_item,
+            create_als_biomass_products_site_collection,
         ),
     )
 
 
 def _build_base_tree(
-    versions: Mapping[str, List[str]],
+    versions: Mapping[str, Union[List[str], SiteVersions]],
     *,
     catalog_id: str,
     description: str,
@@ -287,7 +331,9 @@ def _build_base_tree(
       root catalog
         ├─ theme subcatalogs (Catalog)
         │    └─ collections
-        │         └─ items (versioned)
+        │         ├─ items (versioned)
+        │         └─ site collections (multi-site products only)
+        │              └─ items (versioned)
     Returns root catalog and a mapping {product_id: (collection, item_factory)}.
     """
     root = pystac.Catalog(id=catalog_id, description=description)
@@ -345,14 +391,32 @@ def _build_base_tree(
             + ". Add them to THEMES or decide an 'other' theme."
         )
 
-    # 4) Create versioned items under each collection
-    # item_factory may return a single Item or a List[Item] (e.g. multi-resolution products)
+    # 4) Create versioned items under each collection, or under each site
+    # collection for multi-site products.
     for prod_id, (col, item_factory) in collections.items():
-        for v in versions.get(prod_id, []):
-            result = item_factory(v)
-            items = result if isinstance(result, list) else [result]
-            for item in items:
-                col.add_item(item)
+        site_factory = specs_by_id[prod_id].site_collection_factory
+        prod_versions = versions.get(prod_id, [])
+
+        if site_factory is None:
+            # item_factory may return a single Item or a List[Item]
+            for v in prod_versions:
+                result = item_factory(v)
+                items = result if isinstance(result, list) else [result]
+                for item in items:
+                    col.add_item(item)
+            continue
+
+        if not isinstance(prod_versions, Mapping):
+            raise TypeError(
+                f"'{prod_id}' is a multi-site product; its versions must map "
+                f"site ids to version lists, got {prod_versions!r}."
+            )
+        for site_id, site_versions in prod_versions.items():
+            site_col = site_factory(site_id)
+            col.add_child(site_col)
+            for v in site_versions:
+                site_col.add_item(item_factory(site_id, v))
+        update_extent_from_sites(col)
 
     return root, collections
 
@@ -362,7 +426,8 @@ def _iter_collections(node: pystac.Catalog) -> List[pystac.Collection]:
     for child in node.get_children():
         if isinstance(child, pystac.Collection):
             cols.append(child)
-        elif isinstance(child, pystac.Catalog):
+        # Collections are Catalogs too and may hold site sub-collections
+        if isinstance(child, pystac.Catalog):
             cols.extend(_iter_collections(child))
     return cols
 
@@ -443,7 +508,7 @@ def _ensure_absolute_root_self_links(pub_dict: dict, self_href: str) -> dict:
 
 
 def _write_browser_variant(
-    base_versions: Mapping[str, List[str]],
+    base_versions: Mapping[str, Union[List[str], SiteVersions]],
     *,
     publish_base: str,
     write_base: str,
@@ -615,7 +680,7 @@ def _write_browser_variant(
 
 
 def build_catalog(
-    versions: Optional[Mapping[str, List[str]]] = None,
+    versions: Optional[Mapping[str, Union[List[str], SiteVersions]]] = None,
     *,
     write: bool = True,
     # Internal (s3-native) catalog
@@ -746,7 +811,7 @@ def build_catalog(
 
 
 def build_browser_catalog(
-    versions: Optional[Mapping[str, List[str]]] = None,
+    versions: Optional[Mapping[str, Union[List[str], SiteVersions]]] = None,
     *,
     publish_base: str = S3_HTTP_BASE,
     write_base: Optional[str] = None,

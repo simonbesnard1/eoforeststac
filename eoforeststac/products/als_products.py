@@ -140,6 +140,7 @@ REGIONS = {
 # ------------------------------------------------------------------
 ALS_PRODUCTS_CFG = {
     "id": "ALS_PRODUCTS",
+    "short_title": "ALS Products",
     "title": "ALS Products – Airborne laser scanning gridded products [Experimental]",
     "description": (
         "⚠️ This collection is under active development. Data coverage, variables, "
@@ -149,8 +150,8 @@ ALS_PRODUCTS_CFG = {
         "digital terrain model (DTM), digital surface model (DSM), gap fraction, effective LAI, "
         "above-ground biomass, and a suite of structural LiDAR metrics (height percentiles, "
         "canopy cover, point density, foliage height diversity, vegetation complexity index).\n\n"
-        "Each region/campaign is a separate STAC item with its own spatial extent, CRS, "
-        "and Zarr store."
+        "Each region/campaign is a child collection with its own spatial extent and "
+        "CRS, holding one item (set of Zarr stores) per version."
     ),
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {

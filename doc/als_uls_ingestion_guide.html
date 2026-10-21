@@ -670,8 +670,19 @@ eoforeststac/<br>
           <div class="step">
             <span class="step-num">&#9314;</span>
             <div class="step-body">
-              That's it. The catalog module automatically creates a STAC item with
-              assets for every resolution (1m, 10m, 100m).
+              List the site and its version(s) under the product in
+              <code>DEFAULT_VERSIONS</code> (<code>catalog/root.py</code>), e.g.
+              <code>"ALS_PRODUCTS": {"my_new_campaign": ["1.0"], ...}</code>.
+              Each site gets its own versions, so reprocessing one site only means
+              appending a version to that site's list.
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-num">&#9315;</span>
+            <div class="step-body">
+              That's it. The catalog creates a site collection (e.g.
+              <code>ALS_PRODUCTS/ALS_MY_CAMPAIGN</code>) holding one STAC item per version,
+              each with assets for every resolution (1m, 10m, 100m).
             </div>
           </div>
         </div>
@@ -906,8 +917,9 @@ eoforeststac/<br>
           <div class="step">
             <span class="step-num">&#128270;</span>
             <div class="step-body">
-              Check the result in the <strong>STAC Browser</strong>. Your new item should appear
-              under the "ALS / ULS / LiDAR" theme with all resolution assets listed.
+              Check the result in the <strong>STAC Browser</strong>. Your new site should appear
+              as a sub-collection of its product under the "ALS / ULS / LiDAR" theme, with one
+              item per version and all resolution assets listed.
             </div>
           </div>
         </div>
@@ -1008,13 +1020,13 @@ eoforeststac/<br>
 
         <div class="callout callout-green">
           <strong>Checklist for a new campaign:</strong><br>
-          1. Region added to <code>REGIONS</code> in product config<br>
+          1. Region added to <code>REGIONS</code> in product config and its version(s) to <code>DEFAULT_VERSIONS</code><br>
           2. Zarr v3 converted to v2<br>
           3. Writer pushed data to S3<br>
           4. Catalog rebuilt (<code>scripts/create_catalog.py</code>)<br>
           5. Tests pass<br>
           6. Data readable from S3 with anonymous access<br>
-          7. Item visible in STAC Browser<br>
+          7. Site collection and its version items visible in STAC Browser<br>
           8. Code formatted with black and committed
         </div>
       </section>

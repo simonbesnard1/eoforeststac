@@ -83,6 +83,9 @@ fallback_version = "9999"
 
 [tool.black]
 line-length = 88
+# Oldest supported Python (requires-python); otherwise black targets up to the
+# newest release and warns that CI's interpreter cannot run its safety check
+target-version = ["py310"]
 exclude = '''
 /(
     \.git
