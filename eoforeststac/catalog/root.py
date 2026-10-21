@@ -138,6 +138,11 @@ DEFAULT_VERSIONS: Dict[str, Union[List[str], SiteVersions]] = {
     },
     "ALS_BIOMASS_PRODUCTS": {
         "finland": ["1.0"],
+        "ireland": ["1.0"],
+        "italy": ["1.0"],
+        "netherlands": ["1.0"],
+        "spain": ["1.0"],
+        "sweden": ["1.0"],
     },
 }
 

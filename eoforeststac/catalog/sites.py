@@ -95,7 +95,7 @@ def create_site_item(
         item.add_asset(
             "zarr",
             create_zarr_asset(
-                href=f"{cfg['base_path']}/{item_id}",
+                href=f"{cfg['base_path']}/{item_id}.zarr",
                 title="Zarr dataset",
                 roles=["data"],
                 description=(
