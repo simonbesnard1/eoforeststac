@@ -1,5 +1,5 @@
 {
-  "catalog": "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
+  "catalog": "https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/catalog.json",
   "products": [
     {
       "collection": "CCI_BIOMASS",

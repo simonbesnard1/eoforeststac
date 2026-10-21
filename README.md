@@ -85,15 +85,15 @@ from eoforeststac.providers.discovery import DiscoveryProvider
 from eoforeststac.providers.zarr import ZarrProvider
 from eoforeststac.providers.subset import subset
 
-CATALOG = "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
+CATALOG = "https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
 
 # Discover what is available
-disc = DiscoveryProvider(catalog_url=CATALOG, endpoint_url="https://s3.gfz-potsdam.de", anon=True)
+disc = DiscoveryProvider(catalog_url=CATALOG, endpoint_url="https://s3.gfz.de", anon=True)
 disc.list_themes()
 disc.list_collections(theme="biomass-carbon")
 
 # Stream a dataset (no download needed)
-provider = ZarrProvider(catalog_url=CATALOG, endpoint_url="https://s3.gfz-potsdam.de", anon=True)
+provider = ZarrProvider(catalog_url=CATALOG, endpoint_url="https://s3.gfz.de", anon=True)
 ds = provider.open_dataset(collection_id="CCI_BIOMASS", version="6.0")
 ds_subset = subset(ds, geometry=geometry, time=("2010-01-01", "2020-12-31"))
 ```

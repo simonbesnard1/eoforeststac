@@ -17,13 +17,13 @@ from eoforeststac.providers.subset import subset
 from eoforeststac.providers.align import DatasetAligner
 
 CATALOG_URL = (
-    "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data"
+    "https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data"
     "/collections/public/catalog.json"
 )
 
 provider = ZarrProvider(
     catalog_url=CATALOG_URL,
-    endpoint_url="https://s3.gfz-potsdam.de",
+    endpoint_url="https://s3.gfz.de",
     anon=True,
 )
 

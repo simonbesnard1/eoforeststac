@@ -17,8 +17,8 @@ Setup
     from eoforeststac.providers.align import DatasetAligner
     import geopandas as gpd
 
-    CATALOG_URL = "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
-    ENDPOINT_URL = "https://s3.gfz-potsdam.de"
+    CATALOG_URL = "https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json"
+    ENDPOINT_URL = "https://s3.gfz.de"
 
 Discover the catalog
 ---------------------

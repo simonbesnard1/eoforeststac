@@ -9,7 +9,7 @@ class BaseProvider:
     def __init__(
         self,
         catalog_url: str,
-        endpoint_url: str = "https://s3.gfz-potsdam.de",
+        endpoint_url: str = "https://s3.gfz.de",
         anon: bool = True,
     ):
         self.catalog_url = catalog_url

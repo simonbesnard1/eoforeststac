@@ -16,8 +16,8 @@ All public assets are served as HTTPS URLs. Both ``DiscoveryProvider`` and ``Zar
     from eoforeststac.providers.zarr import ZarrProvider
 
     provider = ZarrProvider(
-        catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
-        endpoint_url="https://s3.gfz-potsdam.de",
+        catalog_url="https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
+        endpoint_url="https://s3.gfz.de",
         anon=True,
     )
 
@@ -33,8 +33,8 @@ If you have write access to the bucket (e.g. for uploading new product versions)
 .. code-block:: python
 
     provider = ZarrProvider(
-        catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
-        endpoint_url="https://s3.gfz-potsdam.de",
+        catalog_url="https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
+        endpoint_url="https://s3.gfz.de",
         anon=False,
         aws_access_key_id="YOUR_ACCESS_KEY",
         aws_secret_access_key="YOUR_SECRET_KEY",
@@ -53,8 +53,8 @@ If you manage credentials via ``~/.aws/credentials`` or environment variables, u
     creds = session.get_credentials().get_frozen_credentials()
 
     provider = ZarrProvider(
-        catalog_url="https://s3.gfz-potsdam.de/.../catalog.json",
-        endpoint_url="https://s3.gfz-potsdam.de",
+        catalog_url="https://s3.gfz.de/.../catalog.json",
+        endpoint_url="https://s3.gfz.de",
         anon=False,
         aws_access_key_id=creds.access_key,
         aws_secret_access_key=creds.secret_key,

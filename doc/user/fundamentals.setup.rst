@@ -42,7 +42,7 @@ The STAC catalog is a hierarchy of JSON files hosted on Ceph S3 at:
 
 .. code-block:: text
 
-   https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json
+   https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json
 
 It follows the `SpatioTemporal Asset Catalog <https://stacspec.org>`_ specification with four levels:
 

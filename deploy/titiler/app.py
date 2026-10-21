@@ -25,7 +25,7 @@ def _csv_env(name: str, default: str) -> frozenset[str]:
     )
 
 
-ALLOWED_DATA_HOSTS = _csv_env("ALLOWED_DATA_HOSTS", "s3.gfz-potsdam.de")
+ALLOWED_DATA_HOSTS = _csv_env("ALLOWED_DATA_HOSTS", "s3.gfz.de")
 ALLOWED_PATH_PREFIXES = tuple(
     value.strip()
     for value in os.getenv(

@@ -59,9 +59,7 @@ def make_s3(profile: str | None = None) -> s3fs.S3FileSystem:
     """Create an authenticated S3 client for the GFZ-compatible endpoint."""
     kwargs: dict[str, Any] = {
         "client_kwargs": {
-            "endpoint_url": os.environ.get(
-                "AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de"
-            )
+            "endpoint_url": os.environ.get("AWS_S3_ENDPOINT", "https://s3.gfz.de")
         }
     }
     profile = profile or os.environ.get("AWS_PROFILE")
@@ -83,7 +81,7 @@ def normalize_s3_url(url: str) -> str:
     if url.startswith("s3://"):
         return url.rstrip("/")
     parsed = urlsplit(url)
-    endpoint = urlsplit(os.environ.get("AWS_S3_ENDPOINT", "https://s3.gfz-potsdam.de"))
+    endpoint = urlsplit(os.environ.get("AWS_S3_ENDPOINT", "https://s3.gfz.de"))
     if parsed.scheme == "https" and parsed.hostname == endpoint.hostname:
         return f"s3://{parsed.path.lstrip('/').rstrip('/')}"
     raise ValueError(f"Expected an s3:// URL or GFZ S3 HTTPS URL, got: {url}")

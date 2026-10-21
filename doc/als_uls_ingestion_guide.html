@@ -830,7 +830,7 @@ eoforeststac/<br>
           <pre><span class="kw">from</span> <span class="var">eoforeststac.writers.als_products</span> <span class="kw">import</span> <span class="var">ALSProductsWriter</span>
 
 <span class="var">writer</span> <span class="op">=</span> <span class="fn">ALSProductsWriter</span><span class="op">(</span>
-    <span class="var">endpoint_url</span><span class="op">=</span><span class="str">"https://s3.gfz-potsdam.de"</span><span class="op">,</span>
+    <span class="var">endpoint_url</span><span class="op">=</span><span class="str">"https://s3.gfz.de"</span><span class="op">,</span>
     <span class="var">bucket</span><span class="op">=</span><span class="str">"dog.atlaseo-glm.eo-gridded-data"</span><span class="op">,</span>
     <span class="var">profile</span><span class="op">=</span><span class="str">"atlaseo-glm"</span><span class="op">,</span>
 <span class="op">)</span>
@@ -858,7 +858,7 @@ eoforeststac/<br>
           <pre><span class="kw">from</span> <span class="var">eoforeststac.writers.uls_products</span> <span class="kw">import</span> <span class="var">ULSProductsWriter</span>
 
 <span class="var">writer</span> <span class="op">=</span> <span class="fn">ULSProductsWriter</span><span class="op">(</span>
-    <span class="var">endpoint_url</span><span class="op">=</span><span class="str">"https://s3.gfz-potsdam.de"</span><span class="op">,</span>
+    <span class="var">endpoint_url</span><span class="op">=</span><span class="str">"https://s3.gfz.de"</span><span class="op">,</span>
     <span class="var">bucket</span><span class="op">=</span><span class="str">"dog.atlaseo-glm.eo-gridded-data"</span><span class="op">,</span>
     <span class="var">profile</span><span class="op">=</span><span class="str">"atlaseo-glm"</span><span class="op">,</span>
 <span class="op">)</span>
@@ -991,7 +991,7 @@ eoforeststac/<br>
 <span class="kw">import</span> <span class="var">s3fs</span>
 
 <span class="var">fs</span> <span class="op">=</span> <span class="fn">s3fs.S3FileSystem</span><span class="op">(</span>
-    <span class="var">client_kwargs</span><span class="op">={</span><span class="str">"endpoint_url"</span><span class="op">:</span> <span class="str">"https://s3.gfz-potsdam.de"</span><span class="op">},</span>
+    <span class="var">client_kwargs</span><span class="op">={</span><span class="str">"endpoint_url"</span><span class="op">:</span> <span class="str">"https://s3.gfz.de"</span><span class="op">},</span>
     <span class="var">anon</span><span class="op">=</span><span class="kw">True</span><span class="op">,</span>
 <span class="op">)</span>
 

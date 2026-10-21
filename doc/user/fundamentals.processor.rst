@@ -14,8 +14,8 @@ Overview
     from eoforeststac.providers.discovery import DiscoveryProvider
 
     disc = DiscoveryProvider(
-        catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
-        endpoint_url="https://s3.gfz-potsdam.de",
+        catalog_url="https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
+        endpoint_url="https://s3.gfz.de",
         anon=True,
     )
 

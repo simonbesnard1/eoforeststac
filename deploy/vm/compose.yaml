@@ -42,7 +42,8 @@ services:
     expose:
       - "8000"
     environment:
-      ALLOWED_DATA_HOSTS: s3.gfz-potsdam.de
+      # s3.gfz-potsdam.de is retired in early Nov 2026; drop it then
+      ALLOWED_DATA_HOSTS: s3.gfz.de,s3.gfz-potsdam.de
       ALLOWED_DATA_PATH_PREFIXES: /dog.atlaseo-glm.eo-gridded-data/
       MAX_PROXY_BYTES: "5242880"
       TITILER_XARRAY_API_CORS_ORIGINS: "[]"

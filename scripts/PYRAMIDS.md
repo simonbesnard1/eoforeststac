@@ -30,7 +30,7 @@ micromamba activate eoforeststac-pyramid
 Configure credentials that can create objects beside the native stores:
 
 ```bash
-export AWS_S3_ENDPOINT=https://s3.gfz-potsdam.de
+export AWS_S3_ENDPOINT=https://s3.gfz.de
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
 ```

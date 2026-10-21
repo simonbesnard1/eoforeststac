@@ -76,7 +76,7 @@ def test_pyramid_helpers():
     dataset = xr.Dataset(coords={"y": range(202_500), "x": range(405_000)})
     assert automatic_levels(dataset, "y", "x", target_size=8192) == 6
     assert (
-        normalize_s3_url("https://s3.gfz-potsdam.de/bucket/product.zarr")
+        normalize_s3_url("https://s3.gfz.de/bucket/product.zarr")
         == "s3://bucket/product.zarr"
     )
     assert infer_reducer("loss_year", {}) == "max"

@@ -17,13 +17,13 @@ collections, and available versions without loading any data.
 from eoforeststac.providers.discovery import DiscoveryProvider
 
 CATALOG_URL = (
-    "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data"
+    "https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data"
     "/collections/public/catalog.json"
 )
 
 disc = DiscoveryProvider(
     catalog_url=CATALOG_URL,
-    endpoint_url="https://s3.gfz-potsdam.de",
+    endpoint_url="https://s3.gfz.de",
     anon=True,
 )
 

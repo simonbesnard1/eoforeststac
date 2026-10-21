@@ -20,8 +20,8 @@ Basic alignment
     import geopandas as gpd
 
     provider = ZarrProvider(
-        catalog_url="https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
-        endpoint_url="https://s3.gfz-potsdam.de",
+        catalog_url="https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
+        endpoint_url="https://s3.gfz.de",
         anon=True,
     )
 
@@ -81,7 +81,7 @@ Example: GAMI Age-Class Fractions
     from eoforeststac.writers.gami_ageclass import GAMIAgeClassWriter
 
     writer = GAMIAgeClassWriter(
-        endpoint_url="https://s3.gfz-potsdam.de",
+        endpoint_url="https://s3.gfz.de",
         aws_access_key_id="...",
         aws_secret_access_key="...",
     )
@@ -102,7 +102,7 @@ Example: CCI Biomass
     from eoforeststac.writers.CCI_biomass import CCIBiomassWriter
 
     writer = CCIBiomassWriter(
-        endpoint_url="https://s3.gfz-potsdam.de",
+        endpoint_url="https://s3.gfz.de",
         aws_access_key_id="...",
         aws_secret_access_key="...",
     )

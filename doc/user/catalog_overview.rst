@@ -120,7 +120,7 @@ to find the Zarr asset URL for any collection/version, then stream it directly w
       import xarray as xr
 
       s3_path = (
-          "https://s3.gfz-potsdam.de/dog.atlaseo-glm.eo-gridded-data"
+          "https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data"
           "/collections/CCI_BIOMASS/CCI_BIOMASS_v6.0.zarr"
       )
 
