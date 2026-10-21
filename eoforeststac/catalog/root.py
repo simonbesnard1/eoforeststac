@@ -7,7 +7,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Tuple, Union
 
 import pystac
 
-from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_BASE
+from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_PUBLIC_BASE
 from eoforeststac.core.io import write_json
 from eoforeststac.catalog.writer import write_collection, write_item
 from eoforeststac.catalog.sites import update_extent_from_sites
@@ -699,7 +699,7 @@ def build_catalog(
     internal_href_base: str = BASE_S3_URL,
     # Browser mirror (https links, written to s3)
     build_browser: bool = False,
-    browser_publish_base: str = S3_HTTP_BASE,
+    browser_publish_base: str = S3_HTTP_PUBLIC_BASE,
     browser_write_base: Optional[str] = None,
     # Root metadata
     catalog_id: str = "EOForestSTAC",
@@ -825,7 +825,7 @@ def build_catalog(
 def build_browser_catalog(
     versions: Optional[Mapping[str, Union[List[str], SiteVersions]]] = None,
     *,
-    publish_base: str = S3_HTTP_BASE,
+    publish_base: str = S3_HTTP_PUBLIC_BASE,
     write_base: Optional[str] = None,
     internal_base_for_default: str = BASE_S3_URL,
     catalog_id: str = "EOForestSTAC",

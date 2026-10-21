@@ -29,7 +29,7 @@ from eoforeststac.catalog.root import (
     _build_base_tree,
     _iter_collections,
 )
-from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_BASE
+from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_PUBLIC_BASE
 from eoforeststac.core.io import get_fs, get_s3_client, write_json
 
 PUBLIC_WRITE_BASE = BASE_S3_URL.rstrip("/") + "/public"
@@ -135,7 +135,7 @@ def main() -> None:
     fs = get_fs(BASE_S3_URL)
     variants = [
         ("internal", BASE_S3_URL, BASE_S3_URL),
-        ("public", S3_HTTP_BASE, PUBLIC_WRITE_BASE),
+        ("public", S3_HTTP_PUBLIC_BASE, PUBLIC_WRITE_BASE),
     ]
     plan = []  # (variant, action, url, doc)
     for name, publish_base, write_base in variants:
