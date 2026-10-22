@@ -130,6 +130,19 @@ async def restrict_dataset_urls(request: Request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def no_store_for_jobs(request: Request, call_next):
+    """
+    Job status must never be cached. TiTiler marks every GET
+    "public, max-age=3600", so browsers answered progress polls from cache
+    and a running analysis or download looked frozen at its first poll.
+    """
+    response = await call_next(request)
+    if request.url.path.startswith(("/analysis", "/download")):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 SPATIAL_DIMS = frozenset(["x", "y", *xarray_io.X_DIM_NAMES, *xarray_io.Y_DIM_NAMES])
 MAX_DIM_LABELS = 1000
 

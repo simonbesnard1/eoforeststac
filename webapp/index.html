@@ -1094,12 +1094,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 /* ══════════════════════════════════════════════════════════════════
    FETCH (CORS-proxied through TiTiler when available)
 ══════════════════════════════════════════════════════════════════ */
-async function fetchJSON(url, { viaTiTiler = false } = {}) {
+/* noStore: for polling. TiTiler marks GET responses cacheable for an hour, so
+   without it every poll after the first was answered from the browser cache. */
+async function fetchJSON(url, { viaTiTiler = false, noStore = false } = {}) {
   const target = (viaTiTiler && S.tiOk)
     ? `${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`
     : url;
   let r;
-  try { r = await fetch(target); }
+  try { r = await fetch(target, noStore ? { cache: 'no-store' } : undefined); }
   catch (e) {
     if (!viaTiTiler && S.tiOk)
       r = await fetch(`${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`);
@@ -2538,7 +2540,7 @@ async function startAnalysis() {
     const { id } = await postJSON('/analysis', req);
     for (;;) {
       await new Promise(r => setTimeout(r, 1200));
-      const st = await fetchJSON(`${S.tiTiler}/analysis/${id}`);
+      const st = await fetchJSON(`${S.tiTiler}/analysis/${id}`, { noStore: true });
       S.an.progress = st.progress || 0;
       S.an.message = st.message || '';
       if (st.status === 'done') { S.an.result = st.result; S.an.resultSig = JSON.stringify(req); break; }
@@ -2750,7 +2752,12 @@ function drawAnalysisChart(host, series, value, unit) {
   const NS = 'http://www.w3.org/2000/svg';
   const W = Math.max(280, host.clientWidth || 340), H = 190;
   const labelled = series.length <= 4;
-  const M = { l: 44, r: labelled ? 70 : 14, t: 10, b: 24 };
+  /* Room for the direct end labels, measured with the label font rather than
+     guessed, so a long name is never clipped by the chart edge. */
+  const measure = document.createElement('canvas').getContext('2d');
+  measure.font = `10.5px ${getComputedStyle(host).fontFamily}`;
+  const labelW = labelled ? Math.max(0, ...series.map(s => measure.measureText(s.short).width)) : 0;
+  const M = { l: 44, r: labelled ? Math.min(130, Math.ceil(labelW) + 14) : 14, t: 10, b: 24 };
   const pw = W - M.l - M.r, ph = H - M.t - M.b;
   const pts = series.flatMap(s => s.points.filter(p => p.t != null && value(p) != null));
   host.replaceChildren();
@@ -2777,9 +2784,11 @@ function drawAnalysisChart(host, series, value, unit) {
   const text = (str, attrs) => { const n = add('text', attrs); n.textContent = str; return n; };
 
   // Recessive hairline grid and y ticks
+  const tickDecimals = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
   for (let v = 0; v <= ymax + 1e-9; v += step) {
     add('line', { x1: M.l, x2: M.l + pw, y1: y(v), y2: y(v), class: 'an-grid' });
-    text(fmtCompact(v), { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
+    const label = v === 0 ? '0' : v.toLocaleString('en', { minimumFractionDigits: tickDecimals, maximumFractionDigits: tickDecimals });
+    text(label, { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
   }
   // Year ticks: at most ~6 labels
   const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
@@ -2847,8 +2856,10 @@ function drawAnalysisChart(host, series, value, unit) {
       tip.append(row);
     }
     tip.hidden = false;
-    const left = Math.min(cx + 10, W - tip.offsetWidth - 4);
-    tip.style.left = `${cx + 10 + tip.offsetWidth > W ? cx - tip.offsetWidth - 10 : left}px`;
+    const w = tip.offsetWidth, scaleX = (svg.getBoundingClientRect().width || W) / W;
+    const px = cx * scaleX, width = host.clientWidth || W;
+    const right = px + 10, left = px - w - 10;
+    tip.style.left = `${Math.max(0, Math.min(width - w, right + w <= width ? right : left))}px`;
     tip.style.top = `${M.t}px`;
   };
   const hide = () => { cross.setAttribute('visibility', 'hidden'); tip.hidden = true; };
@@ -3208,7 +3219,7 @@ async function startDownload() {
     refreshDownload({ estimate: false });
     for (;;) {
       await new Promise(r => setTimeout(r, 1500));
-      const st = await fetchJSON(`${S.tiTiler}/download/${id}`);
+      const st = await fetchJSON(`${S.tiTiler}/download/${id}`, { noStore: true });
       el('dl-bar').style.width = `${Math.round(st.progress * 100)}%`;
       el('dl-status').textContent = `${st.message} · ${Math.round(st.progress * 100)}%`;
       if (st.status === 'error') throw new Error(st.message);
