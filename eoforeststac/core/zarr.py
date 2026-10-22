@@ -66,6 +66,16 @@ def add_display_range(
         if not keys:
             continue
         picked = rng.choice(len(keys), size=min(max_chunks, len(keys)), replace=False)
+        # Raw zarr reads keep the fill value (e.g. -9999) as a number
+        fills = [
+            float(v)
+            for v in (
+                arr.fill_value,
+                arr.attrs.get("_FillValue"),
+                arr.attrs.get("missing_value"),
+            )
+            if isinstance(v, (int, float, np.number)) and np.isfinite(v)
+        ]
 
         samples = []
         for i in picked:
@@ -73,7 +83,7 @@ def add_display_range(
             block = np.asarray(
                 arr[tuple(slice(j * c, (j + 1) * c) for j, c in zip(idx, arr.chunks))]
             )
-            valid = block[np.isfinite(block)]
+            valid = block[np.isfinite(block) & ~np.isin(block, fills)]
             # Same rate for every chunk, so a nearly empty edge chunk does not
             # weigh as much as a full one
             rate = values_per_chunk / block.size
