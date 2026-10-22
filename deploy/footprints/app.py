@@ -48,7 +48,7 @@ WORKERS = int(os.getenv("FOOTPRINT_WORKERS", "3"))
 START = {"gedi": "2019-01-01", "icesat2": "2018-10-01"}
 END = "2030-12-31"
 
-# icesat2db's defaults (10 GB budgets, 2 GiB initial buffers per attribute)
+# gediDB and icesat2DB S3 defaults (10 GB budgets, 2 GiB initial buffers)
 # suit a batch server, not a shared web container
 SAFE_TILEDB = {
     "sm.memory_budget": str(512 * 1024**2),
@@ -138,24 +138,23 @@ def provider(kind: str):
             if kind == "gedi":
                 import gedidb
 
-                # gediDB's S3 defaults are already modest (256 MB budget, 1 GB
-                # total); its config_overrides only apply to local databases
-                _providers[kind] = gedidb.GEDIProvider(
-                    storage_type="s3", s3_bucket=GEDI_BUCKET, url=S3_URL
-                )
+                base, bucket = gedidb.GEDIProvider, GEDI_BUCKET
             else:
                 import icesat2db
 
-                class SafeIceSat2Provider(icesat2db.IceSat2Provider):
-                    # IceSat2Provider does not pass s3_config_overrides on;
-                    # set them right before the TileDB context is built
-                    def _initialize_s3_context(self, *args, **kwargs):
-                        self.s3_config_overrides = SAFE_TILEDB
-                        return super()._initialize_s3_context(*args, **kwargs)
+                base, bucket = icesat2db.IceSat2Provider, ICESAT2_BUCKET
 
-                _providers[kind] = SafeIceSat2Provider(
-                    storage_type="s3", s3_bucket=ICESAT2_BUCKET, url=S3_URL
-                )
+            class SafeProvider(base):
+                # GEDIProvider and IceSat2Provider do not pass
+                # s3_config_overrides on to their TileDB base provider; set
+                # them right before the TileDB context is built
+                def _initialize_s3_context(self, *args, **kwargs):
+                    self.s3_config_overrides = SAFE_TILEDB
+                    return super()._initialize_s3_context(*args, **kwargs)
+
+            _providers[kind] = SafeProvider(
+                storage_type="s3", s3_bucket=bucket, url=S3_URL
+            )
         return _providers[kind]
 
 
