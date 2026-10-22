@@ -84,6 +84,44 @@ services:
       - backend
       - egress
 
+  footprints:
+    build:
+      context: ../..
+      dockerfile: deploy/footprints/Dockerfile
+    expose:
+      - "8000"
+    environment:
+      HOME: /tmp
+      FOOTPRINT_WORKERS: "3"
+      MAX_POINTS_PER_TILE: "25000"
+      MAX_ANALYSIS_DEG2: "1.0"
+      TILE_CACHE_SIZE: "64"
+      MALLOC_ARENA_MAX: "2"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    mem_limit: 6g
+    cpus: 2.0
+    ulimits:
+      nofile:
+        soft: 8192
+        hard: 8192
+    logging:
+      driver: json-file
+      options:
+        max-size: 25m
+        max-file: "3"
+    networks:
+      - backend
+      - egress
+
 volumes:
   downloads: {}
 

@@ -297,3 +297,35 @@ def test_area_smaller_than_a_pixel_raises():
     da = geographic_grid(res=1.0)
     with pytest.raises(ValueError, match="no pixel"):
         region_statistics(da, box(0.1, 0.1, 0.3, 0.3), crs="EPSG:4326")
+
+
+# ── Footprints ───────────────────────────────────────────────────────────
+
+
+def test_footprint_statistics_per_year():
+    from eoforeststac.analytics import footprint_statistics
+
+    times = ["2019-03-01", "2019-07-01", "2019-09-01", "2020-01-05", "2020-06-01"]
+    values = [10.0, 20.0, 30.0, 5.0, np.nan]
+    rows = footprint_statistics(times, values)
+    assert [r["time"] for r in rows] == ["2019-01-01", "2020-01-01"]
+    assert (
+        rows[0]["count"] == 3 and rows[0]["median"] == 20.0 and rows[0]["mean"] == 20.0
+    )
+    assert rows[0]["p25"] == 15.0 and rows[0]["p75"] == 25.0
+    assert rows[1]["count"] == 1  # the NaN is dropped
+
+
+def test_footprint_statistics_monthly_and_empty():
+    from eoforeststac.analytics import footprint_statistics
+
+    rows = footprint_statistics(
+        ["2021-01-10", "2021-01-20", "2021-02-01"], [1.0, 3.0, 5.0], by="month"
+    )
+    assert [(r["time"], r["count"]) for r in rows] == [
+        ("2021-01-01", 2),
+        ("2021-02-01", 1),
+    ]
+    assert footprint_statistics([], []) == []
+    with pytest.raises(ValueError):
+        footprint_statistics(["2021-01-01"], [1.0], by="week")

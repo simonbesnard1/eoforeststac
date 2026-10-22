@@ -35,7 +35,7 @@
   --shadow:    0 2px 14px rgba(0,0,0,.45);
   --shadow-lg: 0 6px 32px rgba(0,0,0,.5);
   /* theme accents */
-  --bc:#97bd3d; --dc:#f88b2f; --sd:#4a9fd8; --al:#a583d8; --lu:#d8b63a; --ab:#e07a94;
+  --bc:#97bd3d; --dc:#f88b2f; --sd:#4a9fd8; --al:#a583d8; --lu:#d8b63a; --ab:#e07a94; --sl:#3cc0bc;
   --sans: 'Fira Sans', system-ui, -apple-system, sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
   --rail-w: 58px;
@@ -51,7 +51,7 @@
     --alert:#d96f10; --danger:#c23b30;
     --map-void:#dfe4dd; --attrib-bg:rgba(255,255,255,.78);
     --shadow:0 1px 8px rgba(0,0,0,.12); --shadow-lg:0 4px 22px rgba(0,0,0,.16);
-    --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10; --ab:#b4466b;
+    --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10; --ab:#b4466b; --sl:#1d8783;
   }
 }
 :root[data-theme="light"] {
@@ -62,7 +62,7 @@
   --alert:#d96f10; --danger:#c23b30;
   --map-void:#dfe4dd; --attrib-bg:rgba(255,255,255,.78);
   --shadow:0 1px 8px rgba(0,0,0,.12); --shadow-lg:0 4px 22px rgba(0,0,0,.16);
-  --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10; --ab:#b4466b;
+  --bc:#6f9219; --dc:#d96f10; --sd:#1f6fa8; --al:#6f4bb0; --lu:#9a7c10; --ab:#b4466b; --sl:#1d8783;
 }
 
 /* ═══ Reset ══════════════════════════════════════════════════════════ */
@@ -589,8 +589,8 @@ input[type=range]::-moz-range-thumb{
 </style>
 <style>
 /* 2026 visual refresh: a calm, map-first forest monitoring interface. */
-:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6;--o1:#86b6ef;--o2:#5598e7;--o3:#2a78d6;--o4:#1c5cab;--o5:#104281}
-:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6;--o1:#86b6ef;--o2:#5598e7;--o3:#2a78d6;--o4:#1c5cab;--o5:#104281}
+:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--sl:#1d8783;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6;--o1:#86b6ef;--o2:#5598e7;--o3:#2a78d6;--o4:#1c5cab;--o5:#104281}
+:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--sl:#1d8783;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6;--o1:#86b6ef;--o2:#5598e7;--o3:#2a78d6;--o4:#1c5cab;--o5:#104281}
 :root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;--s-other:#5c6760;--o1:#184f95;--o2:#256abf;--o3:#3987e5;--o4:#6da7ec;--o5:#9ec5f4}
 body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
@@ -1014,6 +1014,8 @@ const CFG = {
       icon:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>' },
     'land-use-land-cover':  { label:'Land Use & Land Cover',  short:'Land use',    cls:'lu',
       icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>' },
+    'spaceborne-lidar':     { label:'Spaceborne LiDAR',       short:'Spaceborne',  cls:'sl',
+      icon:'<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/>' },
   },
   themeIconFallback: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
 };
@@ -1067,9 +1069,9 @@ const LAYER_COLORS = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300
 
 /* First slot no active layer uses, so a colour stays with its layer. */
 function freeColorSlot() {
-  const used = new Set([...S.layers.values()].map(l => l.slot));
+  const used = new Set([...S.layers.values(), ...(S.fp?.values() || [])].map(l => l.slot));
   for (let i = 0; i < LAYER_COLORS.length; i++) if (!used.has(i)) return i;
-  return S.layers.size % LAYER_COLORS.length;
+  return (S.layers.size + (S.fp?.size || 0)) % LAYER_COLORS.length;
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -1264,6 +1266,8 @@ async function loadCatalog() {
       root.links.filter(l => l.rel === 'child').map(tl => loadTheme(tl, CFG.catalog))
     );
     S.catalog = { themes: themes.filter(t => t && t.collections.length) };
+    const fpTheme = await loadFootprintSources();
+    if (fpTheme) S.catalog.themes.push(fpTheme);
     if (!S.catalog.themes.some(t => t.id === S.cat)) S.cat = firstThemeId();
     renderRailCats();
     renderCatalog();
@@ -1436,7 +1440,7 @@ function syncRail() {
   });
   document.querySelectorAll('#rail-cats .rail-btn').forEach(b => {
     const theme = S.catalog?.themes.find(t => t.id === b.dataset.cat);
-    const n = theme ? theme.collections.filter(c => S.layers.has(c.id)).length : 0;
+    const n = theme ? theme.collections.filter(c => S.layers.has(c.id) || S.fp.has(c.id)).length : 0;
     const badge = b.querySelector('.rail-badge');
     badge.textContent = n;
     badge.hidden = n === 0;
@@ -1493,7 +1497,7 @@ function renderCatalog() {
 }
 
 function renderDatasetRow(col) {
-  const on = S.layers.has(col.id);
+  const on = S.layers.has(col.id) || S.fp.has(col.id);
   const f = col.facts;
   const facts = [f.time, f.gsd, f.region, f.provider].filter(Boolean).join(' · ');
   const search = [col.title, col.id, col.parent?.title || '', ...col.providers.map(p => p.name), ...col.keywords].join(' ').toLowerCase();
@@ -1504,9 +1508,9 @@ function renderDatasetRow(col) {
       <div class="ds-name" title="${esc(col.title)}">${esc(col.siteLabel || shortTitle(col.title))}</div>
       ${facts ? `<div class="ds-facts" title="${esc(facts)}">${esc(facts)}</div>` : ''}
     </div>
-    <button class="ds-zoom" data-id="${esc(col.id)}" title="Zoom to extent" aria-label="Zoom to ${esc(col.title)} extent">
+    ${col.footprint ? '' : `<button class="ds-zoom" data-id="${esc(col.id)}" title="Zoom to extent" aria-label="Zoom to ${esc(col.title)} extent">
       <svg class="ico-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-    </button>
+    </button>`}
     <button class="ds-cfg" data-id="${esc(col.id)}" title="Variable & display settings" aria-label="Display settings for ${esc(col.title)}">
       <svg class="ico-sm" viewBox="0 0 24 24"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="9" cy="8" r="2.4"/><circle cx="16" cy="16" r="2.4"/></svg>
     </button>
@@ -1607,10 +1611,14 @@ async function toggleDataset(id, on) {
     row?.classList.add('on');
     const col = findCollection(id);
     if (!col) return;
-    await activateLayer(col);
+    if (col.footprint) await toggleFootprints(col, true);
+    else await activateLayer(col);
   } else {
     row?.classList.remove('on');
-    removeLayer(id);
+    const box = row?.querySelector('input[type=checkbox]');
+    if (box) box.checked = false;
+    if (S.fp.has(id)) toggleFootprints(findCollection(id), false);
+    else removeLayer(id);
   }
   renderLayerPanel();
   renderLegend();
@@ -2185,7 +2193,7 @@ function updateFootprint(layer) {
 }
 
 function syncLayerCount() {
-  const n = S.layers.size;
+  const n = S.layers.size + S.fp.size;
   const badge = el('rail-badge');
   badge.textContent = n;
   badge.hidden = n === 0;
@@ -2200,12 +2208,12 @@ function syncLayerCount() {
 ══════════════════════════════════════════════════════════════════ */
 function renderLayerPanel() {
   const host = el('view-layers');
-  if (!S.layers.size) {
+  if (!S.layers.size && !S.fp.size) {
     host.innerHTML = '<div class="state">No active layers.<br>Turn one on from <b>Datasets</b>.</div>';
     return;
   }
 
-  host.innerHTML = [...S.layers.values()].map(layer => {
+  host.innerHTML = '<div id="fp-cards"></div>' + [...S.layers.values()].map(layer => {
     const di = layer.dimInfo;
     let dimFld = '';
     if (di && di.length > 1) {
@@ -2313,6 +2321,7 @@ function renderLayerPanel() {
            </div>` : ''}`}
     </div>`;
   }).join('');
+  renderFootprintCards();
 
   host.querySelectorAll('select[data-prop],input[data-prop]').forEach(ctrl => {
     ctrl.addEventListener(ctrl.type === 'range' ? 'input' : 'change', () => onLayerControl(ctrl));
@@ -2447,7 +2456,7 @@ function syncLegendTabs() {
 
 function renderLegend() {
   const leg = el('legend');
-  if (!S.layers.size) { leg.hidden = true; return; }
+  if (!S.layers.size && !S.fp.size) { leg.hidden = true; return; }
   leg.hidden = false;
   ensureLegendShell();
   if (S.legTab === 'analysis') { renderAnalysis(); return; }
@@ -2513,7 +2522,7 @@ function renderLegend() {
         <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}</div>
         ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
       </div>`;
-    }).join('');
+    }).join('') + footprintLegendItems();
 
   items.querySelectorAll('.leg-var').forEach(sel => {
     sel.addEventListener('change', () => {
@@ -2524,6 +2533,295 @@ function renderLegend() {
       onLayerControl(sel);
     });
   });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SPACEBORNE LIDAR FOOTPRINTS — GEDI and ICESat-2 shots from gediDB and
+   icesat2DB, served by the footprint service (/api/footprints/). They are
+   not in the STAC catalog: the service lists the sources, which appear as a
+   "Spaceborne LiDAR" category like the catalog's themes.
+══════════════════════════════════════════════════════════════════ */
+const FP = { minZoom: 11, maxTiles: 24, concurrency: 4, tileDeg: 0.2, bins: 32 };
+/* Points use the ramp from 20 % on: the palest steps vanish on light basemaps. */
+const fpColor = (layer, t) => colorAt(layer.colormap, 0.2 + 0.8 * t);
+const fpGradient = layer => `linear-gradient(90deg, ${Array.from({ length: 11 }, (_, i) => fpColor(layer, i / 10)).join(', ')})`;
+const FP_THEME = 'spaceborne-lidar';
+S.fp = new Map();          // id -> footprint layer
+S.fpSources = null;        // service metadata
+let _fpQueue = [], _fpActive = 0, _fpCanvas = null, _fpRedrawTimer = null;
+
+async function loadFootprintSources() {
+  try {
+    const meta = await fetchJSON(`${S.tiTiler}/footprints/sources`);
+    S.fpSources = meta;
+    FP.tileDeg = meta.tile_deg || FP.tileDeg;
+    return {
+      id: FP_THEME,
+      title: 'Spaceborne LiDAR',
+      collections: meta.sources.map(src => ({
+        id: src.id, title: src.title, footprint: true, fp: src,
+        version: '', variables: [src.quantity], zarrs: [], bbox: null,
+        summaries: { variables: [src.quantity], units_by_variable: { [src.quantity]: src.units } },
+        description: `${src.description}\n\nFootprints are samples along the satellite tracks, not a map: zoom in (level ${FP.minZoom}+) to load them, or draw an area in the Analysis tab for per-year statistics.`,
+        license: 'Open data (NASA)',
+        providers: [{ name: src.provider === 'gedi' ? 'NASA GEDI · gediDB (GFZ)' : 'NASA ICESat-2 · icesat2DB (GFZ)' }],
+        keywords: ['lidar', 'footprints', src.provider === 'gedi' ? 'GEDI' : 'ICESat-2', src.quantity],
+        links: [{ rel: 'about', href: src.docs, title: 'Database documentation' }],
+        facts: { time: src.provider === 'gedi' ? '2019–present' : '2018–present',
+                 gsd: src.provider === 'gedi' ? '25 m footprints' : '100 m segments',
+                 region: src.provider === 'gedi' ? '52° S–52° N' : 'global',
+                 provider: src.provider === 'gedi' ? 'NASA GEDI' : 'NASA ICESat-2' },
+      })),
+    };
+  } catch { return null; }   // no footprint service: the category is simply absent
+}
+
+function fpTileKey(i, j) { return `${i}:${j}`; }
+
+/* Tiles of the fixed 0.2° grid that the current view touches. */
+function fpTilesInView() {
+  const b = S.map.getBounds(), d = FP.tileDeg;
+  const w = Math.max(-180, b.getWest()), e = Math.min(180, b.getEast());
+  const s = Math.max(-90, b.getSouth()), n = Math.min(90, b.getNorth());
+  const out = [];
+  for (let i = Math.floor((w + 180) / d); i <= Math.floor((e + 180 - 1e-9) / d); i++)
+    for (let j = Math.floor((s + 90) / d); j <= Math.floor((n + 90 - 1e-9) / d); j++)
+      out.push([i, j]);
+  return out;
+}
+
+function fpStatus(layer) {
+  if (S.map.getZoom() < FP.minZoom) return { kind: 'zoom', text: `Zoom in to level ${FP.minZoom}+ to load footprints` };
+  const tiles = fpTilesInView();
+  if (tiles.length > FP.maxTiles) return { kind: 'zoom', text: 'Zoom in a little further to load footprints' };
+  let loading = 0, count = 0, shown = 0, errors = 0;
+  for (const [i, j] of tiles) {
+    const t = layer.tiles.get(fpTileKey(i, j));
+    if (!t || t.state === 'loading') loading++;
+    else if (t.state === 'error') errors++;
+    else { count += t.data.count; shown += t.data.shown; }
+  }
+  const parts = [`${count.toLocaleString('en')} footprints in view`];
+  if (shown < count) parts.push(`${shown.toLocaleString('en')} drawn`);
+  if (loading) parts.push(`loading ${loading} tile${loading > 1 ? 's' : ''}…`);
+  if (errors) parts.push(`${errors} tile${errors > 1 ? 's' : ''} failed`);
+  return { kind: loading ? 'loading' : 'ok', text: parts.join(' · ') };
+}
+
+async function toggleFootprints(col, on) {
+  if (!on) {
+    S.fp.delete(col.id);
+    fpRedraw();
+    return;
+  }
+  const slot = freeColorSlot();
+  S.fp.set(col.id, {
+    id: col.id, title: col.title, col, src: col.fp, slot, color: LAYER_COLORS[slot],
+    colormap: col.fp.colormap, tiles: new Map(), rMin: 0, rMax: 1, rangeSource: 'manual',
+  });
+  await loadLUT(col.fp.colormap);
+  if (!_fpCanvas) { _fpCanvas = new FootprintCanvas().addTo(S.map); S.map.on('moveend', fpRefresh); }
+  fpRefresh();
+}
+
+/* Queue the tiles in view for every footprint layer; tiles already loaded
+   or loading are kept. Views far out of zoom only update the status. */
+function fpRefresh() {
+  if (!S.fp.size) return;
+  _fpQueue = [];
+  if (S.map.getZoom() >= FP.minZoom) {
+    const tiles = fpTilesInView();
+    if (tiles.length <= FP.maxTiles)
+      for (const layer of S.fp.values())
+        for (const [i, j] of tiles)
+          if (!layer.tiles.has(fpTileKey(i, j))) _fpQueue.push({ layer, i, j });
+  }
+  fpPump();
+  fpRedraw();
+}
+
+function fpPump() {
+  while (_fpActive < FP.concurrency && _fpQueue.length) {
+    const { layer, i, j } = _fpQueue.shift();
+    const key = fpTileKey(i, j);
+    if (layer.tiles.has(key) || !S.fp.has(layer.id)) continue;
+    layer.tiles.set(key, { state: 'loading' });
+    _fpActive++;
+    fpLoadTile(layer, i, j)
+      .then(data => { layer.tiles.set(key, { state: 'done', data }); fpUpdateRange(layer); })
+      .catch(() => layer.tiles.set(key, { state: 'error' }))
+      .finally(() => { _fpActive--; fpPump(); fpRedraw(); });
+  }
+}
+
+async function fpPoll(start) {
+  let st = start;
+  while (st.status === 'running') {
+    await new Promise(r => setTimeout(r, 1500));
+    st = await fetchJSON(`${S.tiTiler}/footprints/jobs/${st.id}`, { noStore: true });
+  }
+  if (st.status !== 'done') throw new Error(st.message || 'Footprint query failed');
+  return st.result;
+}
+
+async function fpLoadTile(layer, i, j) {
+  return fpPoll(await postJSON('/footprints/tile', { source: layer.id, i, j }));
+}
+
+/* Colour range from the loaded footprints (p2–p98), as for measured rasters. */
+function fpUpdateRange(layer) {
+  if (layer.rangeSource === 'manual-set') return;
+  const vals = [];
+  for (const t of layer.tiles.values()) if (t.state === 'done') {
+    const v = t.data.v, step = Math.max(1, Math.floor(v.length / 4000));
+    for (let k = 0; k < v.length; k += step) vals.push(v[k]);
+  }
+  if (vals.length < 20) return;
+  vals.sort((a, b) => a - b);
+  const q = p => vals[Math.min(vals.length - 1, Math.floor(p * vals.length))];
+  const lo = q(0.02), hi = q(0.98);
+  if (hi > lo) { layer.rMin = roundRangeEnd(lo, hi - lo); layer.rMax = roundRangeEnd(hi, hi - lo); layer.rangeSource = 'footprints'; }
+}
+
+function fpRedraw() {
+  clearTimeout(_fpRedrawTimer);
+  _fpRedrawTimer = setTimeout(() => {
+    _fpCanvas?.draw();
+    renderLegend();
+    renderFootprintCards();
+    syncLayerCount();
+  }, 60);
+}
+
+/* One canvas over the map for all footprint layers. Points are binned by
+   colour so the canvas switches fill style a few dozen times, not per point. */
+const FootprintCanvas = L.Layer.extend({
+  onAdd(map) {
+    this._map = map;
+    this._c = L.DomUtil.create('canvas', 'fp-canvas');
+    map.getPanes().overlayPane.appendChild(this._c);
+    map.on('moveend zoomend resize', this._reset, this);
+    this._reset();
+  },
+  onRemove(map) {
+    map.off('moveend zoomend resize', this._reset, this);
+    this._c.remove();
+  },
+  _reset() {
+    const size = this._map.getSize(), dpr = window.devicePixelRatio || 1;
+    L.DomUtil.setPosition(this._c, this._map.containerPointToLayerPoint([0, 0]));
+    this._c.width = size.x * dpr; this._c.height = size.y * dpr;
+    this._c.style.width = `${size.x}px`; this._c.style.height = `${size.y}px`;
+    this.draw();
+  },
+  draw() {
+    const ctx = this._c.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, this._c.width, this._c.height);
+    const z = this._map.getZoom();
+    if (z < FP.minZoom) return;
+    const r = z >= 15 ? 3 : z >= 13 ? 2 : 1.5;
+    const size = this._map.getSize();
+    for (const layer of S.fp.values()) {
+      const span = layer.rMax - layer.rMin || 1;
+      const fills = Array.from({ length: FP.bins }, (_, b) => fpColor(layer, (b + 0.5) / FP.bins));
+      const buckets = Array.from({ length: FP.bins }, () => []);
+      for (const t of layer.tiles.values()) {
+        if (t.state !== 'done') continue;
+        const { lon, lat, v } = t.data;
+        for (let k = 0; k < v.length; k++) {
+          const p = this._map.latLngToContainerPoint([lat[k], lon[k]]);
+          if (p.x < -4 || p.y < -4 || p.x > size.x + 4 || p.y > size.y + 4) continue;
+          const b = Math.max(0, Math.min(FP.bins - 1, Math.floor((v[k] - layer.rMin) / span * FP.bins)));
+          buckets[b].push(p.x, p.y);
+        }
+      }
+      ctx.globalAlpha = 0.9;
+      buckets.forEach((pts, b) => {
+        if (!pts.length) return;
+        ctx.fillStyle = fills[b];
+        for (let k = 0; k < pts.length; k += 2) ctx.fillRect(pts[k] - r, pts[k + 1] - r, 2 * r, 2 * r);
+      });
+    }
+  },
+});
+
+/* Nearest drawn footprint within a few pixels of a map click. */
+function fpPick(latlng) {
+  const at = S.map.latLngToContainerPoint(latlng);
+  let best = null;
+  for (const layer of S.fp.values())
+    for (const t of layer.tiles.values()) {
+      if (t.state !== 'done') continue;
+      const { lon, lat, v, year } = t.data;
+      for (let k = 0; k < v.length; k++) {
+        const p = S.map.latLngToContainerPoint([lat[k], lon[k]]);
+        const d = Math.hypot(p.x - at.x, p.y - at.y);
+        if (d < 7 && (!best || d < best.d)) best = { d, layer, value: v[k], year: year[k], lat: lat[k], lon: lon[k] };
+      }
+    }
+  return best;
+}
+
+function renderFootprintCards() {
+  const host = el('fp-cards');
+  if (!host) return;
+  host.innerHTML = [...S.fp.values()].map(layer => {
+    const st = fpStatus(layer);
+    const filters = Object.entries(layer.src.filters || {}).map(([k, v]) => `${k} ${v}`).join(', ');
+    return `<div class="lc" data-card="${esc(layer.id)}">
+      <div class="lc-top">
+        <span class="lc-swatch" style="background:${layer.color}"></span>
+        <span class="lc-name" title="${esc(layer.id)}">${esc(layer.title)}</span>
+        <button class="ghost-btn danger" data-fp-remove="${esc(layer.id)}" title="Remove layer">
+          <svg class="ico-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="set-note" style="margin-top:0">${esc(st.text)}</div>
+      <div class="set-note">${esc(layer.src.quantity)} (${esc(layer.src.units)})${filters ? ` · quality filter: ${esc(filters)}` : ''}</div>
+    </div>`;
+  }).join('');
+  host.querySelectorAll('[data-fp-remove]').forEach(b => b.addEventListener('click', () => toggleDataset(b.dataset.fpRemove, false)));
+}
+
+function footprintLegendItems() {
+  return [...S.fp.values()].map(layer => {
+    const st = fpStatus(layer);
+    const ticks = st.kind === 'zoom' ? '' : `<div class="leg-ramp" style="background:${fpGradient(layer)}"></div>
+      <div class="leg-ticks">${Array.from({ length: 5 }, (_, i) => `<span>${fmtNum(layer.rMin + (layer.rMax - layer.rMin) * i / 4)}</span>`).join('')}</div>`;
+    return `<div class="leg-item">
+      <div class="leg-vn"><span class="leg-key" style="background:${layer.color}"></span>${esc(layer.src.quantity)}</div>
+      <div class="leg-ds">${esc(layer.title)} · ${esc(layer.src.units)}</div>
+      ${ticks}
+      <div class="leg-prov">${esc(st.text)}${layer.rangeSource === 'footprints' && st.kind !== 'zoom' ? ' · range from loaded footprints (p2–p98)' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* Area of a GeoJSON polygon on the sphere (ha), for footprint-only analyses
+   where no raster job reports the region's area. */
+function geodesicAreaHa(g) {
+  const R = 6371008.8, rad = Math.PI / 180;
+  const ring = pts => {
+    let a = 0;
+    for (let k = 0; k < pts.length - 1; k++) {
+      const [x1, y1] = pts[k], [x2, y2] = pts[k + 1];
+      a += (x2 - x1) * rad * (2 + Math.sin(y1 * rad) + Math.sin(y2 * rad));
+    }
+    return Math.abs(a * R * R / 2);
+  };
+  const poly = rings => rings.reduce((sum, r, k) => sum + (k ? -ring(r) : ring(r)), 0);
+  const polys = g.type === 'MultiPolygon' ? g.coordinates : g.type === 'Polygon' ? [g.coordinates] : [];
+  return polys.reduce((sum, p) => sum + poly(p), 0) / 1e4;
+}
+
+/* Analysis: per-year statistics of every footprint in the drawn area. */
+async function fpAnalyse(id, geometry) {
+  try {
+    return await fpPoll(await postJSON('/footprints/analysis', { source: id, geometry }));
+  } catch (e) {
+    return { name: id, kind: 'footprints', error: e.message };
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2545,6 +2843,7 @@ function analysisRequest() {
     .filter(x => x.target);
   return {
     geometry: S.dl.geometry,
+    footprints: [...S.fp.keys()],
     layers: layers.map(({ layer, target }) => {
       const keep = new Set(target.keep_dims || []);
       const options = {};
@@ -2560,20 +2859,30 @@ function analysisRequest() {
 
 async function startAnalysis() {
   const req = analysisRequest();
-  if (!req.geometry || !req.layers.length || S.an.running) return;
+  if (!req.geometry || !(req.layers.length || req.footprints.length) || S.an.running) return;
   Object.assign(S.an, { running: true, progress: 0, message: 'Starting…', error: null });
   renderAnalysis();
   try {
-    const { id } = await postJSON('/analysis', req);
-    for (;;) {
-      await new Promise(r => setTimeout(r, 1200));
-      const st = await fetchJSON(`${S.tiTiler}/analysis/${id}`, { noStore: true });
-      S.an.progress = st.progress || 0;
-      S.an.message = st.message || '';
-      if (st.status === 'done') { S.an.result = st.result; S.an.resultSig = JSON.stringify(req); break; }
-      if (st.status === 'error') throw new Error(st.message || 'Analysis failed');
+    const { footprints, ...rasterReq } = req;
+    const shots = Promise.all(footprints.map(id => fpAnalyse(id, req.geometry)));
+    let result = { region_area_ha: geodesicAreaHa(req.geometry), layers: [] };
+    if (rasterReq.layers.length) {
+      const { id } = await postJSON('/analysis', rasterReq);
+      for (;;) {
+        await new Promise(r => setTimeout(r, 1200));
+        const st = await fetchJSON(`${S.tiTiler}/analysis/${id}`, { noStore: true });
+        S.an.progress = st.progress || 0;
+        S.an.message = st.message || '';
+        if (st.status === 'done') { result = st.result; break; }
+        if (st.status === 'error') throw new Error(st.message || 'Analysis failed');
+        renderAnalysisProgress();
+      }
+    } else {
+      S.an.message = 'Querying footprints…';
       renderAnalysisProgress();
     }
+    result.layers = [...(result.layers || []), ...await shots];
+    S.an.result = result; S.an.resultSig = JSON.stringify(req);
   } catch (e) {
     S.an.error = e.message;
   }
@@ -2589,11 +2898,12 @@ const AN_METRICS = new Set(['mean', 'total', 'cover_area_ha', 'area_ha', 'share'
 
 function analysisSeries(result) {
   return (result?.layers || []).map(res => {
-    const layer = S.layers.get(res.name);
+    const layer = S.layers.get(res.name) || S.fp.get(res.name);
     const col = findCollection(res.name);
-    const recipe = col?.analytics?.[res.variable] || {};
+    const recipe = col?.analytics?.[res.variable] || (col?.fp ? { quantity: col.fp.quantity } : {});
     const rows = res.rows || [];
-    const catKey = res.kind === 'event_year' ? 'year'
+    const catKey = res.kind === 'footprints' ? null
+      : res.kind === 'event_year' ? 'year'
       : res.kind === 'class_area' ? 'class'
       : Object.keys(rows[0] || {}).find(k => !AN_METRICS.has(k)) || null;
     const fallbackT = col?.startYear ? Date.UTC(+col.startYear, 0, 1) : null;
@@ -2639,6 +2949,10 @@ function analysisMeasures(s) {
               { key: 'total', label: 'Total', unit: s.totalUnits, scale: true }];
     case 'mean':
       return [{ key: 'mean', label: `Mean ${s.quantity.toLowerCase()}`, unit: s.units }];
+    case 'footprints':
+      return [{ key: 'median', label: 'Median', unit: s.units },
+              { key: 'mean', label: 'Mean', unit: s.units },
+              { key: 'count', label: 'Footprints', unit: '' }];
     case 'cover': {
       const mean = { key: 'mean', label: 'Mean cover', unit: s.units, fraction: s.units === 'fraction' };
       const area = { key: 'cover_area_ha', label: s.catKey ? 'Area' : 'Equivalent area', unit: 'ha', area: true };
@@ -2676,7 +2990,7 @@ function displayScale(unit, maxValue, measure) {
    its own chart. */
 function analysisGroups(series) {
   const groups = [];
-  const lineKinds = new Set(['density', 'amount', 'mean', 'cover']);
+  const lineKinds = new Set(['density', 'amount', 'mean', 'cover', 'footprints']);
   for (const s of series.filter(x => !x.error && x.rows.length)) {
     if (lineKinds.has(s.kind) && !s.catKey) {
       const key = `line:${s.kind}:${s.units}:${s.totalUnits}`;
@@ -2710,7 +3024,7 @@ function renderAnalysis() {
   syncLegendTabs();
   const g = S.dl.geometry;
   const req = analysisRequest();
-  const candidates = [...S.layers.values()];
+  const candidates = [...S.layers.values(), ...S.fp.values()];
   const stale = S.an.result && S.an.resultSig !== JSON.stringify(req);
 
   let html = `<div class="an-head">Analyse forest change</div>`;
@@ -2735,7 +3049,7 @@ function renderAnalysis() {
       </div>
       <div class="an-layers">` +
       (candidates.length ? candidates.map(l => {
-        const t = analysisTarget(l);
+        const t = l.src ? { quantity: `${l.src.quantity} per year (areas up to ${S.fpSources?.max_analysis_deg2 ?? 1}°²)` } : analysisTarget(l);
         return `<div class="an-layer${t ? '' : ' off'}">
           <span class="leg-key" style="background:var(--s${l.slot + 1})"></span>
           <span class="an-layer-name">${esc(l.title)}</span>
@@ -2744,7 +3058,7 @@ function renderAnalysis() {
       }).join('') : '<div class="set-note">Switch on a biomass layer (CCI, Saatchi, ALS biomass) to analyse it.</div>') +
       `</div>
       <div class="an-actions">
-        <button class="btn" id="an-go" ${!req.layers.length || S.an.running ? 'disabled' : ''}>
+        <button class="btn" id="an-go" ${!(req.layers.length || req.footprints.length) || S.an.running ? 'disabled' : ''}>
           ${S.an.result && !stale ? 'Analyse again' : 'Analyse'}</button>
       </div>
       <div id="an-progress" ${S.an.running ? '' : 'hidden'}>
@@ -2821,7 +3135,9 @@ function renderAnalysisResults(host, result, stale) {
     const title = document.createElement('div');
     title.className = 'an-chart-title';
     const q = lead.quantity.charAt(0).toLowerCase() + lead.quantity.slice(1);
-    const lineTitle = { mean: `Mean ${q}`, total: `Total ${q}`, cover_area_ha: `${lead.quantity}, equivalent area` }[m.key] || m.label;
+    const lineTitle = lead.kind === 'footprints'
+      ? (m.key === 'count' ? 'Footprints per year' : `${m.label} ${q} of the footprints`)
+      : { mean: `Mean ${q}`, total: `Total ${q}`, cover_area_ha: `${lead.quantity}, equivalent area` }[m.key] || m.label;
     title.textContent = `${g.type === 'line' ? lineTitle : lead.quantity}${sc.unit ? ` (${sc.unit})` : ''}`;
     card.append(title);
     const legend = document.createElement('div');
@@ -2875,6 +3191,7 @@ function renderAnalysisResults(host, result, stale) {
     if (g.type === 'line' && g.series.some(s => s.rows.some(r => r.coverage != null && r.coverage < 0.5)))
       notes.push('Some years cover less than half of the area; see the coverage column in the table.');
     if (g.type !== 'line') notes.push(`${lead.short}: shares are of the drawn area.`);
+    if (lead.kind === 'footprints') notes.push('Statistics of the footprints inside the area (quality-filtered), not an area-weighted mean; the table lists counts and quartiles per year.');
     if (notes.length) {
       const n = document.createElement('div');
       n.className = 'an-notes';
@@ -3212,6 +3529,13 @@ function analysisTable(series) {
   for (const s of series.filter(x => !x.error)) {
     const m = analysisMeasures(s)[0];
     for (const r of s.rows) {
+      if (s.kind === 'footprints') {
+        const row = body.insertRow();
+        [s.short, fmtTime(r.t, s.rows), `n = ${r.count.toLocaleString('en')}`,
+         `${fmtCompact(r.median)} ${s.units} (IQR ${fmtCompact(r.p25)}–${fmtCompact(r.p75)})`, '—']
+          .forEach(c => { row.insertCell().textContent = c; });
+        continue;
+      }
       if (s.kind === 'class_area' || s.kind === 'event_year') { if (!r.area_ha) continue; }
       const cells = [
         s.short,
@@ -3231,7 +3555,8 @@ function analysisTable(series) {
 
 function downloadAnalysisCsv(series, result) {
   const cols = ['product', 'variable', 'kind', 'time', 'category', 'label', 'mean', 'total', 'cover_area_ha',
-                'area_ha', 'share', 'valid_area_ha', 'region_area_ha', 'coverage', 'units', 'resolution_m', 'approximate'];
+                'area_ha', 'share', 'valid_area_ha', 'region_area_ha', 'coverage', 'count', 'median', 'p25', 'p75', 'min', 'max',
+                'units', 'resolution_m', 'approximate'];
   const q = v => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
   const lines = [cols.join(',')];
   for (const s of series) {
@@ -3239,6 +3564,7 @@ function downloadAnalysisCsv(series, result) {
     for (const r of s.rows) lines.push([
       s.id, s.variable, s.kind, r.time ?? '', s.catKey ? r[s.catKey] : '', r.label ?? '',
       r.mean, r.total, r.cover_area_ha, r.area_ha, r.share, r.valid_area_ha, r.region_area_ha, r.coverage,
+      r.count, r.median, r.p25, r.p75, r.min, r.max,
       s.kind === 'class_area' || s.kind === 'event_year' ? 'ha' : s.units, s.res, s.approx,
     ].map(q).join(','));
   }
@@ -3262,8 +3588,17 @@ async function onMapClick(e) {
   el('inspector').hidden = false;
   el('ins-xy').textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 
-  if (!S.tiOk)      { el('ins-rows').innerHTML = '<div class="ins-msg">Tile server not connected.</div>'; return; }
-  if (!S.layers.size) { el('ins-rows').innerHTML = '<div class="ins-msg">No active layers.</div>'; return; }
+  const shot = fpPick(e.latlng);
+  const shotRow = shot ? `<div class="ins-row">
+      <span class="ins-k" title="${esc(shot.layer.title)}">${esc(shot.layer.src.quantity)}</span>
+      <span class="ins-v">${esc(fmtNum(shot.value))} ${esc(shot.layer.src.units)}</span>
+    </div>` : '';
+  if (shot) el('ins-xy').textContent = `${shot.lat.toFixed(5)}, ${shot.lon.toFixed(5)} · footprint ${shot.year}`;
+  if (!S.layers.size) {
+    el('ins-rows').innerHTML = shotRow || `<div class="ins-msg">${S.fp.size ? 'No footprint here; click on a point.' : 'No active layers.'}</div>`;
+    return;
+  }
+  if (!S.tiOk)      { el('ins-rows').innerHTML = shotRow + '<div class="ins-msg">Tile server not connected.</div>'; return; }
 
   el('ins-rows').innerHTML = '<div class="ins-msg">Querying…</div>';
 
@@ -3278,7 +3613,7 @@ async function onMapClick(e) {
     } catch { return { layer, val: null }; }
   }));
 
-  el('ins-rows').innerHTML = rows.map(({ layer, val }) => {
+  el('ins-rows').innerHTML = shotRow + rows.map(({ layer, val }) => {
     const nil = val == null || val === -9999;
     const shown = nil ? 'no data' : (typeof val === 'number' ? (Number.isInteger(val) ? val : val.toFixed(3)) : val);
     return `<div class="ins-row">
@@ -3667,7 +4002,7 @@ function syncPanelHead(hits = 0) {
       sub = theme ? `${theme.collections.length} datasets` : '';
     }
   } else if (S.view === 'layers') {
-    sub = `${S.layers.size} active`;
+    sub = `${S.layers.size + S.fp.size} active`;
   }
   el('pnl-title').textContent = title;
   el('pnl-sub').textContent = sub;

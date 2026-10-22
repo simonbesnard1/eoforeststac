@@ -1,0 +1,5 @@
+# Footprint service: the lidar databases' own readers
+gedidb==2026.4.30
+icesat2db==2026.4.14
+fastapi>=0.115,<1
+uvicorn[standard]>=0.35,<0.36

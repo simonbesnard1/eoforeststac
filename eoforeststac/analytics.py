@@ -37,11 +37,11 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import dask.array as dsa
 import numpy as np
-import rasterio.features
 import xarray as xr
-from affine import Affine
 from pyproj import CRS, Geod
-from rasterio.warp import transform_geom
+
+# rasterio (and affine) are imported where grids are rasterized, so the
+# footprint statistics also work where only the lidar readers are installed
 
 WGS84 = CRS.from_epsg(4326)
 # WGS84 ellipsoid: semi-major axis, first eccentricity, b^2
@@ -170,6 +170,10 @@ def clip_to_geometry(
     Returns (subset, mask): ``mask`` is a lazy boolean (y, x) array, True for
     pixels whose centre lies inside the geometry. Only coordinates are read.
     """
+    import rasterio.features
+    from affine import Affine
+    from rasterio.warp import transform_geom
+
     if geometry.get("type") not in ("Polygon", "MultiPolygon"):
         raise ValueError("Geometry must be a GeoJSON Polygon or MultiPolygon")
     crs = CRS.from_user_input(crs)
@@ -437,4 +441,49 @@ def statistics_rows(
             coverage=v / region if region > 0 else None,
         )
         rows.append(row)
+    return rows
+
+
+# ── Footprints (GEDI, ICESat-2) ──────────────────────────────────────────
+
+
+def footprint_statistics(
+    times: Sequence[Any], values: Sequence[float], by: str = "year"
+) -> List[Dict[str, Any]]:
+    """
+    Distribution of footprint values (lidar shots or segments) per year or
+    month: ``count``, ``mean``, ``median``, ``p25``, ``p75``, ``min``, ``max``.
+
+    Footprints are samples, not a wall-to-wall grid, so there is no area
+    weighting and no total: report the distribution and the sample size.
+    ``times`` are datetimes (anything numpy can parse); NaN values are dropped.
+    """
+    import pandas as pd
+
+    if by not in ("year", "month"):
+        raise ValueError("by must be 'year' or 'month'")
+    frame = pd.DataFrame(
+        {
+            "time": pd.to_datetime(np.asarray(times)),
+            "value": np.asarray(values, dtype="float64"),
+        }
+    ).dropna()
+    if frame.empty:
+        return []
+    period = frame["time"].dt.to_period("Y" if by == "year" else "M")
+    rows = []
+    for key, group in frame.groupby(period)["value"]:
+        v = group.to_numpy()
+        rows.append(
+            {
+                "time": str(key.start_time.date()),
+                "count": int(v.size),
+                "mean": float(v.mean()),
+                "median": float(np.median(v)),
+                "p25": float(np.percentile(v, 25)),
+                "p75": float(np.percentile(v, 75)),
+                "min": float(v.min()),
+                "max": float(v.max()),
+            }
+        )
     return rows
