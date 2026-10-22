@@ -157,7 +157,9 @@ def main() -> None:
                 live = json.loads(fs.cat(url))
             except FileNotFoundError:
                 live = None
-            action = "new" if live is None else ("same" if live == doc else "update")
+            # Compare as JSON: recipes with integer class keys come back as strings
+            same = live == json.loads(json.dumps(doc))
+            action = "new" if live is None else ("same" if same else "update")
             plan.append((name, action, url, doc))
         stale = _live_json_keys(f"{write_base}/{args.theme}") - set(docs)
         plan.extend((name, "delete", url, None) for url in sorted(stale))

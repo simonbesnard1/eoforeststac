@@ -151,7 +151,7 @@ JRC_GFC_CFG = {
     "analytics": {
         "forest_cover": {
             "kind": "class_area",
-            "quantity": "Forest area (2020)",
+            "quantity": "Forest area in 2020",
             "classes": {0: "non-forest", 1: "forest"},
         }
     },

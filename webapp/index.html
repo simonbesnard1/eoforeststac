@@ -467,6 +467,12 @@ input[type=range]::-moz-range-thumb{
 .an-card{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
 .an-card:first-child{border-top:0;margin-top:4px;padding-top:0}
 .an-card .an-seg{margin-top:0}
+.an-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:6px}
+.an-tile{padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.an-tile-label{font-size:10.5px;color:var(--text-3);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.an-tile-value{font-size:22px;font-weight:600;color:var(--text);margin-top:3px;line-height:1.15}
+.an-tile-value span{font-size:12px;font-weight:500;color:var(--text-2)}
+.an-tile-meta{font-size:10.5px;color:var(--text-3);margin-top:3px}
 .an-bar-label{fill:var(--text-2);font-size:11px}
 .an-bar-value{fill:var(--text-2);font-size:10.5px;font-variant-numeric:tabular-nums}
 .an-chart{position:relative;outline:none}
@@ -583,9 +589,9 @@ input[type=range]::-moz-range-thumb{
 </style>
 <style>
 /* 2026 visual refresh: a calm, map-first forest monitoring interface. */
-:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6}
-:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6}
-:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;--s-other:#5c6760}
+:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6;--o1:#86b6ef;--o2:#5598e7;--o3:#2a78d6;--o4:#1c5cab;--o5:#104281}
+:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6;--o1:#86b6ef;--o2:#5598e7;--o3:#2a78d6;--o4:#1c5cab;--o5:#104281}
+:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;--s-other:#5c6760;--o1:#184f95;--o2:#256abf;--o3:#3987e5;--o4:#6da7ec;--o5:#9ec5f4}
 body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:46px;height:46px;flex-shrink:0;object-fit:contain}.bn-eo{color:#3f8a2e}.bn-stac{color:#2b5d9a}:root[data-theme="dark"] .bn-eo{color:#86b052}:root[data-theme="dark"] .bn-stac{color:#7aa7dd}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
@@ -2585,15 +2591,24 @@ function analysisSeries(result) {
       slot: layer?.slot ?? 0,
       kind: res.kind, variable: res.variable,
       quantity: recipe.quantity || res.variable,
-      units: (res.units || '').replace(/^Mg ha-1$/, 'Mg/ha').replace(/^percent$/, '%'),
-      totalUnits: recipe.total_units || '',
+      units: prettyUnit(res.units || ''),
+      totalUnits: prettyUnit(recipe.total_units || ''),
       approx: !!res.approximate, res: res.resolution_m, level: res.level,
       error: res.error || null,
       catKey,
+      ordinal: !!recipe.ordinal,
       timed: rows.some(r => r.time != null && r.time !== ''),
       rows: rows.map(r => ({ ...r, t: timeOf(r) })),
     };
   });
+}
+
+/* Store units as people write them: "m2 ha-1" -> "m²/ha", "Mg C ha-1 yr-1" -> "Mg C/ha/yr". */
+function prettyUnit(u) {
+  return String(u).trim()
+    .replace(/^percent$/i, '%')
+    .replace(/\bm2\b/g, 'm²').replace(/\bm3\b/g, 'm³')
+    .replace(/\s+(\w+)-1\b/g, '/$1');
 }
 
 function shortSeriesName(title) {
@@ -2606,13 +2621,15 @@ function analysisMeasures(s) {
   switch (s.kind) {
     case 'density': case 'amount':
       return [{ key: 'mean', label: s.kind === 'amount' ? 'Mean per hectare' : 'Mean density',
-                unit: s.kind === 'amount' ? `${s.totalUnits}/ha` : s.units },
+                unit: s.kind === 'amount' ? `${s.totalUnits}/ha` : s.units, perHa: s.kind === 'amount' },
               { key: 'total', label: 'Total', unit: s.totalUnits, scale: true }];
     case 'mean':
       return [{ key: 'mean', label: `Mean ${s.quantity.toLowerCase()}`, unit: s.units }];
-    case 'cover':
-      return [{ key: 'mean', label: 'Mean cover', unit: s.units },
-              { key: 'cover_area_ha', label: 'Equivalent area', unit: 'ha', area: true }];
+    case 'cover': {
+      const mean = { key: 'mean', label: 'Mean cover', unit: s.units, fraction: s.units === 'fraction' };
+      const area = { key: 'cover_area_ha', label: s.catKey ? 'Area' : 'Equivalent area', unit: 'ha', area: true };
+      return s.catKey ? [area, mean] : [mean, area];
+    }
     default:
       return [{ key: 'area_ha', label: 'Area', unit: 'ha', area: true },
               { key: 'share', label: 'Share of the area', unit: '%', percent: true }];
@@ -2622,8 +2639,10 @@ function analysisMeasures(s) {
 /* Large values in a readable unit: Mg-based totals as Gg/Tg/Pg, kg via Mg,
    areas in ha or km², anything else with thousand/million/billion. */
 function displayScale(unit, maxValue, measure) {
-  if (measure?.percent) return { f: 0.01, unit: '%' };
+  if (measure?.percent || measure?.fraction) return { f: 0.01, unit: '%' };
   if (measure?.area) return maxValue >= 1e4 ? { f: 100, unit: 'km²' } : { f: 1, unit: 'ha' };
+  // Per-hectare amounts in kg read as Mg/ha like every other biomass density
+  if (measure?.perHa && /^kg\/ha$/.test(unit)) return { f: 1e3, unit: 'Mg/ha' };
   if (!measure?.scale) return { f: 1, unit };
   let base = unit, f0 = 1;
   if (/^kg\b/.test(base)) { base = base.replace(/^kg/, 'Mg'); f0 = 1e3; }
@@ -2787,7 +2806,9 @@ function renderAnalysisResults(host, result, stale) {
     const val = v => (v == null ? null : v / sc.f);
     const title = document.createElement('div');
     title.className = 'an-chart-title';
-    title.textContent = `${g.type === 'line' ? (m.label === 'Total' ? `Total ${lead.quantity.toLowerCase()}` : m.label) : lead.quantity}${sc.unit ? ` (${sc.unit})` : ''}`;
+    const q = lead.quantity.charAt(0).toLowerCase() + lead.quantity.slice(1);
+    const lineTitle = { mean: `Mean ${q}`, total: `Total ${q}`, cover_area_ha: `${lead.quantity}, equivalent area` }[m.key] || m.label;
+    title.textContent = `${g.type === 'line' ? lineTitle : lead.quantity}${sc.unit ? ` (${sc.unit})` : ''}`;
     card.append(title);
     const legend = document.createElement('div');
     legend.className = 'an-legend';
@@ -2796,7 +2817,11 @@ function renderAnalysisResults(host, result, stale) {
     chart.className = 'an-chart'; chart.tabIndex = 0;
     card.append(chart);
 
-    if (g.type === 'line') {
+    const single = g.type === 'line' && g.series.every(s => s.rows.filter(r => r[m.key] != null).length <= 1);
+    if (single) {
+      chart.replaceWith(statTiles(g.series, m, val, sc.unit));
+      legend.remove();
+    } else if (g.type === 'line') {
       if (g.series.length >= 2) g.series.forEach(s => legend.append(legendItem(`var(--s${s.slot + 1})`, s.short + (s.timed ? '' : ' (single year)'), 'line')));
       else legend.textContent = lead.title, legend.classList.add('single');
       chart.setAttribute('aria-label', `${title.textContent} over time; arrow keys step through years`);
@@ -2810,14 +2835,18 @@ function renderAnalysisResults(host, result, stale) {
       if (g.type === 'bars') {
         drawBars(chart, cats.map(c => ({ label: c.label, v: val(c.values.get(null) ?? c.total) })), sc.unit, `var(--s${lead.slot + 1})`);
       } else {
-        const colors = new Map(cats.map((c, i) => [c.key, c.other ? 'var(--s-other)' : g.type === 'columns' ? `var(--s${lead.slot + 1})` : `var(--s${(i % 8) + 1})`]));
+        const colors = new Map(cats.map((c, i) => [c.key,
+          c.other ? 'var(--s-other)'
+          : g.type === 'columns' ? `var(--s${lead.slot + 1})`
+          : lead.ordinal ? `var(--o${i + 1})`
+          : `var(--s${i + 1})`]));
         if (g.type === 'stack' && cats.length >= 2) {
           legend.replaceChildren();
           legend.classList.remove('single');
           cats.forEach(c => legend.append(legendItem(colors.get(c.key), c.label, 'box')));
         }
         const times = g.type === 'columns'
-          ? cats.map(c => ({ t: Date.UTC(+c.key, 0, 1), label: String(c.key), segments: [{ key: c.key, label: c.label, color: colors.get(c.key), v: val(c.total) }] }))
+          ? cats.map(c => ({ t: Date.UTC(+c.key, 0, 1), label: String(c.key), segments: [{ key: c.key, label: lead.quantity, color: colors.get(c.key), v: val(c.total) }] }))
           : [...new Set(lead.rows.map(r => r.t))].sort((a, b) => a - b).map(t => ({
               t, label: fmtTime(t, lead.rows),
               segments: cats.map(c => ({ key: c.key, label: c.label, color: colors.get(c.key), v: val(c.values.get(t) ?? 0) })),
@@ -2863,6 +2892,26 @@ function renderAnalysisResults(host, result, stale) {
   host.append(actions);
 }
 
+/* One number per product: the value, its unit, and how much of the area it covers. */
+function statTiles(series, m, val, unit) {
+  const wrap = document.createElement('div');
+  wrap.className = 'an-tiles';
+  for (const s of series) {
+    const r = s.rows.find(x => x[m.key] != null) || s.rows[0];
+    const tile = document.createElement('div');
+    tile.className = 'an-tile';
+    const label = Object.assign(document.createElement('div'), { className: 'an-tile-label', textContent: s.title });
+    const value = Object.assign(document.createElement('div'), { className: 'an-tile-value' });
+    value.append(document.createTextNode(r && r[m.key] != null ? fmtCompact(val(r[m.key])) : '—'),
+                 Object.assign(document.createElement('span'), { textContent: ` ${unit}` }));
+    const meta = Object.assign(document.createElement('div'), { className: 'an-tile-meta',
+      textContent: [s.timed && r?.t != null ? fmtTime(r.t, s.rows) : null, r?.coverage != null ? `${Math.round(r.coverage * 100)} % of the area covered` : null].filter(Boolean).join(' · ') });
+    tile.append(label, value, meta);
+    wrap.append(tile);
+  }
+  return wrap;
+}
+
 function legendItem(color, text, shape) {
   const item = document.createElement('span');
   item.className = 'an-leg-item';
@@ -2890,7 +2939,8 @@ function analysisCategories(s, key) {
   }
   let list = [...cats.values()];
   if (s.kind === 'event_year') return list.sort((a, b) => a.key - b.key);
-  if (s.catKey !== 'class') return list;             // e.g. age classes: keep their order
+  if (s.ordinal) return mergeOrdinal(list, 5);       // e.g. age classes: keep order, <= 5 ramp steps
+  if (s.catKey !== 'class') return list;
   list.sort((a, b) => b.total - a.total);
   if (list.length > 8) {
     const keep = list.slice(0, 7), rest = list.slice(7);
@@ -2899,6 +2949,26 @@ function analysisCategories(s, key) {
     list = [...keep, other];
   }
   return list;
+}
+
+/* Neighbouring ordered categories merged so at most `n` remain, e.g. twelve
+   20-year age classes into five bins labelled "0-60", "60-120", ... */
+function mergeOrdinal(list, n) {
+  if (list.length <= n) return list;
+  const size = Math.ceil(list.length / n), out = [];
+  for (let i = 0; i < list.length; i += size) {
+    const part = list.slice(i, i + size);
+    const first = String(part[0].label), last = String(part[part.length - 1].label);
+    const lo = first.split('-')[0];
+    // An open-ended last class (">299") makes the bin open-ended too: "180+"
+    const label = part.length === 1 ? first
+      : /^[>≥]/.test(last) ? `${lo}+`
+      : `${lo}-${last.includes('-') ? last.split('-').pop() : last}`;
+    const merged = { key: part.map(c => c.key).join('|'), label, values: new Map(), total: 0 };
+    for (const c of part) { merged.total += c.total; for (const [t, v] of c.values) merged.values.set(t, (merged.values.get(t) || 0) + v); }
+    out.push(merged);
+  }
+  return out;
 }
 
 function fmtTime(t, rows) {
@@ -2924,10 +2994,17 @@ function svgPlot(host, W, H, M, ymax, step) {
   const ph = H - M.t - M.b;
   const y = v => M.t + ph - (v / ymax) * ph;
   const decimals = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
-  for (let v = 0; v <= ymax + 1e-9; v += step) {
+  const ticks = [];
+  for (let v = 0; v <= ymax + 1e-9; v += step)
+    ticks.push([v, v === 0 ? '0' : v.toLocaleString('en', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })]);
+  /* The left margin fits the widest tick label (callers read M.l after this),
+     so "150,000" is never cut off. */
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `10px ${getComputedStyle(host).getPropertyValue('--mono') || 'monospace'}`;
+  M.l = Math.max(M.l, Math.ceil(Math.max(...ticks.map(([, t]) => ctx.measureText(t).width))) + 12);
+  for (const [v, label] of ticks) {
     add('line', { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: 'an-grid' });
-    text(v === 0 ? '0' : v.toLocaleString('en', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
-         { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
+    text(label, { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
   }
   host.replaceChildren(svg);
   return { svg, add, text, y, ph };

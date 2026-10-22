@@ -156,7 +156,7 @@ CCI_BIOMASS_CFG = {
         },
         "aboveground_biomass_std": {
             "kind": "mean",
-            "quantity": "Aboveground biomass uncertainty (1 sigma)",
+            "quantity": "Aboveground biomass uncertainty, 1 sigma",
         },
     },
     "item_assets": {

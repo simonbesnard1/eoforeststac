@@ -151,6 +151,7 @@ GAMI_AGECLASS_CFG = {
             "kind": "cover",
             "quantity": "Forest area by age class",
             "keep_dims": ["age_class"],
+            "ordinal": True,
         }
     },
     "item_assets": {

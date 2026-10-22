@@ -164,10 +164,10 @@ HANSEN_GFC_CFG = {
             "quantity": "Tree cover loss",
             "years": [2001, 2024],
         },
-        "tree_cover": {"kind": "cover", "quantity": "Tree cover (2000)"},
+        "tree_cover": {"kind": "cover", "quantity": "Tree cover in 2000"},
         "gain": {
             "kind": "class_area",
-            "quantity": "Tree cover gain (2000-2012)",
+            "quantity": "Tree cover gain 2000-2012",
             "classes": {1: "gain"},
         },
     },
