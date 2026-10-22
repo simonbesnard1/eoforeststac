@@ -175,6 +175,24 @@ ROBINSON_CR_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "max_rate": {
+            "kind": "density",
+            "quantity": "Maximum carbon accumulation rate",
+            "total_units": "Mg C yr-1",
+        },
+        "cr_a": {
+            "kind": "density",
+            "quantity": "Asymptotic carbon stock",
+            "total_units": "Mg C",
+        },
+        "age_at_max_rate": {
+            "kind": "mean",
+            "quantity": "Age at maximum accumulation rate",
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

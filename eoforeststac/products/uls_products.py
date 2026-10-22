@@ -283,6 +283,27 @@ ULS_PRODUCTS_CFG = {
         "volume_m3_ha": {"data_type": "float32", "nodata": -9999.0},
         "volume_m3_sum": {"data_type": "float32", "nodata": -9999.0},
     },
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "volume_m3_ha": {
+            "kind": "density",
+            "quantity": "Tree volume",
+            "total_units": "m3",
+        },
+        "basal_area_m2_ha": {
+            "kind": "density",
+            "quantity": "Basal area",
+            "total_units": "m2",
+        },
+        "n_segments_ha": {
+            "kind": "density",
+            "quantity": "Number of trees",
+            "total_units": "trees",
+        },
+        "h_m_mean": {"kind": "mean", "quantity": "Mean tree height"},
+        "dbh_m_mean": {"kind": "mean", "quantity": "Mean DBH"},
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

@@ -48,14 +48,29 @@ ANALYSIS_DASK_WORKERS = int(os.getenv("ANALYSIS_DASK_WORKERS", "4"))
 ANALYSIS_TTL_SECONDS = int(os.getenv("ANALYSIS_TTL_SECONDS", str(2 * 3600)))
 MAX_PYRAMID_LEVELS = 10
 
+# Kinds whose values can be averaged into coarser cells; counts and
+# per-pixel amounts must be computed at native resolution
+PYRAMID_KINDS = frozenset({"density", "mean", "cover"})
+
 # One job at a time, like downloads: each uses ANALYSIS_DASK_WORKERS threads
 _EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="analysis")
+
+
+class AnalysisOptions(BaseModel):
+    """Recipe options passed through to eoforeststac.analytics."""
+
+    classes: dict[int, str] | None = Field(None, max_length=200)
+    exclude: list[int] = Field(default_factory=list, max_length=200)
+    years: list[int] | None = Field(None, min_length=2, max_length=2)
+    encoding: str = Field("year", pattern="^(year|yyddd)$")
+    scale: float | None = None
 
 
 class AnalysisLayer(BaseModel):
     url: str
     variable: str = Field(..., max_length=200)
     kind: str = Field(..., max_length=40)
+    options: AnalysisOptions = Field(default_factory=AnalysisOptions)
     # Pins for extra dimensions other than time (e.g. an ensemble member)
     sel: list[str] = Field(default_factory=list, max_length=8)
     name: str = Field("layer", max_length=120)
@@ -151,7 +166,12 @@ def choose_source(
         raise HTTPException(400, f"{layer.name}: {exc}") from exc
     if cost <= MAX_ANALYSIS_PIXELS:
         return native, 0, layer.url
-    for level, url in enumerate(_pyramid_levels(layer.url, layer.variable), start=1):
+    levels = (
+        _pyramid_levels(layer.url, layer.variable)
+        if layer.kind in PYRAMID_KINDS
+        else []
+    )
+    for level, url in enumerate(levels, start=1):
         da = _open(layer, url)
         if _cost(da, geometry) <= MAX_ANALYSIS_PIXELS:
             return da, level, url
@@ -182,13 +202,19 @@ def _run(
             try:
                 da, level, url = choose_source(layer, geometry)
                 parts = region_statistics(
-                    da, geometry, kind=layer.kind, crs=da.rio.crs, compute=False
+                    da,
+                    geometry,
+                    kind=layer.kind,
+                    crs=da.rio.crs,
+                    compute=False,
+                    **layer.options.model_dump(exclude_none=True),
                 )
+                lazy = {k: v for k, v in parts.items() if isinstance(v, xr.DataArray)}
                 with dask.config.set(
                     scheduler="threads", num_workers=ANALYSIS_DASK_WORKERS
                 ):
                     with _Progress(job, index / len(layers), 1 / len(layers)):
-                        computed = dask.compute(*parts.values())
+                        computed = dict(zip(lazy, dask.compute(*lazy.values())))
 
                 results.append(
                     {
@@ -199,7 +225,7 @@ def _run(
                         "level": level,
                         "approximate": level > 0,
                         "resolution_m": round(_resolution_m(da), 1),
-                        "rows": statistics_rows(*computed),
+                        "rows": statistics_rows({**parts, **computed}, layer.kind),
                     }
                 )
             except HTTPException as exc:

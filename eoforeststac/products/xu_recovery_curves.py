@@ -188,6 +188,15 @@ XU_RECOVERY_CURVES_CFG = {
     # ------------------------------------------------------------------
     # Item assets template
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "agbmax": {
+            "kind": "density",
+            "quantity": "Maximum recovered biomass",
+            "total_units": "Mg",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

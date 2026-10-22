@@ -164,6 +164,26 @@ RADD_EUROPE_CFG = {
     # ------------------------------------------------------------------
     # Item assets (how a client should interpret the asset)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "disturbance_occurrence": {
+            "kind": "class_area",
+            "quantity": "Disturbance alerts",
+            "classes": {1: "alert"},
+        },
+        "alert_yydoy": {
+            "kind": "event_year",
+            "quantity": "Alerted area",
+            "years": [2020, 2025],
+            "encoding": "yyddd",
+        },
+        "forest_mask": {
+            "kind": "class_area",
+            "quantity": "Forest area",
+            "classes": {1: "forest"},
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

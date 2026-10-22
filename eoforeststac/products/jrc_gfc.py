@@ -146,6 +146,15 @@ JRC_GFC_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "forest_cover": {
+            "kind": "class_area",
+            "quantity": "Forest area (2020)",
+            "classes": {0: "non-forest", 1: "forest"},
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

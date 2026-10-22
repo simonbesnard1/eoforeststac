@@ -164,6 +164,20 @@ EFDA_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "disturbance_occurrence": {
+            "kind": "class_area",
+            "quantity": "Disturbed area",
+            "classes": {1: "disturbed"},
+        },
+        "disturbance_agent": {
+            "kind": "class_area",
+            "quantity": "Disturbed area by agent",
+            "exclude": [0],
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

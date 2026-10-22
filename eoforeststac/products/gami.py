@@ -131,6 +131,9 @@ GAMI_CFG = {
     # ------------------------------------------------------------------
     # Item assets template
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {"forest_age": {"kind": "mean", "quantity": "Forest age"}},
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

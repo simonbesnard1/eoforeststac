@@ -8,9 +8,14 @@ the package.
 Each variable is analysed according to its *kind*, declared per product in
 the catalog (``eoforeststac:analytics`` on the collection):
 
-``density``
-    A quantity per unit area, e.g. biomass in Mg ha-1. Per step, the total is
-    sum(value x pixel area) and the mean is the total over the valid area.
+``density`` amount per area (biomass, Mg ha-1): mean and total
+``mean`` a property without a meaningful total (height, age): mean
+``amount`` amount per pixel (kg): total and total per hectare
+``cover`` share of each pixel (tree cover %): mean and equivalent area
+``class_area`` categorical (land use, agents): area per class
+``event_year`` year of an event (forest loss year): area per year
+
+See :func:`region_statistics` for the fields of each.
 
 Pixel areas are exact on geographic grids (they shrink with latitude) and
 taken from the resolution on projected grids, which is exact for equal-area
@@ -43,7 +48,7 @@ WGS84 = CRS.from_epsg(4326)
 _A = 6_378_137.0
 _E = np.sqrt((2 - 1 / 298.257223563) / 298.257223563)
 _B2 = _A**2 * (1 - _E**2)
-KINDS = ("density",)
+KINDS = ("density", "mean", "amount", "cover", "class_area", "event_year")
 
 _X_NAMES = ("x", "lon", "longitude")
 _Y_NAMES = ("y", "lat", "latitude")
@@ -67,7 +72,9 @@ def _resolution(coord: np.ndarray) -> float:
     return float(coord[1] - coord[0])
 
 
-def pixel_area_ha(da: xr.DataArray, crs: Any) -> xr.DataArray:
+def pixel_area_ha(
+    da: xr.DataArray, crs: Any, resolution: Optional[Tuple[float, float]] = None
+) -> xr.DataArray:
     """
     Area of each pixel in hectares, broadcastable against ``da``.
 
@@ -76,12 +83,13 @@ def pixel_area_ha(da: xr.DataArray, crs: Any) -> xr.DataArray:
     with g(p) = sin p / (1 - e^2 sin^2 p) + atanh(e sin p) / e (radians); this
     matches geodesic polygon areas (a sphere is ~0.4 % off at 52 deg N).
     Projected grids: |dx * dy|. Web Mercator is refused: its pixel areas are
-    not meaningful.
+    not meaningful. ``resolution`` = (dy, dx) is for a subset too small to
+    infer it from (e.g. one row of pixels).
     """
     crs = CRS.from_user_input(crs)
     y, x = spatial_dims(da)
     ys, xs = da[y].values, da[x].values
-    dy, dx = _resolution(ys), _resolution(xs)
+    dy, dx = resolution or (_resolution(ys), _resolution(xs))
     if crs.is_geographic:
         rows = (
             (_B2 / 2)
@@ -220,44 +228,9 @@ def _label(value: Any) -> Any:
     return value
 
 
-def region_statistics(
-    da: xr.DataArray,
-    geometry: Dict[str, Any],
-    kind: str = "density",
-    crs: Optional[Any] = None,
-    geometry_crs: Any = WGS84,
-    compute: bool = True,
-) -> List[Dict[str, Any]]:
-    """
-    Area-weighted statistics of ``da`` inside ``geometry``, per step of every
-    non-spatial dimension (e.g. one row per year).
-
-    Each row holds the step's coordinates and, for ``kind="density"``:
-
-    - ``mean``: area-weighted mean over valid pixels (units of ``da``)
-    - ``total``: sum of value x area (units of ``da`` x ha, e.g. Mg)
-    - ``valid_area_ha``: area of valid (non-NaN) pixels inside the region
-    - ``region_area_ha``: area of all pixels whose centre is in the region
-    - ``coverage``: valid_area_ha / region_area_ha
-
-    ``crs`` defaults to ``da.rio.crs``. With ``compute=False`` the dask
-    arrays are returned unevaluated; compute them (e.g. with a progress
-    callback) and pass the results to :func:`statistics_rows`.
-    """
-    if kind not in KINDS:
-        raise ValueError(f"Unknown kind {kind!r}; expected one of {KINDS}")
-    if crs is None:
-        crs = getattr(da, "rio", None) and da.rio.crs
-        if crs is None:
-            raise ValueError("Pass crs=...: the DataArray has no CRS")
-
-    sub, mask = clip_to_geometry(da, geometry, crs, geometry_crs)
-    y, x = spatial_dims(sub)
-    area = pixel_area_ha(sub, crs)
-
-    inside = mask * area  # (y, x) hectares inside the region
+def _masked_values(sub: xr.DataArray) -> xr.DataArray:
+    """Values as float64 with the fill value (if still encoded) as NaN."""
     values = sub.astype("float64")
-    # Undecoded integer stores keep their fill value; treat it as missing
     if np.issubdtype(sub.dtype, np.integer):
         for source in (sub.encoding, sub.attrs):
             fill = next(
@@ -269,40 +242,196 @@ def region_statistics(
                 None,
             )
             if fill is not None:
-                values = values.where(sub != fill)
-                break
+                return values.where(sub != fill)
+    return values
+
+
+def class_labels(da: xr.DataArray) -> Dict[int, str]:
+    """
+    Class values and labels from CF ``flag_values``/``flag_meanings`` or an
+    explorer-style ``legend`` attribute ({value: label}).
+    """
+    attrs = da.attrs
+    legend = attrs.get("legend")
+    if isinstance(legend, str):
+        import ast
+
+        try:
+            legend = ast.literal_eval(legend)
+        except (ValueError, SyntaxError):
+            legend = None
+    if isinstance(legend, dict):
+        return {int(k): str(v) for k, v in legend.items()}
+    values = attrs.get("flag_values")
+    if isinstance(values, str):
+        import ast
+
+        values = ast.literal_eval(values)
+    if values is not None:
+        meanings = str(attrs.get("flag_meanings", "")).split()
+        return {
+            int(v): (meanings[i].replace("_", " ") if i < len(meanings) else str(v))
+            for i, v in enumerate(np.atleast_1d(values))
+        }
+    return {}
+
+
+def _event_years(values: xr.DataArray, encoding: str) -> xr.DataArray:
+    """Map event codes to calendar years (NaN where there is no event)."""
+    if encoding == "year":
+        return values.where(values > 0)
+    if encoding == "yyddd":  # e.g. RADD: 23145 = 2023, day 145
+        return (2000 + np.floor(values / 1000)).where(values > 0)
+    raise ValueError(f"Unknown event encoding {encoding!r}")
+
+
+def region_statistics(
+    da: xr.DataArray,
+    geometry: Dict[str, Any],
+    kind: str = "density",
+    crs: Optional[Any] = None,
+    geometry_crs: Any = WGS84,
+    compute: bool = True,
+    classes: Optional[Dict[Any, str]] = None,
+    exclude: Sequence[int] = (),
+    years: Optional[Sequence[int]] = None,
+    encoding: str = "year",
+    scale: Optional[float] = None,
+) -> Any:
+    """
+    Area-weighted statistics of ``da`` inside ``geometry``, one row per step
+    of every non-spatial dimension (e.g. per year), and per class or year for
+    the counting kinds.
+
+    Kinds and the fields of each row (besides the step's coordinates):
+
+    ``density`` (amount per area, e.g. Mg ha-1)
+        ``mean``, ``total`` (value x area, e.g. Mg)
+    ``mean`` (a property with no meaningful total, e.g. height, age)
+        ``mean``
+    ``amount`` (amount per pixel, e.g. kg)
+        ``total`` (sum), ``mean`` (total per hectare)
+    ``cover`` (share of each pixel, % or fraction; ``scale`` converts to a
+    fraction and defaults from the units)
+        ``mean`` (in the data's units), ``cover_area_ha`` (cover x area)
+    ``class_area`` (categorical; ``classes`` {value: label}, default from the
+    variable's attributes; values in ``exclude`` are skipped)
+        ``class``, ``label``, ``area_ha``, ``share`` (of the region)
+    ``event_year`` (the value is the year of an event; ``years`` = [first,
+    last]; ``encoding`` "year" or "yyddd")
+        ``year``, ``area_ha``, ``share`` (of the region)
+
+    Every row also has ``valid_area_ha`` (pixels with data in the region),
+    ``region_area_ha`` (all pixels whose centre is in the region) and
+    ``coverage`` (their ratio). For products that store "no event" as missing
+    (e.g. a loss year), valid area is the event area, so read ``share``
+    rather than ``coverage``. ``crs`` defaults to ``da.rio.crs``.
+
+    With ``compute=False`` the lazy parts are returned as a dict; compute it
+    (e.g. with a progress callback) and pass it to :func:`statistics_rows`
+    with the same ``kind``.
+    """
+    if kind not in KINDS:
+        raise ValueError(f"Unknown kind {kind!r}; expected one of {KINDS}")
+    if crs is None:
+        crs = getattr(da, "rio", None) and da.rio.crs
+        if crs is None:
+            raise ValueError("Pass crs=...: the DataArray has no CRS")
+
+    sub, mask = clip_to_geometry(da, geometry, crs, geometry_crs)
+    y, x = spatial_dims(sub)
+    resolution = (_resolution(da[y].values), _resolution(da[x].values))
+    area = pixel_area_ha(sub, crs, resolution)
+    inside = mask * area  # (y, x) hectares inside the region
+    values = _masked_values(sub)
     valid = values.notnull() & mask
-    parts = {
-        "total": (values.fillna(0) * inside).sum((y, x)),
+    parts: Dict[str, Any] = {
         "valid_area_ha": (valid * area).sum((y, x)),
         "region_area_ha": inside.sum((y, x)),
     }
+
+    if kind in ("density", "mean"):
+        parts["total"] = (values.fillna(0) * inside).sum((y, x))
+    elif kind == "amount":
+        parts["total"] = (values.fillna(0) * mask).sum((y, x))
+    elif kind == "cover":
+        if scale is None:
+            units = str(sub.attrs.get("units", "")).strip().lower()
+            scale = 0.01 if units in ("percent", "%", "pct") else 1.0
+        parts["total"] = (values.fillna(0) * scale * inside).sum((y, x))
+        parts["scale"] = scale
+    else:  # class_area, event_year
+        if kind == "event_year":
+            if not years or len(years) != 2:
+                raise ValueError("event_year needs years=[first, last]")
+            values = _event_years(values, encoding)
+            keys = list(range(int(years[0]), int(years[1]) + 1))
+            dim, labels = "year", {k: str(k) for k in keys}
+        else:
+            labels = {int(k): str(v) for k, v in (classes or class_labels(sub)).items()}
+            keys = [k for k in sorted(labels) if k not in set(exclude)]
+            if not keys:
+                raise ValueError("No classes: pass classes={value: label}")
+            dim = "class"
+        per_key = [((values == k) * inside).sum((y, x)) for k in keys]
+        parts["area_ha"] = xr.concat(per_key, dim=dim).assign_coords({dim: keys})
+        parts["labels"] = labels
+
     if not compute:
-        return parts  # type: ignore[return-value]
+        return parts
 
     import dask
 
-    total, valid_area, region_area = dask.compute(*parts.values())
-    return statistics_rows(total, valid_area, region_area)
+    lazy = {k: v for k, v in parts.items() if isinstance(v, xr.DataArray)}
+    computed = dict(zip(lazy, dask.compute(*lazy.values())))
+    return statistics_rows({**parts, **computed}, kind)
 
 
 def statistics_rows(
-    total: xr.DataArray, valid_area: xr.DataArray, region_area: Any
+    parts: Dict[str, Any], kind: str = "density"
 ) -> List[Dict[str, Any]]:
-    """Turn computed (total, valid_area, region_area) into one dict per step."""
-    region = float(region_area)
-    dims: Sequence[str] = total.dims
+    """Turn computed parts of :func:`region_statistics` into one dict per row."""
+    region = float(parts["region_area_ha"])
+    if region <= 0:
+        raise ValueError(
+            "The area contains no pixel of this dataset; draw a larger area"
+        )
+    key = "area_ha" if "area_ha" in parts else "total"
+    main = parts[key]
+    valid_area = parts["valid_area_ha"]
+    if isinstance(valid_area, xr.DataArray) and isinstance(main, xr.DataArray):
+        main, valid_area = xr.broadcast(main, valid_area)
+    dims: Sequence[str] = main.dims
     rows = []
-    for idx in np.ndindex(*total.shape) if dims else [()]:
+    for idx in np.ndindex(*main.shape) if dims else [()]:
         sel = dict(zip(dims, idx))
-        t = float(total.isel(sel)) if dims else float(total)
+        value = float(main.isel(sel)) if dims else float(main)
         v = float(valid_area.isel(sel)) if dims else float(valid_area)
-        row = {
-            d: _label(total[d].values[i]) for d, i in sel.items() if d in total.coords
+        row: Dict[str, Any] = {
+            d: _label(main[d].values[i]) for d, i in sel.items() if d in main.coords
         }
+        has_data = v > 0
+        if kind == "density":
+            row.update(
+                mean=value / v if has_data else None, total=value if has_data else None
+            )
+        elif kind == "mean":
+            row.update(mean=value / v if has_data else None)
+        elif kind == "amount":
+            row.update(
+                total=value if has_data else None, mean=value / v if has_data else None
+            )
+        elif kind == "cover":
+            row.update(
+                mean=value / v / parts["scale"] if has_data else None,
+                cover_area_ha=value if has_data else None,
+            )
+        elif kind == "class_area":
+            row.update(label=parts["labels"].get(row["class"], str(row["class"])))
+            row.update(area_ha=value, share=value / region if region > 0 else None)
+        elif kind == "event_year":
+            row.update(area_ha=value, share=value / region if region > 0 else None)
         row.update(
-            mean=t / v if v > 0 else None,
-            total=t if v > 0 else None,
             valid_area_ha=v,
             region_area_ha=region,
             coverage=v / region if region > 0 else None,

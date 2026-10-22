@@ -463,6 +463,12 @@ input[type=range]::-moz-range-thumb{
 .an-legend.single{font-size:10.5px;color:var(--text-3)}
 .an-leg-item{display:inline-flex;align-items:center;gap:6px}
 .an-line-key{display:inline-block;width:12px;height:2px;border-radius:1px;flex-shrink:0}
+.an-box-key{display:inline-block;width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.an-card{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.an-card:first-child{border-top:0;margin-top:4px;padding-top:0}
+.an-card .an-seg{margin-top:0}
+.an-bar-label{fill:var(--text-2);font-size:11px}
+.an-bar-value{fill:var(--text-2);font-size:10.5px;font-variant-numeric:tabular-nums}
 .an-chart{position:relative;outline:none}
 .an-chart:focus-visible{box-shadow:0 0 0 2px var(--accent-w);border-radius:6px}
 .an-chart svg{display:block;max-width:100%;height:auto;overflow:visible}
@@ -577,9 +583,9 @@ input[type=range]::-moz-range-thumb{
 </style>
 <style>
 /* 2026 visual refresh: a calm, map-first forest monitoring interface. */
-:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300}
-:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300}
-:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300}
+:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6}
+:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--s-other:#b8bdb6}
+:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300;--s7:#9085e9;--s8:#e66767;--s-other:#5c6760}
 body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:46px;height:46px;flex-shrink:0;object-fit:contain}.bn-eo{color:#3f8a2e}.bn-stac{color:#2b5d9a}:root[data-theme="dark"] .bn-eo{color:#86b052}:root[data-theme="dark"] .bn-stac{color:#7aa7dd}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
@@ -2506,11 +2512,6 @@ function renderLegend() {
    notebooks use); which variables qualify, and how, comes from each
    collection's eoforeststac:analytics recipe.
 ══════════════════════════════════════════════════════════════════ */
-const AN_MEASURES = {
-  mean:  { label: 'Mean density', key: 'mean' },
-  total: { label: 'Total stock',  key: 'total' },
-};
-
 function analysisTarget(layer) {
   const recipes = findCollection(layer.id)?.analytics;
   if (!recipes || typeof recipes !== 'object') return null;
@@ -2524,10 +2525,16 @@ function analysisRequest() {
     .filter(x => x.target);
   return {
     geometry: S.dl.geometry,
-    layers: layers.map(({ layer, target }) => ({
-      url: layer.zarrUrl, variable: target.variable, kind: target.kind,
-      sel: extraSels(layer), name: layer.id,
-    })),
+    layers: layers.map(({ layer, target }) => {
+      const keep = new Set(target.keep_dims || []);
+      const options = {};
+      for (const k of ['classes', 'exclude', 'years', 'encoding', 'scale'])
+        if (target[k] != null) options[k] = target[k];
+      return {
+        url: layer.zarrUrl, variable: target.variable, kind: target.kind, options,
+        sel: extraSels(layer).filter(s => !keep.has(s.split('=')[0])), name: layer.id,
+      };
+    }),
   };
 }
 
@@ -2554,31 +2561,37 @@ async function startAnalysis() {
   renderAnalysis();
 }
 
-/* One series per analysed layer, in the layer's colour slot. */
+/* One entry per analysed layer, in the layer's colour slot. `catKey` is the
+   dimension results are split by besides time: the class, the event year, or
+   a kept dimension such as GAMI's age class or XU's disturbance type. */
+const AN_METRICS = new Set(['mean', 'total', 'cover_area_ha', 'area_ha', 'share', 'label',
+  'valid_area_ha', 'region_area_ha', 'coverage', 'time']);
+
 function analysisSeries(result) {
   return (result?.layers || []).map(res => {
     const layer = S.layers.get(res.name);
     const col = findCollection(res.name);
     const recipe = col?.analytics?.[res.variable] || {};
+    const rows = res.rows || [];
+    const catKey = res.kind === 'event_year' ? 'year'
+      : res.kind === 'class_area' ? 'class'
+      : Object.keys(rows[0] || {}).find(k => !AN_METRICS.has(k)) || null;
     const fallbackT = col?.startYear ? Date.UTC(+col.startYear, 0, 1) : null;
-    const points = (res.rows || []).map(r => ({
-      t: r.time ? Date.parse(r.time) : fallbackT,
-      mean: r.mean, total: r.total, coverage: r.coverage,
-      valid: r.valid_area_ha, region: r.region_area_ha,
-    })).sort((a, b) => (a.t ?? 0) - (b.t ?? 0));
+    const timeOf = r => r.time != null && r.time !== '' ? Date.parse(String(r.time)) : fallbackT;
     return {
       id: res.name,
       title: col?.title || res.name,
       short: shortSeriesName(col?.title || res.name),
       slot: layer?.slot ?? 0,
-      variable: res.variable,
+      kind: res.kind, variable: res.variable,
       quantity: recipe.quantity || res.variable,
-      units: (res.units || '').replace(/^Mg ha-1$/, 'Mg/ha'),
-      totalUnits: recipe.total_units || 'Mg',
-      level: res.level, approx: !!res.approximate, res: res.resolution_m,
+      units: (res.units || '').replace(/^Mg ha-1$/, 'Mg/ha').replace(/^percent$/, '%'),
+      totalUnits: recipe.total_units || '',
+      approx: !!res.approximate, res: res.resolution_m, level: res.level,
       error: res.error || null,
-      static: !(res.rows || []).some(r => r.time),
-      points,
+      catKey,
+      timed: rows.some(r => r.time != null && r.time !== ''),
+      rows: rows.map(r => ({ ...r, t: timeOf(r) })),
     };
   });
 }
@@ -2588,10 +2601,61 @@ function shortSeriesName(title) {
   return head.length > 22 ? head.slice(0, 21) + '…' : head;
 }
 
-/* Mg totals are shown in the largest unit that keeps values >= 1. */
-function totalScale(maxMg) {
-  for (const [f, u] of [[1e9, 'Pg'], [1e6, 'Tg'], [1e3, 'Gg']]) if (maxMg >= f) return { f, u };
-  return { f: 1, u: 'Mg' };
+/* What can be plotted for a kind: a value per row, its label and units. */
+function analysisMeasures(s) {
+  switch (s.kind) {
+    case 'density': case 'amount':
+      return [{ key: 'mean', label: s.kind === 'amount' ? 'Mean per hectare' : 'Mean density',
+                unit: s.kind === 'amount' ? `${s.totalUnits}/ha` : s.units },
+              { key: 'total', label: 'Total', unit: s.totalUnits, scale: true }];
+    case 'mean':
+      return [{ key: 'mean', label: `Mean ${s.quantity.toLowerCase()}`, unit: s.units }];
+    case 'cover':
+      return [{ key: 'mean', label: 'Mean cover', unit: s.units },
+              { key: 'cover_area_ha', label: 'Equivalent area', unit: 'ha', area: true }];
+    default:
+      return [{ key: 'area_ha', label: 'Area', unit: 'ha', area: true },
+              { key: 'share', label: 'Share of the area', unit: '%', percent: true }];
+  }
+}
+
+/* Large values in a readable unit: Mg-based totals as Gg/Tg/Pg, kg via Mg,
+   areas in ha or km², anything else with thousand/million/billion. */
+function displayScale(unit, maxValue, measure) {
+  if (measure?.percent) return { f: 0.01, unit: '%' };
+  if (measure?.area) return maxValue >= 1e4 ? { f: 100, unit: 'km²' } : { f: 1, unit: 'ha' };
+  if (!measure?.scale) return { f: 1, unit };
+  let base = unit, f0 = 1;
+  if (/^kg\b/.test(base)) { base = base.replace(/^kg/, 'Mg'); f0 = 1e3; }
+  if (/^Mg\b/.test(base)) {
+    const v = maxValue / f0;
+    for (const [f, p] of [[1e9, 'Pg'], [1e6, 'Tg'], [1e3, 'Gg']])
+      if (v >= f) return { f: f * f0, unit: base.replace(/^Mg/, p) };
+    return { f: f0, unit: base };
+  }
+  for (const [f, w] of [[1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']])
+    if (maxValue >= f) return { f, unit: `${w} ${unit}` };
+  return { f: 1, unit };
+}
+
+/* Charts to draw: line-type kinds with the same kind and units share one chart
+   (comparing products is the point); everything split by class or year gets
+   its own chart. */
+function analysisGroups(series) {
+  const groups = [];
+  const lineKinds = new Set(['density', 'amount', 'mean', 'cover']);
+  for (const s of series.filter(x => !x.error && x.rows.length)) {
+    if (lineKinds.has(s.kind) && !s.catKey) {
+      const key = `line:${s.kind}:${s.units}:${s.totalUnits}`;
+      let g = groups.find(x => x.key === key);
+      if (!g) groups.push(g = { key, type: 'line', series: [] });
+      g.series.push(s);
+    } else {
+      const type = s.kind === 'event_year' ? 'columns' : s.timed ? 'stack' : 'bars';
+      groups.push({ key: `${type}:${s.id}:${s.variable}`, type, series: [s] });
+    }
+  }
+  return groups;
 }
 
 function fmtCompact(v) {
@@ -2688,89 +2752,164 @@ function renderAnalysisProgress() {
 
 function renderAnalysisResults(host, result, stale) {
   const series = analysisSeries(result);
-  const ok = series.filter(s => !s.error && s.points.length);
-  const m = AN_MEASURES[S.an.measure];
-  const maxTotal = Math.max(0, ...ok.flatMap(s => s.points.map(p => p.total ?? 0)));
-  const scale = totalScale(maxTotal);
-  const unit = S.an.measure === 'mean' ? (ok[0]?.units || '') : scale.u;
+  const groups = analysisGroups(series);
+  S.an.measures = S.an.measures || {};
+  host.replaceChildren();
+  if (stale) host.insertAdjacentHTML('beforeend',
+    '<div class="set-note warn">The area or layers changed since this result — analyse again to update it.</div>');
 
-  host.innerHTML = `
-    ${stale ? '<div class="set-note warn">The area or layers changed since this result — analyse again to update it.</div>' : ''}
-    <div class="an-seg" role="radiogroup" aria-label="Measure">
-      ${Object.entries(AN_MEASURES).map(([k, v]) =>
-        `<button role="radio" aria-checked="${k === S.an.measure}" class="${k === S.an.measure ? 'on' : ''}" data-measure="${k}">${v.label}</button>`).join('')}
-    </div>
-    <div class="an-chart-title">${esc(m.label)}${unit ? ` (${esc(unit)})` : ''}</div>
-    <div class="an-legend" id="an-legend"></div>
-    <div class="an-chart" id="an-chart" tabindex="0" aria-label="${esc(m.label)} over time; use the arrow keys to step through years"></div>
-    <div class="an-notes" id="an-notes"></div>
-    <details class="an-table-wrap"><summary>Table</summary><div id="an-table"></div></details>
-    <div class="an-actions"><button class="btn btn-ghost" id="an-csv">Download CSV</button></div>`;
+  for (const g of groups) {
+    const lead = g.series[0];
+    const measures = analysisMeasures(lead);
+    const mKey = S.an.measures[g.key] && measures.some(m => m.key === S.an.measures[g.key]) ? S.an.measures[g.key] : measures[0].key;
+    const m = measures.find(x => x.key === mKey);
+    const card = document.createElement('section');
+    card.className = 'an-card';
+    host.append(card);
 
-  host.querySelectorAll('[data-measure]').forEach(b => b.addEventListener('click', () => {
-    S.an.measure = b.dataset.measure; b.blur(); renderAnalysis();
-  }));
-  el('an-csv').addEventListener('click', () => downloadAnalysisCsv(series, result));
+    if (measures.length > 1) {
+      const seg = document.createElement('div');
+      seg.className = 'an-seg'; seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', 'Measure');
+      for (const x of measures) {
+        const b = document.createElement('button');
+        b.textContent = x.label; b.dataset.measure = x.key;
+        b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', String(x.key === mKey));
+        if (x.key === mKey) b.classList.add('on');
+        b.addEventListener('click', () => { S.an.measures[g.key] = x.key; b.blur(); renderAnalysis(); });
+        seg.append(b);
+      }
+      card.append(seg);
+    }
 
-  const value = p => {
-    const v = p[m.key];
-    return v == null ? null : (S.an.measure === 'total' ? v / scale.f : v);
-  };
+    const raw = s => s.rows.map(r => r[m.key]).filter(v => v != null);
+    const maxRaw = Math.max(0, ...g.series.flatMap(raw));
+    const sc = displayScale(m.unit, maxRaw, m);
+    const val = v => (v == null ? null : v / sc.f);
+    const title = document.createElement('div');
+    title.className = 'an-chart-title';
+    title.textContent = `${g.type === 'line' ? (m.label === 'Total' ? `Total ${lead.quantity.toLowerCase()}` : m.label) : lead.quantity}${sc.unit ? ` (${sc.unit})` : ''}`;
+    card.append(title);
+    const legend = document.createElement('div');
+    legend.className = 'an-legend';
+    card.append(legend);
+    const chart = document.createElement('div');
+    chart.className = 'an-chart'; chart.tabIndex = 0;
+    card.append(chart);
 
-  // Legend for two or more series; one series is named by the title row
-  const legend = el('an-legend');
-  if (ok.length >= 2) {
-    ok.forEach(s => {
-      const item = document.createElement('span');
-      item.className = 'an-leg-item';
-      const key = document.createElement('span');
-      key.className = 'an-line-key';
-      key.style.background = `var(--s${s.slot + 1})`;
-      item.append(key, document.createTextNode(s.short + (s.static ? ' (single year)' : '')));
-      legend.append(item);
-    });
-  } else if (ok.length === 1) {
-    legend.textContent = ok[0].title;
-    legend.classList.add('single');
+    if (g.type === 'line') {
+      if (g.series.length >= 2) g.series.forEach(s => legend.append(legendItem(`var(--s${s.slot + 1})`, s.short + (s.timed ? '' : ' (single year)'), 'line')));
+      else legend.textContent = lead.title, legend.classList.add('single');
+      chart.setAttribute('aria-label', `${title.textContent} over time; arrow keys step through years`);
+      drawLines(chart, g.series.map(s => ({
+        name: s.short, color: `var(--s${s.slot + 1})`,
+        points: s.rows.filter(r => r.t != null).map(r => ({ t: r.t, v: val(r[m.key]), coverage: r.coverage })),
+      })), sc.unit);
+    } else {
+      legend.textContent = lead.title; legend.classList.add('single');
+      const cats = analysisCategories(lead, m.key);
+      if (g.type === 'bars') {
+        drawBars(chart, cats.map(c => ({ label: c.label, v: val(c.values.get(null) ?? c.total) })), sc.unit, `var(--s${lead.slot + 1})`);
+      } else {
+        const colors = new Map(cats.map((c, i) => [c.key, c.other ? 'var(--s-other)' : g.type === 'columns' ? `var(--s${lead.slot + 1})` : `var(--s${(i % 8) + 1})`]));
+        if (g.type === 'stack' && cats.length >= 2) {
+          legend.replaceChildren();
+          legend.classList.remove('single');
+          cats.forEach(c => legend.append(legendItem(colors.get(c.key), c.label, 'box')));
+        }
+        const times = g.type === 'columns'
+          ? cats.map(c => ({ t: Date.UTC(+c.key, 0, 1), label: String(c.key), segments: [{ key: c.key, label: c.label, color: colors.get(c.key), v: val(c.total) }] }))
+          : [...new Set(lead.rows.map(r => r.t))].sort((a, b) => a - b).map(t => ({
+              t, label: fmtTime(t, lead.rows),
+              segments: cats.map(c => ({ key: c.key, label: c.label, color: colors.get(c.key), v: val(c.values.get(t) ?? 0) })),
+            }));
+        chart.setAttribute('aria-label', `${title.textContent}; arrow keys step through ${g.type === 'columns' ? 'years' : 'time steps'}`);
+        drawColumns(chart, times, sc.unit);
+      }
+    }
+
+    const notes = [];
+    if (lead.approx) notes.push(`${lead.short}: approximate, from a ~${fmtCompact(lead.res)} m overview (the area is too large for native resolution).`);
+    if (g.type === 'line' && g.series.some(s => s.rows.some(r => r.coverage != null && r.coverage < 0.5)))
+      notes.push('Some years cover less than half of the area; see the coverage column in the table.');
+    if (g.type !== 'line') notes.push(`${lead.short}: shares are of the drawn area.`);
+    if (notes.length) {
+      const n = document.createElement('div');
+      n.className = 'an-notes';
+      notes.forEach(t => n.append(Object.assign(document.createElement('div'), { textContent: t })));
+      card.append(n);
+    }
   }
 
-  drawAnalysisChart(el('an-chart'), ok, value, unit);
-
-  const notes = [];
-  for (const s of series) {
-    if (s.error) notes.push(`${s.short}: ${s.error}`);
-    else if (s.approx) notes.push(`${s.short}: approximate, from a ~${fmtCompact(s.res)} m overview (the area is too large for native resolution).`);
+  const errors = series.filter(s => s.error);
+  if (errors.length) {
+    const n = document.createElement('div');
+    n.className = 'an-notes';
+    errors.forEach(s => n.append(Object.assign(document.createElement('div'), { textContent: `${s.short}: ${s.error}` })));
+    host.append(n);
   }
-  if (ok.some(s => s.points.some(p => p.coverage != null && p.coverage < 0.5)))
-    notes.push('Some years cover less than half of the area; see the coverage column in the table.');
-  el('an-notes').replaceChildren(...notes.map(t => { const d = document.createElement('div'); d.textContent = t; return d; }));
+  if (!groups.length && !errors.length)
+    host.append(Object.assign(document.createElement('div'), { className: 'set-note', textContent: 'No valid data in this area.' }));
 
-  renderAnalysisTable(el('an-table'), ok, scale);
+  const details = document.createElement('details');
+  details.className = 'an-table-wrap';
+  details.innerHTML = '<summary>Table</summary>';
+  details.append(analysisTable(series));
+  host.append(details);
+  const actions = document.createElement('div');
+  actions.className = 'an-actions';
+  const csv = Object.assign(document.createElement('button'), { className: 'btn btn-ghost', textContent: 'Download CSV' });
+  csv.addEventListener('click', () => downloadAnalysisCsv(series, result));
+  actions.append(csv);
+  host.append(actions);
 }
 
-function drawAnalysisChart(host, series, value, unit) {
+function legendItem(color, text, shape) {
+  const item = document.createElement('span');
+  item.className = 'an-leg-item';
+  const key = document.createElement('span');
+  key.className = shape === 'box' ? 'an-box-key' : 'an-line-key';
+  key.style.background = color;
+  item.append(key, document.createTextNode(text));
+  return item;
+}
+
+/* Categories of a split result, largest first, with more than seven folded
+   into "Other"; each has a value per time step (Map keyed by t, or null when
+   there is no time) and a total. */
+function analysisCategories(s, key) {
+  const cats = new Map();
+  for (const r of s.rows) {
+    const k = r[s.catKey];
+    const label = s.kind === 'class_area' ? (r.label ?? String(k)) : String(k);
+    if (!cats.has(k)) cats.set(k, { key: k, label, values: new Map(), total: 0 });
+    const c = cats.get(k);
+    const v = r[key] ?? 0;
+    const tk = s.timed ? r.t : null;
+    c.values.set(tk, (c.values.get(tk) || 0) + v);
+    c.total += v;
+  }
+  let list = [...cats.values()];
+  if (s.kind === 'event_year') return list.sort((a, b) => a.key - b.key);
+  if (s.catKey !== 'class') return list;             // e.g. age classes: keep their order
+  list.sort((a, b) => b.total - a.total);
+  if (list.length > 8) {
+    const keep = list.slice(0, 7), rest = list.slice(7);
+    const other = { key: '__other', label: `Other (${rest.length} classes)`, values: new Map(), total: 0, other: true };
+    for (const c of rest) { other.total += c.total; for (const [t, v] of c.values) other.values.set(t, (other.values.get(t) || 0) + v); }
+    list = [...keep, other];
+  }
+  return list;
+}
+
+function fmtTime(t, rows) {
+  const d = new Date(t);
+  const monthly = new Set(rows.map(r => new Date(r.t).getUTCFullYear())).size < rows.length && rows.some(r => new Date(r.t).getUTCMonth() > 0);
+  return monthly ? `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}` : String(d.getUTCFullYear());
+}
+
+/* Shared SVG scaffolding: hairline grid, y ticks with one precision. */
+function svgPlot(host, W, H, M, ymax, step) {
   const NS = 'http://www.w3.org/2000/svg';
-  const W = Math.max(280, host.clientWidth || 340), H = 190;
-  const labelled = series.length <= 4;
-  /* Room for the direct end labels, measured with the label font rather than
-     guessed, so a long name is never clipped by the chart edge. */
-  const measure = document.createElement('canvas').getContext('2d');
-  measure.font = `10.5px ${getComputedStyle(host).fontFamily}`;
-  const labelW = labelled ? Math.max(0, ...series.map(s => measure.measureText(s.short).width)) : 0;
-  const M = { l: 44, r: labelled ? Math.min(130, Math.ceil(labelW) + 14) : 14, t: 10, b: 24 };
-  const pw = W - M.l - M.r, ph = H - M.t - M.b;
-  const pts = series.flatMap(s => s.points.filter(p => p.t != null && value(p) != null));
-  host.replaceChildren();
-  if (!pts.length) { host.textContent = 'No valid data in this area.'; return; }
-
-  let t0 = Math.min(...pts.map(p => p.t)), t1 = Math.max(...pts.map(p => p.t));
-  if (t0 === t1) { t0 -= 365 * 864e5; t1 += 365 * 864e5; }
-  const vmax = Math.max(...pts.map(value));
-  const step = niceStep(vmax || 1);
-  const ymax = Math.max(step, Math.ceil(vmax / step) * step);
-  const x = t => M.l + (t - t0) / (t1 - t0) * pw;
-  const y = v => M.t + ph - (v / ymax) * ph;
-
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   svg.setAttribute('width', W); svg.setAttribute('height', H);
@@ -2782,84 +2921,54 @@ function drawAnalysisChart(host, series, value, unit) {
     return n;
   };
   const text = (str, attrs) => { const n = add('text', attrs); n.textContent = str; return n; };
-
-  // Recessive hairline grid and y ticks
-  const tickDecimals = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
+  const ph = H - M.t - M.b;
+  const y = v => M.t + ph - (v / ymax) * ph;
+  const decimals = Math.max(0, -Math.floor(Math.log10(step) + 1e-9));
   for (let v = 0; v <= ymax + 1e-9; v += step) {
-    add('line', { x1: M.l, x2: M.l + pw, y1: y(v), y2: y(v), class: 'an-grid' });
-    const label = v === 0 ? '0' : v.toLocaleString('en', { minimumFractionDigits: tickDecimals, maximumFractionDigits: tickDecimals });
-    text(label, { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
+    add('line', { x1: M.l, x2: W - M.r, y1: y(v), y2: y(v), class: 'an-grid' });
+    text(v === 0 ? '0' : v.toLocaleString('en', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
+         { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
   }
-  // Year ticks: at most ~6 labels
-  const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
-  const every = Math.max(1, Math.ceil((y1 - y0 + 1) / 6));
-  for (let yr = y0; yr <= y1; yr++) {
-    const t = Date.UTC(yr, 0, 1);
-    if (t < t0 || t > t1 || (yr - y0) % every) continue;
-    text(String(yr), { x: x(t), y: H - 6, class: 'an-tick', 'text-anchor': 'middle' });
-  }
+  host.replaceChildren(svg);
+  return { svg, add, text, y, ph };
+}
 
-  // Lines (2px), end dots and markers (r 4, 2px surface ring)
-  const ends = [];
-  for (const s of series) {
-    const sp = s.points.filter(p => p.t != null && value(p) != null);
-    if (!sp.length) continue;
-    const color = `var(--s${s.slot + 1})`;
-    if (sp.length > 1)
-      add('path', { d: sp.map((p, i) => `${i ? 'L' : 'M'}${x(p.t)},${y(value(p))}`).join(''), class: 'an-line', stroke: color });
-    const dots = sp.length <= 24 ? sp : [sp[sp.length - 1]];
-    for (const p of dots) add('circle', { cx: x(p.t), cy: y(value(p)), r: 4, class: 'an-dot', fill: color });
-    const last = sp[sp.length - 1];
-    ends.push({ s, x: x(last.t), y: y(value(last)) });
-  }
-  // Direct end labels for up to four series; drop the ones that would collide
-  if (labelled) {
-    ends.sort((a, b) => a.y - b.y);
-    let prev = -Infinity;
-    for (const e of ends) {
-      if (e.y - prev < 12) continue;
-      text(e.s.short, { x: e.x + 8, y: e.y + 3, class: 'an-end' });
-      prev = e.y;
-    }
-  }
+function yScale(vmax) {
+  const step = niceStep(vmax || 1);
+  return { step, ymax: Math.max(step, Math.ceil(vmax / step) * step) };
+}
 
-  // Crosshair + tooltip: snaps to the nearest year, lists every series
-  const times = [...new Set(pts.map(p => p.t))].sort((a, b) => a - b);
-  const cross = add('line', { y1: M.t, y2: M.t + ph, class: 'an-cross', visibility: 'hidden' });
-  const hit = add('rect', { x: M.l, y: M.t, width: pw, height: ph, fill: 'transparent' });
-  host.append(svg);
+function attachTooltip(host, svg, W, M, H, xs, rowsAt) {
+  const cross = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  for (const [k, v] of Object.entries({ y1: M.t, y2: H - M.b, class: 'an-cross', visibility: 'hidden' })) cross.setAttribute(k, v);
+  svg.append(cross);
+  const hit = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  for (const [k, v] of Object.entries({ x: M.l, y: M.t, width: W - M.l - M.r, height: H - M.t - M.b, fill: 'transparent' })) hit.setAttribute(k, v);
+  svg.append(hit);
   const tip = document.createElement('div');
   tip.className = 'an-tip'; tip.hidden = true;
   host.append(tip);
-
   let cur = -1;
   const show = i => {
-    cur = Math.max(0, Math.min(times.length - 1, i));
-    const t = times[cur], cx = x(t);
+    cur = Math.max(0, Math.min(xs.length - 1, i));
+    const cx = xs[cur];
     cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
-    tip.replaceChildren();
-    const head = document.createElement('div');
-    head.className = 'an-tip-head';
-    head.textContent = String(new Date(t).getUTCFullYear());
-    tip.append(head);
-    for (const s of series) {
-      const p = s.points.find(q => q.t === t);
+    const { head, rows } = rowsAt(cur);
+    tip.replaceChildren(Object.assign(document.createElement('div'), { className: 'an-tip-head', textContent: head }));
+    for (const r of rows) {
       const row = document.createElement('div');
       row.className = 'an-tip-row';
       const key = document.createElement('span');
-      key.className = 'an-line-key'; key.style.background = `var(--s${s.slot + 1})`;
-      const val = document.createElement('strong');
-      val.textContent = p && value(p) != null ? `${fmtCompact(value(p))} ${unit}` : '—';
-      const name = document.createElement('span');
-      name.textContent = s.short + (p?.coverage != null ? ` · ${Math.round(p.coverage * 100)} % covered` : '');
-      row.append(key, val, name);
+      key.className = r.box ? 'an-box-key' : 'an-line-key'; key.style.background = r.color;
+      const v = document.createElement('strong'); v.textContent = r.value;
+      const name = document.createElement('span'); name.textContent = r.name;
+      row.append(key, v, name);
       tip.append(row);
     }
     tip.hidden = false;
-    const w = tip.offsetWidth, scaleX = (svg.getBoundingClientRect().width || W) / W;
-    const px = cx * scaleX, width = host.clientWidth || W;
-    const right = px + 10, left = px - w - 10;
-    tip.style.left = `${Math.max(0, Math.min(width - w, right + w <= width ? right : left))}px`;
+    const w = tip.offsetWidth, sx = (svg.getBoundingClientRect().width || W) / W;
+    const px = cx * sx, width = host.clientWidth || W;
+    tip.style.left = `${Math.max(0, Math.min(width - w, px + 10 + w <= width ? px + 10 : px - w - 10))}px`;
     tip.style.top = `${M.t}px`;
   };
   const hide = () => { cross.setAttribute('visibility', 'hidden'); tip.hidden = true; };
@@ -2867,55 +2976,179 @@ function drawAnalysisChart(host, series, value, unit) {
     const r = svg.getBoundingClientRect();
     const px = (e.clientX - r.left) * (W / r.width);
     let best = 0;
-    times.forEach((t, i) => { if (Math.abs(x(t) - px) < Math.abs(x(times[best]) - px)) best = i; });
+    xs.forEach((x, i) => { if (Math.abs(x - px) < Math.abs(xs[best] - px)) best = i; });
     show(best);
   });
   hit.addEventListener('pointerleave', hide);
   host.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-      e.preventDefault(); show(cur < 0 ? 0 : cur + (e.key === 'ArrowRight' ? 1 : -1));
-    } else if (e.key === 'Escape') hide();
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); show(cur < 0 ? 0 : cur + (e.key === 'ArrowRight' ? 1 : -1)); }
+    else if (e.key === 'Escape') hide();
   });
   host.addEventListener('blur', hide);
 }
 
-function renderAnalysisTable(host, series, scale) {
+/* Lines over time: 2px lines, r 4 dots with a 2px surface ring, direct end
+   labels (up to four series, measured so they are never clipped). */
+function drawLines(host, series, unit) {
+  const W = Math.max(280, host.clientWidth || 340), H = 190;
+  const labelled = series.length <= 4 && series.length >= 2;
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `10.5px ${getComputedStyle(host).fontFamily}`;
+  const labelW = labelled ? Math.max(0, ...series.map(s => ctx.measureText(s.name).width)) : 0;
+  const M = { l: 44, r: labelled ? Math.min(130, Math.ceil(labelW) + 14) : 14, t: 10, b: 24 };
+  const pts = series.flatMap(s => s.points.filter(p => p.v != null));
+  if (!pts.length) { host.textContent = 'No valid data in this area.'; return; }
+  let t0 = Math.min(...pts.map(p => p.t)), t1 = Math.max(...pts.map(p => p.t));
+  if (t0 === t1) { t0 -= 365 * 864e5; t1 += 365 * 864e5; }
+  const { step, ymax } = yScale(Math.max(...pts.map(p => p.v)));
+  const { svg, add, text, y } = svgPlot(host, W, H, M, ymax, step);
+  const x = t => M.l + (t - t0) / (t1 - t0) * (W - M.l - M.r);
+
+  const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
+  const every = Math.max(1, Math.ceil((y1 - y0 + 1) / 6));
+  for (let yr = y0; yr <= y1; yr++) {
+    const t = Date.UTC(yr, 0, 1);
+    if (t < t0 || t > t1 || (yr - y0) % every) continue;
+    text(String(yr), { x: x(t), y: H - 6, class: 'an-tick', 'text-anchor': 'middle' });
+  }
+  const ends = [];
+  for (const s of series) {
+    const sp = s.points.filter(p => p.v != null).sort((a, b) => a.t - b.t);
+    if (!sp.length) continue;
+    if (sp.length > 1)
+      add('path', { d: sp.map((p, i) => `${i ? 'L' : 'M'}${x(p.t)},${y(p.v)}`).join(''), class: 'an-line', stroke: s.color });
+    for (const p of sp.length <= 24 ? sp : [sp[sp.length - 1]]) add('circle', { cx: x(p.t), cy: y(p.v), r: 4, class: 'an-dot', fill: s.color });
+    const last = sp[sp.length - 1];
+    ends.push({ s, x: x(last.t), y: y(last.v) });
+  }
+  if (labelled) {
+    ends.sort((a, b) => a.y - b.y);
+    let prev = -Infinity;
+    for (const e of ends) { if (e.y - prev < 12) continue; text(e.s.name, { x: e.x + 8, y: e.y + 3, class: 'an-end' }); prev = e.y; }
+  }
+  const times = [...new Set(pts.map(p => p.t))].sort((a, b) => a - b);
+  attachTooltip(host, svg, W, M, H, times.map(x), i => ({
+    head: String(new Date(times[i]).getUTCFullYear()),
+    rows: series.map(s => {
+      const p = s.points.find(q => q.t === times[i]);
+      return { color: s.color, value: p && p.v != null ? `${fmtCompact(p.v)} ${unit}` : '—',
+               name: s.name + (p?.coverage != null ? ` · ${Math.round(p.coverage * 100)} % covered` : '') };
+    }),
+  }));
+}
+
+/* Columns per time step, stacked by category; <= 24px wide, 2px surface gap
+   between segments, 4px rounded top on the column end. */
+function drawColumns(host, times, unit) {
+  const W = Math.max(280, host.clientWidth || 340), H = 200;
+  const M = { l: 44, r: 10, t: 10, b: 24 };
+  if (!times.length) { host.textContent = 'No valid data in this area.'; return; }
+  const totals = times.map(c => c.segments.reduce((a, s) => a + (s.v || 0), 0));
+  const { step, ymax } = yScale(Math.max(...totals));
+  const { svg, add, text, y } = svgPlot(host, W, H, M, ymax, step);
+  const band = (W - M.l - M.r) / times.length;
+  const bw = Math.max(2, Math.min(24, band * 0.7));
+  const cx = i => M.l + band * (i + 0.5);
+  const every = Math.max(1, Math.ceil(times.length / 6));
+  times.forEach((c, i) => {
+    if (i % every === 0) text(c.label, { x: cx(i), y: H - 6, class: 'an-tick', 'text-anchor': 'middle' });
+    let base = 0;
+    const segs = c.segments.filter(s => s.v > 0);
+    segs.forEach((s, j) => {
+      const top = base + s.v;
+      const y0 = y(base), y1 = y(top);
+      const gap = j > 0 ? 2 : 0;                       // surface gap between stacked fills
+      const h = Math.max(0, y0 - y1 - gap);
+      if (h > 0) {
+        const xL = cx(i) - bw / 2, isTop = j === segs.length - 1, r = isTop ? Math.min(4, h, bw / 2) : 0;
+        const yTop = y1, yBot = y1 + h;
+        const d = r
+          ? `M${xL},${yBot}V${yTop + r}Q${xL},${yTop} ${xL + r},${yTop}H${xL + bw - r}Q${xL + bw},${yTop} ${xL + bw},${yTop + r}V${yBot}Z`
+          : `M${xL},${yBot}V${yTop}H${xL + bw}V${yBot}Z`;
+        add('path', { d, fill: s.color, class: 'an-bar' });
+      }
+      base = top;
+    });
+  });
+  attachTooltip(host, svg, W, M, H, times.map((_, i) => cx(i)), i => {
+    const c = times[i];
+    const rows = c.segments.filter(s => s.v > 0).reverse().map(s => ({ color: s.color, box: true, value: `${fmtCompact(s.v)} ${unit}`, name: s.label }));
+    if (c.segments.length > 1) rows.push({ color: 'transparent', value: `${fmtCompact(totals[i])} ${unit}`, name: 'total' });
+    return { head: c.label, rows: rows.length ? rows : [{ color: 'transparent', value: `0 ${unit}`, name: '' }] };
+  });
+}
+
+/* Horizontal bars, one per category: label on the left, value at the tip. */
+function drawBars(host, items, unit, color) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const list = items.filter(it => it.v != null);
+  if (!list.length) { host.textContent = 'No valid data in this area.'; return; }
+  const W = Math.max(280, host.clientWidth || 340), row = 24, bh = 14;
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = `11px ${getComputedStyle(host).fontFamily}`;
+  const labelW = Math.min(150, Math.ceil(Math.max(...list.map(it => ctx.measureText(it.label).width))) + 8);
+  const valueW = Math.ceil(Math.max(...list.map(it => ctx.measureText(`${fmtCompact(it.v)} ${unit}`).width))) + 10;
+  const H = list.length * row + 6, x0 = labelW, pw = Math.max(40, W - labelW - valueW);
+  const vmax = Math.max(...list.map(it => it.v)) || 1;
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('role', 'img');
+  const add = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); svg.append(n); return n; };
+  list.forEach((it, i) => {
+    const yc = 3 + i * row + row / 2;
+    const lab = add('text', { x: x0 - 8, y: yc + 3.5, class: 'an-bar-label', 'text-anchor': 'end' });
+    let s = it.label;
+    while (s.length > 3 && ctx.measureText(s).width > labelW - 8) s = s.slice(0, -2);
+    lab.textContent = s === it.label ? s : s.replace(/.$/, '…');
+    const title = document.createElementNS(NS, 'title'); title.textContent = it.label; lab.append(title);
+    const w = Math.max(it.v > 0 ? 1 : 0, (it.v / vmax) * pw);
+    if (w > 0) {
+      const r = Math.min(4, w, bh / 2);
+      add('path', { d: `M${x0},${yc - bh / 2}H${x0 + w - r}Q${x0 + w},${yc - bh / 2} ${x0 + w},${yc - bh / 2 + r}V${yc + bh / 2 - r}Q${x0 + w},${yc + bh / 2} ${x0 + w - r},${yc + bh / 2}H${x0}Z`, fill: color, class: 'an-bar' });
+    }
+    add('text', { x: x0 + w + 6, y: yc + 3.5, class: 'an-bar-value' }).textContent = `${fmtCompact(it.v)} ${unit}`;
+  });
+  host.replaceChildren(svg);
+}
+
+/* Every row of every layer, readable: the table view behind the charts. */
+function analysisTable(series) {
   const table = document.createElement('table');
   table.className = 'an-table';
   const head = table.createTHead().insertRow();
-  for (const h of ['Product', 'Year', `Mean (${series[0]?.units || ''})`, `Total (${scale.u})`, 'Coverage'])
+  for (const h of ['Product', 'When', 'Class / year', 'Value', 'Coverage'])
     head.append(Object.assign(document.createElement('th'), { textContent: h }));
   const body = table.createTBody();
-  for (const s of series) for (const p of s.points) {
-    const row = body.insertRow();
-    const cells = [
-      s.short,
-      p.t != null ? String(new Date(p.t).getUTCFullYear()) + (s.static ? ' *' : '') : '—',
-      p.mean != null ? fmtCompact(p.mean) : '—',
-      p.total != null ? fmtCompact(p.total / scale.f) : '—',
-      p.coverage != null ? `${Math.round(p.coverage * 100)} %` : '—',
-    ];
-    cells.forEach(c => { row.insertCell().textContent = c; });
+  for (const s of series.filter(x => !x.error)) {
+    const m = analysisMeasures(s)[0];
+    for (const r of s.rows) {
+      if (s.kind === 'class_area' || s.kind === 'event_year') { if (!r.area_ha) continue; }
+      const cells = [
+        s.short,
+        r.t != null && s.timed ? fmtTime(r.t, s.rows) : (s.timed ? '—' : 'single'),
+        s.catKey ? (s.kind === 'class_area' ? r.label : String(r[s.catKey])) : '',
+        r[m.key] != null ? `${fmtCompact(m.percent ? r[m.key] * 100 : r[m.key])} ${m.unit}` : '—',
+        s.kind === 'event_year' ? `${fmtCompact((r.share || 0) * 100)} % of area`
+          : s.kind === 'class_area' ? `${fmtCompact((r.share || 0) * 100)} % of area`
+          : r.coverage != null ? `${Math.round(r.coverage * 100)} %` : '—',
+      ];
+      const row = body.insertRow();
+      cells.forEach(c => { row.insertCell().textContent = c; });
+    }
   }
-  host.replaceChildren(table);
-  if (series.some(s => s.static)) {
-    const note = document.createElement('div');
-    note.className = 'set-note';
-    note.textContent = '* single-year product, shown at its nominal year';
-    host.append(note);
-  }
+  return table;
 }
 
 function downloadAnalysisCsv(series, result) {
-  const cols = ['product', 'variable', 'year', 'mean', 'mean_units', 'total_Mg', 'valid_area_ha',
-                'region_area_ha', 'coverage', 'resolution_m', 'approximate'];
+  const cols = ['product', 'variable', 'kind', 'time', 'category', 'label', 'mean', 'total', 'cover_area_ha',
+                'area_ha', 'share', 'valid_area_ha', 'region_area_ha', 'coverage', 'units', 'resolution_m', 'approximate'];
   const q = v => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
   const lines = [cols.join(',')];
   for (const s of series) {
-    if (s.error) { lines.push([s.id, s.variable, '', '', '', '', '', '', '', '', `error: ${s.error}`].map(q).join(',')); continue; }
-    for (const p of s.points) lines.push([
-      s.id, s.variable, p.t != null ? new Date(p.t).getUTCFullYear() : '', p.mean, s.units, p.total,
-      p.valid, p.region, p.coverage, s.res, s.approx,
+    if (s.error) { lines.push([s.id, s.variable, s.kind, '', '', `error: ${s.error}`].map(q).join(',')); continue; }
+    for (const r of s.rows) lines.push([
+      s.id, s.variable, s.kind, r.time ?? '', s.catKey ? r[s.catKey] : '', r.label ?? '',
+      r.mean, r.total, r.cover_area_ha, r.area_ha, r.share, r.valid_area_ha, r.region_area_ha, r.coverage,
+      s.kind === 'class_area' || s.kind === 'event_year' ? 'ha' : s.units, s.res, s.approx,
     ].map(q).join(','));
   }
   lines.push('', `# area_ha (as drawn),${result.region_area_ha}`, `# area_geojson,${q(JSON.stringify(S.dl.geometry))}`,

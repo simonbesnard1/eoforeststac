@@ -157,3 +157,143 @@ def test_large_box_area_follows_drawn_edges_not_great_circles():
     geom = box(-70, -15, -45, 3)
     (row,) = region_statistics(da, geom, crs="EPSG:4326")
     assert row["region_area_ha"] == pytest.approx(geometry_area_ha(geom), rel=1e-3)
+
+
+# ── Other kinds ──────────────────────────────────────────────────────────
+
+
+def halves(left, right, res=0.1, extent=(0, 0, 4, 2)):
+    """Grid over extent whose western half holds `left`, eastern `right`."""
+    w, s, e, n = extent
+    lats = np.arange(n - res / 2, s, -res)
+    lons = np.arange(w + res / 2, e, res)
+    data = np.where(lons[None, :] < (w + e) / 2, left, right) * np.ones((lats.size, 1))
+    return xr.DataArray(
+        data,
+        dims=("latitude", "longitude"),
+        coords={"latitude": lats, "longitude": lons},
+    )
+
+
+def test_mean_kind_has_no_total():
+    da = halves(20.0, 30.0)
+    (row,) = region_statistics(da, box(0, 0, 4, 2), kind="mean", crs="EPSG:4326")
+    assert row["mean"] == pytest.approx(25.0, rel=1e-3)
+    assert "total" not in row
+
+
+def test_amount_kind_sums_pixels():
+    da = halves(1000.0, 1000.0, res=0.5)  # 8 x 4 pixels of 1000 kg
+    (row,) = region_statistics(da, box(0, 0, 4, 2), kind="amount", crs="EPSG:4326")
+    assert row["total"] == pytest.approx(32 * 1000.0)
+    assert row["mean"] == pytest.approx(row["total"] / row["valid_area_ha"])
+
+
+def test_cover_kind_percent_gives_equivalent_area():
+    da = halves(50.0, 50.0)
+    da.attrs["units"] = "percent"
+    (row,) = region_statistics(da, box(0, 0, 4, 2), kind="cover", crs="EPSG:4326")
+    assert row["mean"] == pytest.approx(50.0)
+    assert row["cover_area_ha"] == pytest.approx(0.5 * row["region_area_ha"])
+
+
+def test_class_area_with_explicit_classes_and_exclude():
+    da = halves(1, 2)
+    rows = region_statistics(
+        da,
+        box(0, 0, 4, 2),
+        kind="class_area",
+        crs="EPSG:4326",
+        classes={1: "a", 2: "b"},
+    )
+    by = {r["class"]: r for r in rows}
+    assert by[1]["label"] == "a" and by[2]["label"] == "b"
+    assert by[1]["share"] == pytest.approx(0.5, rel=1e-3)
+    assert by[1]["area_ha"] + by[2]["area_ha"] == pytest.approx(by[1]["region_area_ha"])
+    rows = region_statistics(
+        da,
+        box(0, 0, 4, 2),
+        kind="class_area",
+        crs="EPSG:4326",
+        classes={1: "a", 2: "b"},
+        exclude=[1],
+    )
+    assert [r["class"] for r in rows] == [2]
+
+
+def test_class_labels_from_attributes():
+    da = halves(0, 3)
+    da.attrs.update(flag_values="[0, 3]", flag_meanings="no_disturbance harvest")
+    rows = region_statistics(
+        da, box(0, 0, 4, 2), kind="class_area", crs="EPSG:4326", exclude=[0]
+    )
+    assert [(r["class"], r["label"]) for r in rows] == [(3, "harvest")]
+    leg = halves(10, 20)
+    leg.attrs = {"legend": "{'10': 'Undisturbed', '20': 'Degraded'}"}
+    rows = region_statistics(leg, box(0, 0, 4, 2), kind="class_area", crs="EPSG:4326")
+    assert {r["label"] for r in rows} == {"Undisturbed", "Degraded"}
+
+
+def test_class_area_per_time_step():
+    a = halves(1, 2)
+    b = halves(2, 2)
+    da = xr.concat([a, b], dim="time").assign_coords(
+        time=np.array(["2020-01-01", "2021-01-01"], dtype="datetime64[ns]")
+    )
+    rows = region_statistics(
+        da,
+        box(0, 0, 4, 2),
+        kind="class_area",
+        crs="EPSG:4326",
+        classes={1: "a", 2: "b"},
+    )
+    got = {(r["time"], r["class"]): round(r["share"], 3) for r in rows}
+    assert got == {
+        ("2020-01-01", 1): 0.5,
+        ("2020-01-01", 2): 0.5,
+        ("2021-01-01", 1): 0.0,
+        ("2021-01-01", 2): 1.0,
+    }
+
+
+def test_event_year_area_per_year_and_yyddd():
+    da = halves(2003.0, 0.0)  # loss in 2003 in the west, none in the east
+    rows = region_statistics(
+        da, box(0, 0, 4, 2), kind="event_year", crs="EPSG:4326", years=[2001, 2005]
+    )
+    by = {r["year"]: r for r in rows}
+    assert set(by) == {2001, 2002, 2003, 2004, 2005}
+    assert by[2003]["share"] == pytest.approx(0.5, rel=1e-3)
+    assert by[2001]["area_ha"] == 0
+    radd = halves(23145.0, 24001.0)  # YYddd: 2023 day 145, 2024 day 1
+    rows = region_statistics(
+        radd,
+        box(0, 0, 4, 2),
+        kind="event_year",
+        crs="EPSG:4326",
+        years=[2023, 2024],
+        encoding="yyddd",
+    )
+    assert [round(r["share"], 3) for r in rows] == [0.5, 0.5]
+
+
+def test_event_year_requires_year_range():
+    with pytest.raises(ValueError, match="years"):
+        region_statistics(
+            halves(2001.0, 0.0), box(0, 0, 4, 2), kind="event_year", crs="EPSG:4326"
+        )
+
+
+def test_class_share_is_of_the_region_even_when_absence_is_missing():
+    # Like HANSEN gain: only gain pixels hold data, the rest is NaN
+    da = halves(1.0, np.nan)
+    (row,) = region_statistics(
+        da, box(0, 0, 4, 2), kind="class_area", crs="EPSG:4326", classes={1: "gain"}
+    )
+    assert row["share"] == pytest.approx(0.5, rel=1e-3)
+
+
+def test_area_smaller_than_a_pixel_raises():
+    da = geographic_grid(res=1.0)
+    with pytest.raises(ValueError, match="no pixel"):
+        region_statistics(da, box(0.1, 0.1, 0.3, 0.3), crs="EPSG:4326")

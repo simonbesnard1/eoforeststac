@@ -111,6 +111,9 @@ POTAPOV_HEIGHT_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {"canopy_height": {"kind": "mean", "quantity": "Canopy height"}},
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

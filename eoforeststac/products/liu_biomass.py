@@ -156,6 +156,17 @@ LIU_BIOMASS_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "aboveground_biomass": {
+            "kind": "amount",
+            "quantity": "Aboveground biomass",
+            "total_units": "kg",
+        },
+        "canopy_cover": {"kind": "cover", "quantity": "Canopy cover"},
+        "canopy_height": {"kind": "mean", "quantity": "Canopy height"},
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

@@ -123,6 +123,11 @@ RESTOR_LANDUSE_CFG = {
     "raster_bands": {
         "lulc": {"data_type": "uint8", "nodata": 255},
     },
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "lulc": {"kind": "class_area", "quantity": "Area by land use", "exclude": [14]}
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

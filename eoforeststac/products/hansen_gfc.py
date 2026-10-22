@@ -156,6 +156,21 @@ HANSEN_GFC_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "loss_year": {
+            "kind": "event_year",
+            "quantity": "Tree cover loss",
+            "years": [2001, 2024],
+        },
+        "tree_cover": {"kind": "cover", "quantity": "Tree cover (2000)"},
+        "gain": {
+            "kind": "class_area",
+            "quantity": "Tree cover gain (2000-2012)",
+            "classes": {1: "gain"},
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

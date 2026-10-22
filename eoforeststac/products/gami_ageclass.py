@@ -144,6 +144,15 @@ GAMI_AGECLASS_CFG = {
     # ------------------------------------------------------------------
     # Item assets template
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "forest_age": {
+            "kind": "cover",
+            "quantity": "Forest area by age class",
+            "keep_dims": ["age_class"],
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

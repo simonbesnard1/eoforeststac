@@ -167,6 +167,28 @@ JRC_TMF_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "AnnualChange": {
+            "kind": "class_area",
+            "quantity": "Area by annual forest state",
+        },
+        "TransitionMap_MainClasses": {
+            "kind": "class_area",
+            "quantity": "Area by transition class",
+        },
+        "DeforestationYear": {
+            "kind": "event_year",
+            "quantity": "Deforested area",
+            "years": [1990, 2024],
+        },
+        "DegradationYear": {
+            "kind": "event_year",
+            "quantity": "Degraded area",
+            "years": [1990, 2024],
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",
