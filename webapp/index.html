@@ -422,6 +422,74 @@ input[type=range]::-moz-range-thumb{
   background:var(--panel-2);background-position:right 6px center;
 }
 .leg-classes{display:flex;flex-direction:column;gap:3px}
+/* Legend | Analysis tabs */
+.leg-tabs{gap:0;padding:0 4px 0 0}
+.leg-tab{
+  flex:1;padding:9px 6px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text-3);border-bottom:2px solid transparent;transition:color .14s,border-color .14s;
+}
+.leg-tab:hover{color:var(--text)}
+.leg-tab.on{color:var(--text);border-bottom-color:var(--accent)}
+#legend.an-open{width:390px;max-height:calc(100vh - var(--header-h) - 40px)}
+#an-body{padding:12px 13px 14px}
+.an-head{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2);text-align:center;margin-bottom:10px}
+.an-lede{font-size:12.5px;line-height:1.5;color:var(--text-2);text-align:center;margin:0 0 12px}
+.an-draw{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.an-tool{flex-direction:row;justify-content:center;padding:8px 10px;font-size:12px;font-weight:500;border-radius:8px}
+.btn.an-tool{background:var(--accent);color:var(--accent-t);border-color:var(--accent)}
+.btn.btn-ghost.an-tool{background:var(--panel-2);color:var(--text);border-color:var(--line)}
+.an-tool.on{outline:2px solid var(--accent);outline-offset:2px}
+.an-or{text-align:center;font-size:11.5px;color:var(--text-3);margin:10px 0}
+.an-drop{
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 14px;text-align:center;cursor:pointer;
+  border:1px dashed var(--accent);border-radius:10px;background:var(--accent-w);font-size:12px;color:var(--text-2);line-height:1.45;
+}
+.an-drop.over{background:var(--panel-3)}
+.an-drop small{font-size:10.5px;color:var(--text-3)}
+.an-area{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-2);margin-bottom:8px}
+.an-area span{flex:1;min-width:0}
+.an-layers{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.an-layer{display:grid;grid-template-columns:3px 1fr;column-gap:7px;align-items:center;font-size:11.5px}
+.an-layer .leg-key{grid-row:span 2;height:100%}
+.an-layer-name{font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.an-layer-meta{font-size:10.5px;color:var(--text-3)}
+.an-layer.off{opacity:.55}
+.an-actions{display:flex;gap:8px;margin-top:10px}
+.an-seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin:12px 0 8px}
+.an-seg button{padding:5px 11px;font-size:11.5px;color:var(--text-2)}
+.an-seg button.on{background:var(--accent-w);color:var(--text);font-weight:600}
+.an-chart-title{font-size:12px;font-weight:600;color:var(--text)}
+.an-legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:4px 0 4px;font-size:11px;color:var(--text-2)}
+.an-legend.single{font-size:10.5px;color:var(--text-3)}
+.an-leg-item{display:inline-flex;align-items:center;gap:6px}
+.an-line-key{display:inline-block;width:12px;height:2px;border-radius:1px;flex-shrink:0}
+.an-chart{position:relative;outline:none}
+.an-chart:focus-visible{box-shadow:0 0 0 2px var(--accent-w);border-radius:6px}
+.an-chart svg{display:block;max-width:100%;height:auto;overflow:visible}
+.an-grid{stroke:var(--line);stroke-width:1;shape-rendering:crispEdges}
+.an-tick{fill:var(--text-3);font-size:10px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.an-line{fill:none;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.an-dot{stroke:var(--panel);stroke-width:2;pointer-events:none}
+.an-end{fill:var(--text-2);font-size:10.5px}
+.an-cross{stroke:var(--text-3);stroke-width:1;pointer-events:none}
+.an-tip{
+  position:absolute;z-index:2;min-width:150px;max-width:240px;padding:7px 9px;pointer-events:none;
+  background:var(--panel);border:1px solid var(--line);border-radius:7px;box-shadow:var(--shadow);font-size:11px;
+}
+.an-tip-head{font-size:10.5px;color:var(--text-3);margin-bottom:4px}
+.an-tip-row{display:grid;grid-template-columns:12px auto 1fr;align-items:center;gap:6px;line-height:1.6}
+.an-tip-row strong{color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.an-tip-row span:last-child{color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.an-notes{font-size:10.5px;color:var(--text-3);line-height:1.5;margin-top:6px}
+.an-notes div+div{margin-top:3px}
+.an-table-wrap{margin-top:8px;font-size:11px}
+.an-table-wrap summary{cursor:pointer;color:var(--text-2)}
+.an-table{width:100%;border-collapse:collapse;margin-top:6px;font-variant-numeric:tabular-nums}
+.an-table th,.an-table td{padding:3px 4px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.an-table th:first-child,.an-table td:first-child{text-align:left}
+.an-table th{font-weight:600;color:var(--text-2)}
+.set-note.warn{color:var(--alert)}
+.set-note.err{color:var(--danger)}
 .leg-class{display:flex;align-items:center;gap:7px;min-width:0}
 .leg-chip{width:13px;height:13px;border-radius:2px;flex-shrink:0;border:1px solid var(--line)}
 .leg-chip-nil{
@@ -509,9 +577,9 @@ input[type=range]::-moz-range-thumb{
 </style>
 <style>
 /* 2026 visual refresh: a calm, map-first forest monitoring interface. */
-:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px}
-:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a}
-:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45)}
+:root{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#f8faf7;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--header-h:64px;--rail-w:154px;--panel-w:370px;--r:8px;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300}
+:root[data-theme="light"]{--bg:#f4f5f1;--panel:#fff;--panel-2:#f7f8f5;--panel-3:#edf1eb;--rail:#253129;--line:#dde3dc;--line-2:#c9d2c9;--text:#26312b;--text-2:#68756d;--text-3:#89958d;--accent:#347447;--accent-t:#fff;--accent-w:rgba(52,116,71,.11);--alert:#d97724;--danger:#c94b40;--map-void:#e5e9e3;--attrib-bg:rgba(255,255,255,.9);--shadow:0 3px 14px rgba(34,58,42,.1);--shadow-lg:0 10px 36px rgba(34,58,42,.15);--bc:#3e7e4e;--dc:#d56f2a;--sd:#397ba6;--al:#7656a5;--lu:#a17b22;--ab:#a8456a;--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300}
+:root[data-theme="dark"]{--bg:#101713;--panel:#18211c;--panel-2:#1e2923;--panel-3:#29362f;--rail:#121a15;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.15);--text:#edf2ee;--text-2:#a6b3aa;--text-3:#718078;--accent:#86b052;--accent-t:#101713;--accent-w:rgba(134,176,82,.15);--map-void:#090d0b;--attrib-bg:rgba(16,23,19,.86);--shadow:0 3px 16px rgba(0,0,0,.35);--shadow-lg:0 10px 40px rgba(0,0,0,.45);--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#008300}
 body{font-size:14px;background:var(--bg)}
 #site-header{height:var(--header-h);display:flex;align-items:center;gap:24px;padding:0 24px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:800}
 .brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text);min-width:0}.brand-mark{width:46px;height:46px;flex-shrink:0;object-fit:contain}.bn-eo{color:#3f8a2e}.bn-stac{color:#2b5d9a}:root[data-theme="dark"] .bn-eo{color:#86b052}:root[data-theme="dark"] .bn-stac{color:#7aa7dd}.brand-copy{line-height:1.05}.brand-name{display:block;font-size:17px;font-weight:700;letter-spacing:-.015em}.brand-tagline{display:block;font-size:10.5px;color:var(--text-3);margin-top:5px;letter-spacing:.025em}
@@ -980,7 +1048,17 @@ const BASEMAPS = {
 
 const LABELS_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}';
 
-const LAYER_COLORS = ['#97bd3d','#f88b2f','#4a9fd8','#a583d8','#d8b63a','#e2574c','#3fb8a0'];
+/* Categorical layer colours, validated for colour-vision deficiency on the
+   panel (light and dark); the same slot colours a layer on the map, in the
+   legend and in analysis charts (var(--sN) gives the dark-mode step). */
+const LAYER_COLORS = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300'];
+
+/* First slot no active layer uses, so a colour stays with its layer. */
+function freeColorSlot() {
+  const used = new Set([...S.layers.values()].map(l => l.slot));
+  for (let i = 0; i < LAYER_COLORS.length; i++) if (!used.has(i)) return i;
+  return S.layers.size % LAYER_COLORS.length;
+}
 
 /* ══════════════════════════════════════════════════════════════════
    STATE
@@ -1004,6 +1082,8 @@ const S = {
   cat:       null,
   panelOpen: true,
   legendOpen: true,
+  legTab: 'legend',            // legend | analysis
+  an: { running: false, progress: 0, message: '', error: null, result: null, resultSig: null, measure: 'mean' },
   dl: { drawing: null, geometry: null, shape: null, excluded: new Set(), estimate: null, polling: null },
   colormapNames: Object.keys(RAMPS),
 };
@@ -1232,6 +1312,8 @@ async function loadCollection(link, base) {
       keywords: Array.isArray(col.keywords) ? col.keywords : [],
       links: col.links || [],
       facts: collectionFacts(col),
+      analytics: col['eoforeststac:analytics'] || null,
+      startYear: String(col.extent?.temporal?.interval?.[0]?.[0] || '').slice(0, 4),
       zarrs,
     };
   } catch { return null; }
@@ -1907,11 +1989,13 @@ async function activateLayer(col) {
     bounds: col.bbox,
     summaries: col.summaries || {},
     rasterBands: col.zarrs[0].rasterBands || [],
-    color: LAYER_COLORS[S.layers.size % LAYER_COLORS.length],
+    slot: freeColorSlot(),
+    color: null,          // set from slot below
     footprintLayer: null, footprintLabel: null, leafletLayer: null,
     pyramidUrl: null, numPyramidLevels: 0, _lastPyramidLevel: null,
   };
 
+  layer.color = LAYER_COLORS[layer.slot];
   layer.variables = await fetchVariables(zarrUrl, col.variables);
   layer.activeVar = layer.variables[0];
   layer.label = layer.activeVar;
@@ -2290,22 +2374,61 @@ const fmtNum = v => {
   return Number.isInteger(v) ? String(v) : v.toFixed(a < 10 ? 2 : 1);
 };
 
-function renderLegend() {
+/* The legend box holds two tabs, Legend and Analysis, built once. Each body
+   renders on its own: the legend skips rebuilds while one of its dropdowns
+   has focus, and that guard must not hold back analysis progress. */
+function ensureLegendShell() {
   const leg = el('legend');
-  if (!S.layers.size) { leg.hidden = true; return; }
-  /* Don't rebuild under an open dropdown — zoomend fires while it's in use. */
-  if (leg.contains(document.activeElement)) return;
-  leg.hidden = false;
-  const zoom = S.map?.getZoom() ?? 0;
-
+  if (el('leg-items')) return syncLegendTabs();
   leg.innerHTML =
-    `<div class="leg-head">
-       <span>Legend</span>
-       <button class="ghost-btn" id="leg-toggle" title="Collapse legend">
+    `<div class="leg-head leg-tabs" role="tablist" aria-label="Legend and analysis">
+       <button class="leg-tab" role="tab" data-tab="legend">Legend</button>
+       <button class="leg-tab" role="tab" data-tab="analysis">Analysis</button>
+       <button class="ghost-btn" id="leg-toggle" title="Collapse">
          <svg class="ico-sm" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
        </button>
      </div>
-     <div id="leg-items" ${S.legendOpen ? '' : 'hidden'}>` +
+     <div id="leg-items" role="tabpanel"></div>
+     <div id="an-body" role="tabpanel" hidden></div>`;
+  leg.querySelectorAll('.leg-tab').forEach(b => b.addEventListener('click', () => {
+    S.legTab = b.dataset.tab;
+    S.legendOpen = true;
+    b.blur();
+    renderLegend();
+  }));
+  el('leg-toggle').addEventListener('click', () => {
+    S.legendOpen = !S.legendOpen;
+    syncLegendTabs();
+  });
+  syncLegendTabs();
+}
+
+function syncLegendTabs() {
+  const leg = el('legend');
+  const an = S.legTab === 'analysis';
+  leg.classList.toggle('an-open', an && S.legendOpen);
+  leg.querySelectorAll('.leg-tab').forEach(b => {
+    const on = b.dataset.tab === S.legTab;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+  el('leg-items').hidden = an || !S.legendOpen;
+  el('an-body').hidden = !an || !S.legendOpen;
+  el('leg-toggle').style.transform = S.legendOpen ? '' : 'rotate(180deg)';
+}
+
+function renderLegend() {
+  const leg = el('legend');
+  if (!S.layers.size) { leg.hidden = true; return; }
+  leg.hidden = false;
+  ensureLegendShell();
+  if (S.legTab === 'analysis') { renderAnalysis(); return; }
+  const items = el('leg-items');
+  /* Don't rebuild under an open dropdown — zoomend fires while it's in use. */
+  if (items.contains(document.activeElement)) return;
+  const zoom = S.map?.getZoom() ?? 0;
+
+  items.innerHTML =
     [...S.layers.values()].map(layer => {
       const lvl = getPyramidLevel(layer, zoom);
       const pills = [];
@@ -2362,15 +2485,9 @@ function renderLegend() {
         <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}</div>
         ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
       </div>`;
-    }).join('') + '</div>';
+    }).join('');
 
-  el('leg-toggle').addEventListener('click', () => {
-    S.legendOpen = !S.legendOpen;
-    renderLegend();
-  });
-  el('leg-toggle').style.transform = S.legendOpen ? '' : 'rotate(180deg)';
-
-  leg.querySelectorAll('.leg-var').forEach(sel => {
+  items.querySelectorAll('.leg-var').forEach(sel => {
     sel.addEventListener('change', () => {
       /* The dropdown has closed by now. Release focus, or the guard above
          keeps skipping every rebuild and the legend stays on the old
@@ -2379,6 +2496,425 @@ function renderLegend() {
       onLayerControl(sel);
     });
   });
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ANALYSIS — area-weighted statistics of the active layers in a drawn
+   area. Computed by the server with eoforeststac.analytics (the same code
+   notebooks use); which variables qualify, and how, comes from each
+   collection's eoforeststac:analytics recipe.
+══════════════════════════════════════════════════════════════════ */
+const AN_MEASURES = {
+  mean:  { label: 'Mean density', key: 'mean' },
+  total: { label: 'Total stock',  key: 'total' },
+};
+
+function analysisTarget(layer) {
+  const recipes = findCollection(layer.id)?.analytics;
+  if (!recipes || typeof recipes !== 'object') return null;
+  const variable = recipes[layer.activeVar] ? layer.activeVar : Object.keys(recipes)[0];
+  return variable ? { variable, ...recipes[variable] } : null;
+}
+
+function analysisRequest() {
+  const layers = [...S.layers.values()]
+    .map(layer => ({ layer, target: analysisTarget(layer) }))
+    .filter(x => x.target);
+  return {
+    geometry: S.dl.geometry,
+    layers: layers.map(({ layer, target }) => ({
+      url: layer.zarrUrl, variable: target.variable, kind: target.kind,
+      sel: extraSels(layer), name: layer.id,
+    })),
+  };
+}
+
+async function startAnalysis() {
+  const req = analysisRequest();
+  if (!req.geometry || !req.layers.length || S.an.running) return;
+  Object.assign(S.an, { running: true, progress: 0, message: 'Starting…', error: null });
+  renderAnalysis();
+  try {
+    const { id } = await postJSON('/analysis', req);
+    for (;;) {
+      await new Promise(r => setTimeout(r, 1200));
+      const st = await fetchJSON(`${S.tiTiler}/analysis/${id}`);
+      S.an.progress = st.progress || 0;
+      S.an.message = st.message || '';
+      if (st.status === 'done') { S.an.result = st.result; S.an.resultSig = JSON.stringify(req); break; }
+      if (st.status === 'error') throw new Error(st.message || 'Analysis failed');
+      renderAnalysisProgress();
+    }
+  } catch (e) {
+    S.an.error = e.message;
+  }
+  S.an.running = false;
+  renderAnalysis();
+}
+
+/* One series per analysed layer, in the layer's colour slot. */
+function analysisSeries(result) {
+  return (result?.layers || []).map(res => {
+    const layer = S.layers.get(res.name);
+    const col = findCollection(res.name);
+    const recipe = col?.analytics?.[res.variable] || {};
+    const fallbackT = col?.startYear ? Date.UTC(+col.startYear, 0, 1) : null;
+    const points = (res.rows || []).map(r => ({
+      t: r.time ? Date.parse(r.time) : fallbackT,
+      mean: r.mean, total: r.total, coverage: r.coverage,
+      valid: r.valid_area_ha, region: r.region_area_ha,
+    })).sort((a, b) => (a.t ?? 0) - (b.t ?? 0));
+    return {
+      id: res.name,
+      title: col?.title || res.name,
+      short: shortSeriesName(col?.title || res.name),
+      slot: layer?.slot ?? 0,
+      variable: res.variable,
+      quantity: recipe.quantity || res.variable,
+      units: (res.units || '').replace(/^Mg ha-1$/, 'Mg/ha'),
+      totalUnits: recipe.total_units || 'Mg',
+      level: res.level, approx: !!res.approximate, res: res.resolution_m,
+      error: res.error || null,
+      static: !(res.rows || []).some(r => r.time),
+      points,
+    };
+  });
+}
+
+function shortSeriesName(title) {
+  const head = String(title).split(/\s[–—-]\s/)[0].replace(/\s*\(.*?\)\s*$/, '');
+  return head.length > 22 ? head.slice(0, 21) + '…' : head;
+}
+
+/* Mg totals are shown in the largest unit that keeps values >= 1. */
+function totalScale(maxMg) {
+  for (const [f, u] of [[1e9, 'Pg'], [1e6, 'Tg'], [1e3, 'Gg']]) if (maxMg >= f) return { f, u };
+  return { f: 1, u: 'Mg' };
+}
+
+function fmtCompact(v) {
+  if (!Number.isFinite(v)) return '—';
+  const a = Math.abs(v);
+  if (a >= 100) return Math.round(v).toLocaleString('en');
+  if (a >= 10) return v.toFixed(1);
+  return v.toFixed(a >= 1 ? 2 : 3);
+}
+
+function niceStep(span, target = 4) {
+  const raw = span / target, mag = 10 ** Math.floor(Math.log10(raw || 1));
+  return [1, 2, 2.5, 5, 10].map(m => m * mag).find(st => raw <= st) || mag * 10;
+}
+
+function renderAnalysis() {
+  const host = el('an-body');
+  if (!host || S.legTab !== 'analysis') return;
+  syncLegendTabs();
+  const g = S.dl.geometry;
+  const req = analysisRequest();
+  const candidates = [...S.layers.values()];
+  const stale = S.an.result && S.an.resultSig !== JSON.stringify(req);
+
+  let html = `<div class="an-head">Analyse forest change</div>`;
+  if (!g) {
+    html += `
+      <p class="an-lede">Draw the area you want to analyse on the map, or upload a polygon.</p>
+      <div class="an-draw">
+        <button class="btn dl-tool an-tool" data-draw="poly" title="Click vertices; double-click to finish">Draw polygon</button>
+        <button class="btn btn-ghost dl-tool an-tool" data-draw="rect" title="Drag on the map">Draw rectangle</button>
+      </div>
+      <div class="an-or">or</div>
+      <label class="an-drop" id="an-drop">
+        <input type="file" id="an-file" accept=".geojson,.json,application/geo+json" hidden>
+        <span>Drag and drop a <strong>GeoJSON polygon</strong>, or click to upload</span>
+        <small>Recommended file size &lt; 1 MB</small>
+      </label>`;
+  } else {
+    html += `
+      <div class="an-area">
+        <span>${esc(areaLabel(g))}${S.an.result && !stale ? ` · ${fmtCompact(S.an.result.region_area_ha / 100)} km²` : ''}</span>
+        <a class="dl-link" id="an-zoom">zoom</a><a class="dl-link" id="an-clear">clear</a>
+      </div>
+      <div class="an-layers">` +
+      (candidates.length ? candidates.map(l => {
+        const t = analysisTarget(l);
+        return `<div class="an-layer${t ? '' : ' off'}">
+          <span class="leg-key" style="background:var(--s${l.slot + 1})"></span>
+          <span class="an-layer-name">${esc(l.title)}</span>
+          <span class="an-layer-meta">${t ? esc(t.quantity || t.variable) : 'no statistics for this product yet'}</span>
+        </div>`;
+      }).join('') : '<div class="set-note">Switch on a biomass layer (CCI, Saatchi, ALS biomass) to analyse it.</div>') +
+      `</div>
+      <div class="an-actions">
+        <button class="btn" id="an-go" ${!req.layers.length || S.an.running ? 'disabled' : ''}>
+          ${S.an.result && !stale ? 'Analyse again' : 'Analyse'}</button>
+      </div>
+      <div id="an-progress" ${S.an.running ? '' : 'hidden'}>
+        <div class="dl-bar"><span id="an-bar" style="width:${Math.round(S.an.progress * 100)}%"></span></div>
+        <div class="set-note" id="an-status" aria-live="polite">${esc(S.an.message)}</div>
+      </div>
+      ${S.an.error ? `<div class="set-note err">${esc(S.an.error)}</div>` : ''}
+      <div id="an-results"></div>`;
+  }
+  host.innerHTML = html;
+
+  host.querySelectorAll('.an-tool[data-draw]').forEach(b => b.addEventListener('click', () => {
+    b.blur();
+    if (S.dl.drawing?.kind === b.dataset.draw) cancelDraw(); else startDraw(b.dataset.draw);
+  }));
+  const file = el('an-file');
+  if (file) {
+    file.addEventListener('change', e => { if (e.target.files[0]) loadAreaFile(e.target.files[0]); });
+    const drop = el('an-drop');
+    drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', e => {
+      e.preventDefault(); drop.classList.remove('over');
+      if (e.dataTransfer.files[0]) loadAreaFile(e.dataTransfer.files[0]);
+    });
+  }
+  el('an-clear')?.addEventListener('click', () => { S.an.result = null; setArea(null); });
+  el('an-zoom')?.addEventListener('click', zoomToArea);
+  el('an-go')?.addEventListener('click', e => { e.currentTarget.blur(); startAnalysis(); });
+  if (g && S.an.result) renderAnalysisResults(el('an-results'), S.an.result, stale);
+}
+
+function renderAnalysisProgress() {
+  const bar = el('an-bar'), status = el('an-status');
+  if (bar) bar.style.width = `${Math.round(S.an.progress * 100)}%`;
+  if (status) status.textContent = S.an.message;
+}
+
+function renderAnalysisResults(host, result, stale) {
+  const series = analysisSeries(result);
+  const ok = series.filter(s => !s.error && s.points.length);
+  const m = AN_MEASURES[S.an.measure];
+  const maxTotal = Math.max(0, ...ok.flatMap(s => s.points.map(p => p.total ?? 0)));
+  const scale = totalScale(maxTotal);
+  const unit = S.an.measure === 'mean' ? (ok[0]?.units || '') : scale.u;
+
+  host.innerHTML = `
+    ${stale ? '<div class="set-note warn">The area or layers changed since this result — analyse again to update it.</div>' : ''}
+    <div class="an-seg" role="radiogroup" aria-label="Measure">
+      ${Object.entries(AN_MEASURES).map(([k, v]) =>
+        `<button role="radio" aria-checked="${k === S.an.measure}" class="${k === S.an.measure ? 'on' : ''}" data-measure="${k}">${v.label}</button>`).join('')}
+    </div>
+    <div class="an-chart-title">${esc(m.label)}${unit ? ` (${esc(unit)})` : ''}</div>
+    <div class="an-legend" id="an-legend"></div>
+    <div class="an-chart" id="an-chart" tabindex="0" aria-label="${esc(m.label)} over time; use the arrow keys to step through years"></div>
+    <div class="an-notes" id="an-notes"></div>
+    <details class="an-table-wrap"><summary>Table</summary><div id="an-table"></div></details>
+    <div class="an-actions"><button class="btn btn-ghost" id="an-csv">Download CSV</button></div>`;
+
+  host.querySelectorAll('[data-measure]').forEach(b => b.addEventListener('click', () => {
+    S.an.measure = b.dataset.measure; b.blur(); renderAnalysis();
+  }));
+  el('an-csv').addEventListener('click', () => downloadAnalysisCsv(series, result));
+
+  const value = p => {
+    const v = p[m.key];
+    return v == null ? null : (S.an.measure === 'total' ? v / scale.f : v);
+  };
+
+  // Legend for two or more series; one series is named by the title row
+  const legend = el('an-legend');
+  if (ok.length >= 2) {
+    ok.forEach(s => {
+      const item = document.createElement('span');
+      item.className = 'an-leg-item';
+      const key = document.createElement('span');
+      key.className = 'an-line-key';
+      key.style.background = `var(--s${s.slot + 1})`;
+      item.append(key, document.createTextNode(s.short + (s.static ? ' (single year)' : '')));
+      legend.append(item);
+    });
+  } else if (ok.length === 1) {
+    legend.textContent = ok[0].title;
+    legend.classList.add('single');
+  }
+
+  drawAnalysisChart(el('an-chart'), ok, value, unit);
+
+  const notes = [];
+  for (const s of series) {
+    if (s.error) notes.push(`${s.short}: ${s.error}`);
+    else if (s.approx) notes.push(`${s.short}: approximate, from a ~${fmtCompact(s.res)} m overview (the area is too large for native resolution).`);
+  }
+  if (ok.some(s => s.points.some(p => p.coverage != null && p.coverage < 0.5)))
+    notes.push('Some years cover less than half of the area; see the coverage column in the table.');
+  el('an-notes').replaceChildren(...notes.map(t => { const d = document.createElement('div'); d.textContent = t; return d; }));
+
+  renderAnalysisTable(el('an-table'), ok, scale);
+}
+
+function drawAnalysisChart(host, series, value, unit) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = Math.max(280, host.clientWidth || 340), H = 190;
+  const labelled = series.length <= 4;
+  const M = { l: 44, r: labelled ? 70 : 14, t: 10, b: 24 };
+  const pw = W - M.l - M.r, ph = H - M.t - M.b;
+  const pts = series.flatMap(s => s.points.filter(p => p.t != null && value(p) != null));
+  host.replaceChildren();
+  if (!pts.length) { host.textContent = 'No valid data in this area.'; return; }
+
+  let t0 = Math.min(...pts.map(p => p.t)), t1 = Math.max(...pts.map(p => p.t));
+  if (t0 === t1) { t0 -= 365 * 864e5; t1 += 365 * 864e5; }
+  const vmax = Math.max(...pts.map(value));
+  const step = niceStep(vmax || 1);
+  const ymax = Math.max(step, Math.ceil(vmax / step) * step);
+  const x = t => M.l + (t - t0) / (t1 - t0) * pw;
+  const y = v => M.t + ph - (v / ymax) * ph;
+
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.setAttribute('role', 'img');
+  const add = (tag, attrs, parent = svg) => {
+    const n = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    parent.append(n);
+    return n;
+  };
+  const text = (str, attrs) => { const n = add('text', attrs); n.textContent = str; return n; };
+
+  // Recessive hairline grid and y ticks
+  for (let v = 0; v <= ymax + 1e-9; v += step) {
+    add('line', { x1: M.l, x2: M.l + pw, y1: y(v), y2: y(v), class: 'an-grid' });
+    text(fmtCompact(v), { x: M.l - 6, y: y(v) + 3, class: 'an-tick', 'text-anchor': 'end' });
+  }
+  // Year ticks: at most ~6 labels
+  const y0 = new Date(t0).getUTCFullYear(), y1 = new Date(t1).getUTCFullYear();
+  const every = Math.max(1, Math.ceil((y1 - y0 + 1) / 6));
+  for (let yr = y0; yr <= y1; yr++) {
+    const t = Date.UTC(yr, 0, 1);
+    if (t < t0 || t > t1 || (yr - y0) % every) continue;
+    text(String(yr), { x: x(t), y: H - 6, class: 'an-tick', 'text-anchor': 'middle' });
+  }
+
+  // Lines (2px), end dots and markers (r 4, 2px surface ring)
+  const ends = [];
+  for (const s of series) {
+    const sp = s.points.filter(p => p.t != null && value(p) != null);
+    if (!sp.length) continue;
+    const color = `var(--s${s.slot + 1})`;
+    if (sp.length > 1)
+      add('path', { d: sp.map((p, i) => `${i ? 'L' : 'M'}${x(p.t)},${y(value(p))}`).join(''), class: 'an-line', stroke: color });
+    const dots = sp.length <= 24 ? sp : [sp[sp.length - 1]];
+    for (const p of dots) add('circle', { cx: x(p.t), cy: y(value(p)), r: 4, class: 'an-dot', fill: color });
+    const last = sp[sp.length - 1];
+    ends.push({ s, x: x(last.t), y: y(value(last)) });
+  }
+  // Direct end labels for up to four series; drop the ones that would collide
+  if (labelled) {
+    ends.sort((a, b) => a.y - b.y);
+    let prev = -Infinity;
+    for (const e of ends) {
+      if (e.y - prev < 12) continue;
+      text(e.s.short, { x: e.x + 8, y: e.y + 3, class: 'an-end' });
+      prev = e.y;
+    }
+  }
+
+  // Crosshair + tooltip: snaps to the nearest year, lists every series
+  const times = [...new Set(pts.map(p => p.t))].sort((a, b) => a - b);
+  const cross = add('line', { y1: M.t, y2: M.t + ph, class: 'an-cross', visibility: 'hidden' });
+  const hit = add('rect', { x: M.l, y: M.t, width: pw, height: ph, fill: 'transparent' });
+  host.append(svg);
+  const tip = document.createElement('div');
+  tip.className = 'an-tip'; tip.hidden = true;
+  host.append(tip);
+
+  let cur = -1;
+  const show = i => {
+    cur = Math.max(0, Math.min(times.length - 1, i));
+    const t = times[cur], cx = x(t);
+    cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('visibility', 'visible');
+    tip.replaceChildren();
+    const head = document.createElement('div');
+    head.className = 'an-tip-head';
+    head.textContent = String(new Date(t).getUTCFullYear());
+    tip.append(head);
+    for (const s of series) {
+      const p = s.points.find(q => q.t === t);
+      const row = document.createElement('div');
+      row.className = 'an-tip-row';
+      const key = document.createElement('span');
+      key.className = 'an-line-key'; key.style.background = `var(--s${s.slot + 1})`;
+      const val = document.createElement('strong');
+      val.textContent = p && value(p) != null ? `${fmtCompact(value(p))} ${unit}` : '—';
+      const name = document.createElement('span');
+      name.textContent = s.short + (p?.coverage != null ? ` · ${Math.round(p.coverage * 100)} % covered` : '');
+      row.append(key, val, name);
+      tip.append(row);
+    }
+    tip.hidden = false;
+    const left = Math.min(cx + 10, W - tip.offsetWidth - 4);
+    tip.style.left = `${cx + 10 + tip.offsetWidth > W ? cx - tip.offsetWidth - 10 : left}px`;
+    tip.style.top = `${M.t}px`;
+  };
+  const hide = () => { cross.setAttribute('visibility', 'hidden'); tip.hidden = true; };
+  hit.addEventListener('pointermove', e => {
+    const r = svg.getBoundingClientRect();
+    const px = (e.clientX - r.left) * (W / r.width);
+    let best = 0;
+    times.forEach((t, i) => { if (Math.abs(x(t) - px) < Math.abs(x(times[best]) - px)) best = i; });
+    show(best);
+  });
+  hit.addEventListener('pointerleave', hide);
+  host.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault(); show(cur < 0 ? 0 : cur + (e.key === 'ArrowRight' ? 1 : -1));
+    } else if (e.key === 'Escape') hide();
+  });
+  host.addEventListener('blur', hide);
+}
+
+function renderAnalysisTable(host, series, scale) {
+  const table = document.createElement('table');
+  table.className = 'an-table';
+  const head = table.createTHead().insertRow();
+  for (const h of ['Product', 'Year', `Mean (${series[0]?.units || ''})`, `Total (${scale.u})`, 'Coverage'])
+    head.append(Object.assign(document.createElement('th'), { textContent: h }));
+  const body = table.createTBody();
+  for (const s of series) for (const p of s.points) {
+    const row = body.insertRow();
+    const cells = [
+      s.short,
+      p.t != null ? String(new Date(p.t).getUTCFullYear()) + (s.static ? ' *' : '') : '—',
+      p.mean != null ? fmtCompact(p.mean) : '—',
+      p.total != null ? fmtCompact(p.total / scale.f) : '—',
+      p.coverage != null ? `${Math.round(p.coverage * 100)} %` : '—',
+    ];
+    cells.forEach(c => { row.insertCell().textContent = c; });
+  }
+  host.replaceChildren(table);
+  if (series.some(s => s.static)) {
+    const note = document.createElement('div');
+    note.className = 'set-note';
+    note.textContent = '* single-year product, shown at its nominal year';
+    host.append(note);
+  }
+}
+
+function downloadAnalysisCsv(series, result) {
+  const cols = ['product', 'variable', 'year', 'mean', 'mean_units', 'total_Mg', 'valid_area_ha',
+                'region_area_ha', 'coverage', 'resolution_m', 'approximate'];
+  const q = v => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
+  const lines = [cols.join(',')];
+  for (const s of series) {
+    if (s.error) { lines.push([s.id, s.variable, '', '', '', '', '', '', '', '', `error: ${s.error}`].map(q).join(',')); continue; }
+    for (const p of s.points) lines.push([
+      s.id, s.variable, p.t != null ? new Date(p.t).getUTCFullYear() : '', p.mean, s.units, p.total,
+      p.valid, p.region, p.coverage, s.res, s.approx,
+    ].map(q).join(','));
+  }
+  lines.push('', `# area_ha (as drawn),${result.region_area_ha}`, `# area_geojson,${q(JSON.stringify(S.dl.geometry))}`,
+             '# computed with eoforeststac.analytics (area-weighted; pixel areas on the WGS84 ellipsoid)');
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob), download: `eoforeststac_analysis_${new Date().toISOString().slice(0, 10)}.csv`,
+  });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 /* ══════════════════════════════════════════════════════════════════
@@ -2457,7 +2993,7 @@ function startDraw(kind) {
     const d = { kind, off: [], preview: null, points: [] };
     S.dl.drawing = d;
     el('map').classList.add('dl-drawing');
-    document.querySelector(`.dl-tool[data-draw="${kind}"]`)?.classList.add('on');
+    document.querySelectorAll(`.dl-tool[data-draw="${kind}"]`).forEach(b => b.classList.add('on'));
     S.map.doubleClickZoom.disable();
     const on = (ev, fn) => { S.map.on(ev, fn); d.off.push([ev, fn]); };
 
@@ -2532,6 +3068,7 @@ function setArea(geometry, { fit = false } = {}) {
     : null;
   if (fit) zoomToArea();
   refreshDownload();
+  renderAnalysis();
 }
 
 function zoomToArea() {
