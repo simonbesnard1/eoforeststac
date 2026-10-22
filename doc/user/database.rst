@@ -4,6 +4,50 @@
 Advanced Usage
 ################################
 
+Region statistics
+=================
+
+:py:func:`eoforeststac.analytics.region_statistics` computes area-weighted
+statistics of a gridded variable inside a polygon, one row per time step. It is
+the same code the explorer's **Analysis** tab runs, so notebook numbers match
+the explorer's.
+
+.. code-block:: python
+
+    import rioxarray  # noqa: F401  (gives the DataArray its CRS)
+    from eoforeststac.providers.zarr import ZarrProvider
+    from eoforeststac.analytics import region_statistics
+
+    provider = ZarrProvider(
+        catalog_url="https://s3.gfz.de/dog.atlaseo-glm.eo-gridded-data/collections/public/catalog.json",
+        endpoint_url="https://s3.gfz.de",
+        anon=True,
+    )
+    agb = provider.open_dataset("CCI_BIOMASS", "7.0")["aboveground_biomass"]
+
+    harz = {"type": "Polygon", "coordinates": [[[10.5, 51.5], [11.5, 51.5],
+                                                 [11.5, 52.5], [10.5, 52.5], [10.5, 51.5]]]}
+    for row in region_statistics(agb, harz, crs="EPSG:4326"):
+        print(row["time"], round(row["mean"], 1), "Mg/ha", round(row["total"] / 1e6, 2), "Tg")
+
+Each row holds ``mean`` (area-weighted, over valid pixels), ``total`` (value x
+area, e.g. Mg for a density in Mg/ha), ``valid_area_ha``, ``region_area_ha`` and
+``coverage`` (the valid share of the region). Check ``coverage`` before
+comparing products or years: a total over 40 % of the area is not comparable
+with one over 95 %.
+
+- Pixel areas are exact on the WGS84 ellipsoid for latitude/longitude grids,
+  where they shrink towards the poles, and come from the resolution on
+  projected grids.
+- A pixel counts as inside when its centre lies in the polygon.
+- The polygon is in EPSG:4326 by default (``geometry_crs=...`` to change); it
+  is projected into the dataset's CRS for national grids such as the ALS
+  biomass countries.
+
+Which variables can be analysed, and how, is declared per product in the
+catalog (``eoforeststac:analytics`` on the collection); currently the biomass
+products, as densities in Mg/ha.
+
 Dataset alignment
 ==================
 

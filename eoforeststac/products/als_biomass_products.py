@@ -251,6 +251,15 @@ ALS_BIOMASS_PRODUCTS_CFG = {
     "raster_bands": {
         "biomass": {"data_type": "float32", "nodata": "nan"},
     },
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "biomass": {
+            "kind": "density",
+            "quantity": "Forest biomass",
+            "total_units": "Mg",
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

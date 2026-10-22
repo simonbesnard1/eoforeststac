@@ -129,6 +129,15 @@ SAATCHI_BIOMASS_CFG = {
     # ------------------------------------------------------------------
     # Item assets template (for Item Assets extension)
     # ------------------------------------------------------------------
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "agb": {
+            "kind": "density",
+            "quantity": "Aboveground biomass",
+            "total_units": "Mg",
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

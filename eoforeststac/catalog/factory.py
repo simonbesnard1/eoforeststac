@@ -76,6 +76,11 @@ def create_collection(cfg: dict) -> pystac.Collection:
     if "item_assets" in cfg:
         collection.extra_fields["item_assets"] = cfg["item_assets"]
 
+    # Which variables the explorer's Analysis tab can summarise, and how
+    # (see eoforeststac.analytics)
+    if "analytics" in cfg:
+        collection.extra_fields["eoforeststac:analytics"] = cfg["analytics"]
+
     # Add collection-level assets (used by STAC Browser for thumbnails/icons)
     if "assets" in cfg:
         for key, a in cfg["assets"].items():

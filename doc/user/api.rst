@@ -55,6 +55,19 @@ Base provider
 
    eoforeststac.providers.base.BaseProvider
 
+Analytics
+=========
+
+Area-weighted region statistics, shared with the explorer's Analysis tab.
+
+.. autosummary::
+   :toctree: generated/
+
+   eoforeststac.analytics.region_statistics
+   eoforeststac.analytics.pixel_area_ha
+   eoforeststac.analytics.geometry_area_ha
+   eoforeststac.analytics.clip_to_geometry
+
 Catalog
 =======
 

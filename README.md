@@ -26,6 +26,7 @@ The package supports a growing catalog of global forest EO products covering bio
 - **Spatial subsetting**: Extract regions of interest with automatic CRS handling
 - **Temporal filtering**: Query data by time range
 - **Dataset alignment**: Merge multi-source datasets onto a common grid
+- **Region statistics**: Area-weighted time series (e.g. mean biomass and total stock) for any polygon, the same computation the explorer's Analysis tab uses
 - **Lazy loading**: Efficient on-demand data access via xarray and Dask
 
 ## Why EOForestSTAC?
@@ -41,7 +42,8 @@ The recommended starting point for new users is the interactive **STAC Browser**
 The browser lets you browse all collections and versions by theme, inspect spatial footprints on a map, view dataset metadata and provenance, and copy asset URLs directly for use in Python.
 
 The raster explorer adds interactive Zarr rendering, layer styling, pixel
-inspection and area downloads. It runs on a GFZ virtual machine together with its
+inspection, area downloads and region analysis (area-weighted time series of the
+active biomass layers over a drawn area). It runs on a GFZ virtual machine together with its
 TiTiler tile service and is reachable from the GFZ network at
 **http://eoforeststac.gfz.de**.
 

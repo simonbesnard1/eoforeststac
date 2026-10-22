@@ -146,6 +146,15 @@ CCI_BIOMASS_CFG = {
         "aboveground_biomass": {"data_type": "int32", "nodata": -9999},
         "aboveground_biomass_std": {"data_type": "int32", "nodata": -9999},
     },
+    # Region statistics in the explorer (eoforeststac.analytics); keys are
+    # the variable names in the Zarr store
+    "analytics": {
+        "aboveground_biomass": {
+            "kind": "density",
+            "quantity": "Aboveground biomass",
+            "total_units": "Mg",
+        },
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",
