@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import time
@@ -43,6 +44,12 @@ def child_links(document: dict[str, Any]) -> list[dict[str, Any]]:
     return [link for link in document.get("links", []) if link.get("rel") == "child"]
 
 
+def _item_version(link: dict) -> tuple[int, ...]:
+    """(3, 10) from ".../GAMI_v3.10/GAMI_v3.10.json"; () when unversioned."""
+    match = re.search(r"_v(\d[\d.]*?)(?:/|\.json|$)", link.get("href", ""))
+    return tuple(int(p) for p in match.group(1).split(".") if p) if match else ()
+
+
 def discover_collections(catalog_url: str) -> dict[str, dict[str, str]]:
     """Return collection -> Zarr asset key/URL mappings from a static STAC tree."""
     collections: dict[str, dict[str, str]] = {}
@@ -53,16 +60,15 @@ def discover_collections(catalog_url: str) -> dict[str, dict[str, str]]:
         for collection_link in child_links(theme):
             collection_url = urljoin(theme_url, collection_link["href"])
             collection = read_json(collection_url)
-            item_link = next(
-                (
-                    link
-                    for link in collection.get("links", [])
-                    if link.get("rel") == "item"
-                ),
-                None,
-            )
-            if not item_link:
+            # The newest version, as the explorer shows it
+            item_links = [
+                link
+                for link in collection.get("links", [])
+                if link.get("rel") == "item"
+            ]
+            if not item_links:
                 continue
+            item_link = max(item_links, key=_item_version)
             item = read_json(urljoin(collection_url, item_link["href"]))
             assets = {
                 key: asset["href"]

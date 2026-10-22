@@ -1287,6 +1287,20 @@ async function loadTheme(link, base) {
   } catch { return null; }
 }
 
+/* The newest version's item: links are named ..._v<version>.json; versions
+   compare part by part (3.10 > 3.9). Older versions stay in the catalog. */
+function latestItemLink(links) {
+  const ver = l => (String(l.href).match(/_v(\d[\d.]*)(?:\/|\.json|$)/)?.[1] || '').split('.').filter(Boolean).map(Number);
+  const cmp = (a, b) => {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      const d = (a[i] ?? -1) - (b[i] ?? -1);
+      if (d) return d;
+    }
+    return 0;
+  };
+  return links.reduce((best, l) => (cmp(ver(l), ver(best)) > 0 ? l : best), links[links.length - 1]);
+}
+
 // Returns one dataset, or for a multi-site product (ALS, ULS, …) an array with
 // one dataset per site collection, each tagged with its parent product.
 async function loadCollection(link, base) {
@@ -1302,7 +1316,7 @@ async function loadCollection(link, base) {
     }
     const itemLinks = col.links.filter(l => l.rel === 'item');
     if (!itemLinks.length) return null;
-    const item = await fetchJSON(resolveUrl(url, itemLinks[0].href), { viaTiTiler: true });
+    const item = await fetchJSON(resolveUrl(url, latestItemLink(itemLinks).href), { viaTiTiler: true });
     const zarrs = Object.entries(item.assets || {})
       .filter(([, a]) => a.href?.endsWith('.zarr'))
       .map(([key, a]) => ({
