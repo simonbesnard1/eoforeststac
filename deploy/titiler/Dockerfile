@@ -14,7 +14,11 @@ COPY deploy/titiler/requirements.txt ./requirements.txt
 RUN python -m pip install --upgrade pip && \
     python -m pip install --requirement requirements.txt
 
-COPY deploy/titiler/app.py deploy/titiler/download.py ./
+COPY deploy/titiler/app.py deploy/titiler/download.py deploy/titiler/analysis.py ./
+# Region statistics come from the package (eoforeststac.analytics). Only the
+# source is copied: its own pins (zarr 2) would break TiTiler, and the
+# analytics module needs nothing beyond what TiTiler already installs.
+COPY eoforeststac/ ./eoforeststac/
 
 RUN groupadd --system --gid 10001 eoforest && \
     useradd --system --uid 10001 --gid eoforest --no-create-home eoforest && \

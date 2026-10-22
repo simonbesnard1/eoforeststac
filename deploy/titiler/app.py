@@ -14,6 +14,7 @@ from starlette.responses import JSONResponse
 from titiler.xarray import io as xarray_io
 from titiler.xarray.main import app
 
+from analysis import create_router as create_analysis_router
 from download import create_router
 
 
@@ -180,6 +181,7 @@ def dataset_dims(
 
 
 app.include_router(create_router(validate_remote_url))
+app.include_router(create_analysis_router(validate_remote_url))
 
 
 @app.get("/proxy/fetch", include_in_schema=False)
