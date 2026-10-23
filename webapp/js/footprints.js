@@ -180,7 +180,10 @@ function fpUpdateRange(layer) {
   if (hi > lo) { layer.rMin = roundRangeEnd(lo, hi - lo); layer.rMax = roundRangeEnd(hi, hi - lo); layer.rangeSource = 'footprints'; }
 }
 
+function fpBusy() { return _fpActive > 0 || _fpQueue.length > 0; }
+
 function fpRedraw() {
+  syncLoadingBar();
   clearTimeout(_fpRedrawTimer);
   _fpRedrawTimer = setTimeout(() => {
     _fpCanvas?.draw();

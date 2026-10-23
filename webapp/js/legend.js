@@ -122,6 +122,7 @@ function renderLegend() {
         </div>
         <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}</div>
         ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
+        <div class="leg-pills" data-loading="${esc(layer.id)}" ${layer.loading ? '' : 'hidden'}><span class="leg-lvl">loading tiles…</span></div>
       </div>`;
     }).join('') + footprintLegendItems();
 

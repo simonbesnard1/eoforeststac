@@ -559,7 +559,26 @@ function addLeafletLayer(layer) {
      something enormous. Let Leaflet skip them. */
   const bb = boundsToLatLng(layer.bounds);
   if (bb) opts.bounds = bb;
-  layer.leafletLayer = L.tileLayer(buildTileUrl(layer, zoom), opts).addTo(S.map);
+  // Listen before adding: the first 'loading' fires while the layer is added
+  layer.leafletLayer = L.tileLayer(buildTileUrl(layer, zoom), opts)
+    .on('loading', () => setLayerLoading(layer, true))
+    .on('load', () => setLayerLoading(layer, false))
+    .addTo(S.map);
+}
+
+/* Loading feedback: a bar along the top of the map while any layer (or the
+   footprints) is loading, and "loading tiles…" on that layer's legend entry.
+   Large tiles can take seconds; an empty map otherwise looks broken. */
+function setLayerLoading(layer, on) {
+  layer.loading = on;
+  document.querySelectorAll(`[data-loading="${CSS.escape(layer.id)}"]`).forEach(e => { e.hidden = !on; });
+  syncLoadingBar();
+}
+
+function syncLoadingBar() {
+  const busy = [...S.layers.values()].some(l => l.loading) || (typeof fpBusy === 'function' && fpBusy());
+  const bar = el('map-loading');
+  if (bar) bar.hidden = !busy;
 }
 
 /* Leaflet's redraw (run by setUrl) clamps only to the native zoom range, not

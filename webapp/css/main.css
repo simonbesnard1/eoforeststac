@@ -578,3 +578,9 @@ input[type=range]::-moz-range-thumb{
 
 /* Announced to screen readers, not shown */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* Loading bar along the top of the map */
+#map-loading{position:absolute;top:0;left:0;right:0;height:3px;z-index:900;overflow:hidden;pointer-events:none;background:var(--accent-w)}
+#map-loading span{position:absolute;top:0;bottom:0;width:30%;background:var(--accent);animation:map-loading 1.1s ease-in-out infinite}
+@keyframes map-loading{from{left:-30%}to{left:100%}}
+@media (prefers-reduced-motion: reduce){#map-loading span{animation:none;left:0;width:100%;opacity:.6}}
