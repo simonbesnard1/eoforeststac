@@ -83,7 +83,7 @@ class EFDAWriter(BaseZarrWriter):
         chunks: Dict[str, int],
         dtype: str = "int16",
         forest_mask_path: Optional[str] = None,
-        _FillValue: int = -9999,
+        fill_value: int = -9999,
     ) -> xr.Dataset:
         """
         Build a 1-year Dataset(time=1, y, x) containing both vars.
@@ -111,10 +111,10 @@ class EFDAWriter(BaseZarrWriter):
         )
 
         # 1 = disturbed forest, 0 = undisturbed forest, _FillValue = non-forest OR outside domain
-        da_mosaic = da_mosaic.where(forest_mask_raw == 1, other=_FillValue).astype(
+        da_mosaic = da_mosaic.where(forest_mask_raw == 1, other=fill_value).astype(
             dtype
         )
-        da_agent = da_agent.where(forest_mask_raw == 1, other=_FillValue).astype(dtype)
+        da_agent = da_agent.where(forest_mask_raw == 1, other=fill_value).astype(dtype)
 
         ds = xr.Dataset(
             {
@@ -161,7 +161,7 @@ class EFDAWriter(BaseZarrWriter):
     # Metadata
     # ------------------------------------------------------------------
     def add_metadata(
-        self, ds: xr.Dataset, _FillValue: int, crs: str, version: str = "1.0"
+        self, ds: xr.Dataset, fill_value: int, crs: str, version: str = "1.0"
     ) -> xr.Dataset:
         """
         Add variable + global metadata.
@@ -228,7 +228,7 @@ class EFDAWriter(BaseZarrWriter):
     # Zarr encoding
     # ------------------------------------------------------------------
     def make_encoding(
-        self, chunks: Dict[str, int], _FillValue: int = -9999
+        self, chunks: Dict[str, int], fill_value: int = -9999
     ) -> Dict[str, Dict]:
         zchunks = (1, chunks["y"], chunks["x"])
 
@@ -237,13 +237,13 @@ class EFDAWriter(BaseZarrWriter):
                 "dtype": "int16",
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
+                "_FillValue": np.int16(fill_value),
             },
             "disturbance_agent": {
                 "dtype": "int16",
                 "chunks": zchunks,
                 "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
+                "_FillValue": np.int16(fill_value),
             },
         }
 
@@ -260,7 +260,7 @@ class EFDAWriter(BaseZarrWriter):
         mosaic_pattern: str = "{year}_disturb_mosaic_v211_22_epsg3035.tif",
         agent_pattern: str = "{year}_disturb_agent_v211_reclass_compv211_epsg3035.tif",
         crs: str = "EPSG:3035",
-        _FillValue: int = -9999,
+        fill_value: int = -9999,
         forest_mask_path: str = None,
         chunks: Dict[str, int] = None,
         dtype: str = "int16",
@@ -284,7 +284,7 @@ class EFDAWriter(BaseZarrWriter):
             chunks = {"y": 1000, "x": 1000}
 
         # fixed encoding for initialization
-        encoding = self.make_encoding(chunks=chunks, _FillValue=_FillValue)
+        encoding = self.make_encoding(chunks=chunks, fill_value=fill_value)
 
         # store
         store = self.make_store(output_zarr)
@@ -302,12 +302,12 @@ class EFDAWriter(BaseZarrWriter):
                 chunks=chunks,
                 dtype=dtype,
                 forest_mask_path=forest_mask_path,
-                _FillValue=_FillValue,
+                fill_value=fill_value,
             )
 
             # Add human-readable metadata
             ds_year = self.add_metadata(
-                ds_year, _FillValue=_FillValue, crs=crs, version=version
+                ds_year, fill_value=fill_value, crs=crs, version=version
             )
 
             # Strip CF serialization attrs (_FillValue, scale_factor, add_offset,

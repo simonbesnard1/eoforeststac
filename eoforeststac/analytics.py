@@ -236,17 +236,10 @@ def _masked_values(sub: xr.DataArray) -> xr.DataArray:
     """Values as float64 with the fill value (if still encoded) as NaN."""
     values = sub.astype("float64")
     if np.issubdtype(sub.dtype, np.integer):
-        for source in (sub.encoding, sub.attrs):
-            fill = next(
-                (
-                    source[k]
-                    for k in ("_FillValue", "missing_value", "nodata")
-                    if source.get(k) is not None
-                ),
-                None,
-            )
-            if fill is not None:
-                return values.where(sub != fill)
+        # xarray (and rioxarray) keep an undecoded fill value under _FillValue
+        fill = sub.encoding.get("_FillValue", sub.attrs.get("_FillValue"))
+        if fill is not None:
+            return values.where(sub != fill)
     return values
 
 

@@ -231,7 +231,7 @@ class RADDEuropeWriter(BaseZarrWriter):
         end: str = "2023-12-01",
         version: str = "1.0",
         crs: str = "EPSG:3035",
-        _FillValue: int = -9999,
+        fill_value: int = -9999,
         chunks: Optional[Dict[str, int]] = None,
         consolidate_at_end: bool = True,
     ) -> str:
@@ -255,7 +255,7 @@ class RADDEuropeWriter(BaseZarrWriter):
         ds_in["forest_mask_raw"] = ds_in["forest_mask_raw"].chunk(target_chunks)
 
         domain_valid, forest_mask, alert_month_index, alert_yydoy = (
-            self.build_static_layers(ds_in, fill_value=_FillValue)
+            self.build_static_layers(ds_in, fill_value=fill_value)
         )
 
         times = pd.date_range(start=start, end=end, freq="MS")
@@ -268,19 +268,19 @@ class RADDEuropeWriter(BaseZarrWriter):
                 "dtype": "int16",
                 "chunks": (chunks["time"], chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
+                "_FillValue": np.int16(fill_value),
             },
             "forest_mask": {
                 "dtype": "int16",
                 "chunks": (chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
+                "_FillValue": np.int16(fill_value),
             },
             "alert_yydoy": {
                 "dtype": "int16",
                 "chunks": (chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.int16(_FillValue),
+                "_FillValue": np.int16(fill_value),
             },
         }
 
@@ -288,7 +288,7 @@ class RADDEuropeWriter(BaseZarrWriter):
             print(f"RADD: processing {t.strftime('%Y-%m')} ({i + 1}/{len(times)})")
 
             dist2d = (alert_month_index == np.int32(m_idx)).astype("int16")
-            dist2d = dist2d.where(domain_valid, other=_FillValue)
+            dist2d = dist2d.where(domain_valid, other=fill_value)
             dist2d = dist2d.where(forest_mask != 0, other=0)
 
             ds_step = xr.Dataset(

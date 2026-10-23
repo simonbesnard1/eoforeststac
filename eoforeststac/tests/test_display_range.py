@@ -4,7 +4,7 @@ import zarr
 from eoforeststac.core.zarr import add_display_range
 
 
-def _store(path, data, fill_value, attrs=None):
+def _store(path, data, fill_value):
     """A Zarr v2 store, under zarr 2 (the pinned version) or zarr 3."""
     if zarr.__version__.startswith("2"):
         group = zarr.open_group(str(path), mode="w")
@@ -17,7 +17,6 @@ def _store(path, data, fill_value, attrs=None):
             "v", shape=data.shape, chunks=(50, 50), dtype="f4", fill_value=fill_value
         )
     arr[:] = data
-    arr.attrs.update(attrs or {})
     zarr.consolidate_metadata(str(path))
 
 
@@ -34,10 +33,10 @@ def test_fill_value_is_not_part_of_the_range(tmp_path):
     assert attrs["display_range"] == [lo, hi]
 
 
-def test_missing_value_attribute_is_excluded(tmp_path):
+def test_nan_fill_value_store(tmp_path):
     data = np.linspace(0, 5, 10000, dtype="f4").reshape(100, 100)
-    data[::2] = -1.0
-    _store(tmp_path / "s.zarr", data, fill_value=np.nan, attrs={"missing_value": -1.0})
+    data[::2] = np.nan
+    _store(tmp_path / "s.zarr", data, fill_value=np.nan)
 
     lo, hi = add_display_range(str(tmp_path / "s.zarr"))["v"]
 

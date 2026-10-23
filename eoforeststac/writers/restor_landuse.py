@@ -161,14 +161,14 @@ class RestorLanduseWriter(BaseZarrWriter):
     # Zarr encoding
     # ------------------------------------------------------------------
     def make_encoding(
-        self, chunks: Dict[str, int], _FillValue: int = 255
+        self, chunks: Dict[str, int], fill_value: int = 255
     ) -> Dict[str, Dict]:
         return {
             "lulc": {
                 "dtype": "uint8",
                 "chunks": (1, chunks["y"], chunks["x"]),
                 "compressor": DEFAULT_COMPRESSOR,
-                "_FillValue": np.uint8(_FillValue),
+                "_FillValue": np.uint8(fill_value),
             },
         }
 
@@ -182,7 +182,7 @@ class RestorLanduseWriter(BaseZarrWriter):
         output_zarr: str,
         version: str = "2.0",
         crs: str = NATIVE_CRS,
-        _FillValue: int = 255,
+        fill_value: int = 255,
         chunks: Optional[Dict[str, int]] = None,
         consolidate_at_end: bool = True,
     ) -> str:
@@ -194,7 +194,7 @@ class RestorLanduseWriter(BaseZarrWriter):
         if chunks is None:
             chunks = {"y": 1000, "x": 1000}
 
-        encoding = self.make_encoding(chunks=chunks, _FillValue=_FillValue)
+        encoding = self.make_encoding(chunks=chunks, fill_value=fill_value)
         store = self.make_store(output_zarr)
 
         for i, year in enumerate(years):

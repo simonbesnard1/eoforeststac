@@ -67,15 +67,8 @@ def add_display_range(
             continue
         picked = rng.choice(len(keys), size=min(max_chunks, len(keys)), replace=False)
         # Raw zarr reads keep the fill value (e.g. -9999) as a number
-        fills = [
-            float(v)
-            for v in (
-                arr.fill_value,
-                arr.attrs.get("_FillValue"),
-                arr.attrs.get("missing_value"),
-            )
-            if isinstance(v, (int, float, np.number)) and np.isfinite(v)
-        ]
+        fill = arr.fill_value
+        fills = [float(fill)] if fill is not None and np.isfinite(fill) else []
 
         samples = []
         for i in picked:
