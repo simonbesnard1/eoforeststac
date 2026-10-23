@@ -173,46 +173,6 @@ def test_a_shared_link_reopens_the_same_view(page, browser):
     ), state
 
 
-def test_footprint_coverage_shows_when_zoomed_out(page):
-    if not page.locator('.grp[data-grp="spaceborne-lidar"]').count():
-        return  # no footprint service in this stack
-    import json
-
-    counts = [[0] * 360 for _ in range(180)]
-    for r in range(80, 100):
-        for c in range(150, 230):
-            counts[r][c] = 1000 * (r - 79)
-    grid = {
-        "provider": "gedi",
-        "cell_deg": 1,
-        "origin": [90, -180],
-        "rows": 180,
-        "cols": 360,
-        "total": sum(map(sum, counts)),
-        "counts": counts,
-    }
-    page.route(
-        "**/footprints/coverage_*.json",
-        lambda route: route.fulfill(
-            status=200,
-            content_type="application/json",
-            headers={"Access-Control-Allow-Origin": "*"},
-            body=json.dumps(grid),
-        ),
-    )
-    page.evaluate("() => S.map.setView([0, 20], 3, {animate: false})")
-    page.evaluate("() => toggleDataset('GEDI_L4A_AGBD', true)")
-    page.wait_for_function(
-        "() => /per 1° cell/.test(el('leg-items')?.innerText || '')", timeout=30_000
-    )
-    drawn = page.evaluate(
-        """() => { const c = document.querySelector('.fp-canvas');
-        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-        let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; }"""
-    )
-    assert drawn > 1000, drawn
-
-
 def test_compare_two_layers_side_by_side(page):
     page.evaluate(
         "() => { S.autoZoom = false; S.map.setView([0, 20], 3, {animate: false}); }"

@@ -6,7 +6,7 @@
    Classic script sharing globals with the others; index.html loads them in order. */
 'use strict';
 
-const CMP = { on: false, x: 0.5 };   // divider position as a share of the map width
+const CMP = { on: false, x: 0.5, clipped: false };   // x: divider position as a share of the map width
 
 function compareLayers() {
   return [...S.layers.values()].filter(l => l.leafletLayer).slice(0, 2);
@@ -25,12 +25,17 @@ function setCompare(on) {
 function updateCompare() {
   const btn = el('t-compare');
   if (btn) btn.disabled = compareLayers().length < 2;
+  // Runs on every map move: without a comparison there is nothing to do,
+  // except clearing the clips once when one ends
+  if (!CMP.on && !CMP.clipped) return;
   for (const layer of S.layers.values()) {
     const c = layer.leafletLayer?.getContainer();
     if (c) c.style.clip = '';
   }
+  CMP.clipped = false;
   if (CMP.on && compareLayers().length < 2) { setCompare(false); return; }
   if (!CMP.on) return;
+  CMP.clipped = true;
 
   const [left, right] = compareLayers();
   const size = S.map.getSize();
