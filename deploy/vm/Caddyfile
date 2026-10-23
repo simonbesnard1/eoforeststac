@@ -2,20 +2,18 @@
 # Installed as /etc/caddy/Caddyfile. Intranet only: ufw limits 80/443 to GFZ
 # address ranges.
 #
-# Plain HTTP until GFZ IT issues a certificate. Then replace the block below
-# with:
-#
-#   eoforeststac.gfz.de, rz-vm225.gfz.de {
-#       tls /etc/caddy/certs/eoforeststac.crt /etc/caddy/certs/eoforeststac.key
-#       encode zstd gzip
-#       reverse_proxy 127.0.0.1:8080
-#   }
-
+# HTTPS with the certificate from GFZ IT (GEANT/HARICA, renewed every six
+# months by their script, which copies the files below and runs
+# `systemctl reload caddy`). The key must stay readable by the caddy group
+# (root:caddy or <admin>:caddy, mode 640).
 {
-	auto_https off
+	# The certificate is GFZ's own: never request one from an ACME CA, but
+	# keep Caddy's automatic HTTP -> HTTPS redirect
+	auto_https disable_certs
 }
 
-:80 {
+eoforeststac.gfz.de, rz-vm225.gfz.de {
+	tls /etc/caddy/certs/eoforeststac.crt /etc/caddy/certs/eoforeststac.key
 	encode zstd gzip
 	reverse_proxy 127.0.0.1:8080
 }

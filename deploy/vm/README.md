@@ -6,7 +6,7 @@ limited to the GFZ network: `ufw` only allows ports 80/443 from GFZ address
 ranges.
 
 ```
-browser ──► Caddy :80 (host) ──► web (nginx) 127.0.0.1:8080 ──► titiler (internal)
+browser ──► Caddy :443 (host) ──► web (nginx) 127.0.0.1:8080 ──► titiler (internal)
                                    ├─ explorer (webapp/, deploy/vm/config.js)
                                    └─ /api/ → TiTiler, incl. catalog proxy and area downloads
 ```
@@ -16,8 +16,11 @@ browser ──► Caddy :80 (host) ──► web (nginx) 127.0.0.1:8080 ──�
 - `Dockerfile.web`, `nginx.conf`, `config.js`: the explorer image. The explorer
   calls TiTiler at the same-origin `./api`.
 - `Caddyfile`: host reverse proxy, installed as `/etc/caddy/Caddyfile`. It
-  serves plain HTTP until GFZ IT issues a TLS certificate; the HTTPS block to
-  switch to is documented at the top of the file.
+  serves HTTPS with the certificate from GFZ IT in `/etc/caddy/certs/`
+  (`eoforeststac.crt` full chain, `eoforeststac.key`, which must stay readable
+  by the `caddy` group: mode 640) and redirects HTTP to HTTPS. GFZ IT renews
+  the certificate every six months with a script that replaces both files and
+  runs `systemctl reload caddy`.
 - Area downloads are kept in the `downloads` named volume (5 GB limit, 2 h TTL).
 
 ## Deploy an update
