@@ -13,6 +13,7 @@ aggregates. Select reducers deliberately: ``mean`` for continuous variables,
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
@@ -206,6 +207,26 @@ def open_zarr_store(store: s3fs.S3Map, group: str | None = None) -> xr.Dataset:
         return xr.open_zarr(store, group=group, consolidated=False, chunks={})
 
 
+def source_fingerprint(
+    s3: s3fs.S3FileSystem, source_url: str, variables: list[str]
+) -> str:
+    """Hash of what the overviews depend on: each variable's shape, chunks,
+    dtype and fill value in the native store. Attribute edits (legend ranges,
+    descriptions) leave it unchanged; a rewrite with a new encoding does not.
+    """
+    root = s3_path(source_url)
+    try:
+        metadata = json.loads(s3.cat(f"{root}/.zmetadata"))["metadata"]
+        arrays = {v: metadata[f"{v}/.zarray"] for v in variables}
+    except (FileNotFoundError, KeyError):
+        arrays = {v: json.loads(s3.cat(f"{root}/{v}/.zarray")) for v in variables}
+    parts = {
+        v: {k: arrays[v].get(k) for k in ("shape", "chunks", "dtype", "fill_value")}
+        for v in sorted(variables)
+    }
+    return hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def level_marker_path(output_url: str, level: int) -> str:
     return f"{s3_path(output_url)}/{level}/_SUCCESS"
 
@@ -215,6 +236,7 @@ def prepare_root(
     source_url: str,
     levels: int,
     reducers: Mapping[str, str],
+    fingerprint: str,
 ) -> None:
     try:
         root = zarr.open_group(output_store, mode="a", zarr_format=2)
@@ -233,6 +255,7 @@ def prepare_root(
                         "native_source": source_url,
                         "native_level": 0,
                         "reducers": dict(reducers),
+                        "source_fingerprint": fingerprint,
                     },
                 }
             ]
@@ -275,7 +298,8 @@ def build_pyramid(args: argparse.Namespace) -> None:
         return
 
     output_store = s3_map(output_url, s3, check=False)
-    prepare_root(output_store, source_url, levels, reducers)
+    fingerprint = source_fingerprint(s3, source_url, list(reducers))
+    prepare_root(output_store, source_url, levels, reducers, fingerprint)
 
     parent = source
     for level in range(1, levels + 1):

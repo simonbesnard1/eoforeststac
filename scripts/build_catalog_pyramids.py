@@ -108,6 +108,30 @@ def select_products(
     return jobs
 
 
+def pyramid_command(
+    product: dict[str, Any], asset_url: str, args: argparse.Namespace
+) -> list[str]:
+    """The build_pyramid.py call for one manifest product."""
+    command = [
+        sys.executable,
+        str(Path(__file__).with_name("build_pyramid.py")),
+        asset_url,
+        "--target-size",
+        str(args.target_size),
+        "--chunk-size",
+        str(args.chunk_size),
+        "--workers",
+        str(args.workers),
+        "--output-dtype",
+        args.output_dtype,
+    ]
+    if args.profile:
+        command.extend(["--profile", args.profile])
+    for variable, reducer in product.get("reducers", {}).items():
+        command.extend(["--reducer", f"{variable}={reducer}"])
+    return command
+
+
 def make_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -150,27 +174,10 @@ def main() -> None:
     jobs = select_products(manifest, discovered, set(args.collection))
     print(f"Resolved {len(jobs)} pyramid job(s)", flush=True)
 
-    builder = Path(__file__).with_name("build_pyramid.py")
     failures: list[tuple[str, int]] = []
     for number, (product, asset_url) in enumerate(jobs, start=1):
         collection_id = product["collection"]
-        command = [
-            sys.executable,
-            str(builder),
-            asset_url,
-            "--target-size",
-            str(args.target_size),
-            "--chunk-size",
-            str(args.chunk_size),
-            "--workers",
-            str(args.workers),
-            "--output-dtype",
-            args.output_dtype,
-        ]
-        if args.profile:
-            command.extend(["--profile", args.profile])
-        for variable, reducer in product.get("reducers", {}).items():
-            command.extend(["--reducer", f"{variable}={reducer}"])
+        command = pyramid_command(product, asset_url, args)
         if args.dry_run:
             command.append("--dry-run")
         if args.overwrite_incomplete:

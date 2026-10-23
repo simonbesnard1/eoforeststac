@@ -49,6 +49,29 @@ python scripts/build_catalog_pyramids.py \
 
 The equivalent environment setting is `export AWS_PROFILE=atlaseo-glm`.
 
+## Keep the pyramids in line with the catalog
+
+`maintain_pyramids.py` is the one command to run on the server. It compares
+every `*_pyramid.zarr` on S3 with the manifest and the newest version of each
+product in the catalog, prints a plan, and with `--apply` carries it out:
+deletes pyramids the explorer no longer uses (older versions, products not in
+the manifest, pyramids whose native store is gone), rebuilds outdated ones,
+builds missing ones and resumes unfinished ones.
+
+```bash
+python scripts/maintain_pyramids.py --profile atlaseo-glm            # plan only
+python scripts/maintain_pyramids.py --profile atlaseo-glm --apply \
+  --workers 8 --continue-on-error 2>&1 | tee pyramids.log
+```
+
+New pyramids record a fingerprint of their source (shape, chunks, dtype and
+fill value of each variable), so a source rewritten with a new encoding is
+rebuilt automatically. Pyramids built before the fingerprint existed are
+marked `check` when their source store changed after the build: pass
+`--rebuild <collection>` if its data or encoding changed, or
+`--accept <collection>` if only attributes were edited. Restart titiler on the
+VM afterwards so it drops cached datasets.
+
 ## Validate before writing
 
 Resolve the catalog jobs without opening the stores:
