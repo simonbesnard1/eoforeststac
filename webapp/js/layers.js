@@ -570,6 +570,7 @@ function addLeafletLayer(layer) {
    footprints) is loading, and "loading tiles…" on that layer's legend entry.
    Large tiles can take seconds; an empty map otherwise looks broken. */
 function setLayerLoading(layer, on) {
+  if (typeof updateCompare === 'function') updateCompare();
   layer.loading = on;
   document.querySelectorAll(`[data-loading="${CSS.escape(layer.id)}"]`).forEach(e => { e.hidden = !on; });
   syncLoadingBar();
@@ -676,6 +677,7 @@ function updateFootprint(layer) {
 }
 
 function syncLayerCount() {
+  updateCompare();
   const n = S.layers.size + S.fp.size;
   const badge = el('rail-badge');
   badge.textContent = n;

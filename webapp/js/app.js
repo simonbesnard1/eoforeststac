@@ -130,6 +130,7 @@ function initUI() {
 (async function main() {
   initUI();
   initMap();
+  initCompare();
   await checkTiTiler();
   await Promise.all([loadColormapNames(), loadCatalog()]);
   syncLayerCount();

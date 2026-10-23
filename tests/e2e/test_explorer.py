@@ -168,3 +168,31 @@ def test_footprint_coverage_shows_when_zoomed_out(page):
         const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
         let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; }""")
     assert drawn > 1000, drawn
+
+
+def test_compare_two_layers_side_by_side(page):
+    page.evaluate("() => { S.autoZoom = false; S.map.setView([0, 20], 3, {animate: false}); }")
+    assert page.locator("#t-compare").is_disabled()
+    for layer in (GAMI, "SAATCHI_BIOMASS"):
+        page.evaluate(f"() => toggleDataset('{layer}', true)")
+        wait_for_tiles(page, layer)
+    page.locator("#t-compare").click()
+    assert page.locator("#compare-handle").is_visible()
+    tags = page.locator(".cmp-tag").all_inner_texts()
+    assert any("GAMI" in t for t in tags) and any("Saatchi" in t or "SAATCHI" in t for t in tags), tags
+    clips = page.evaluate(f"""() => [S.layers.get('{GAMI}'), S.layers.get('SAATCHI_BIOMASS')]
+        .map(l => l.leafletLayer.getContainer().style.clip)""")
+    assert all(c.startswith("rect(") for c in clips), clips
+
+    # Drag the divider to the left: the left layer's clip narrows
+    handle = page.locator("#compare-handle").bounding_box()
+    before = page.evaluate("() => CMP.x")
+    page.mouse.move(handle["x"] + handle["width"] / 2, handle["y"] + handle["height"] / 2)
+    page.mouse.down()
+    page.mouse.move(handle["x"] - 200, handle["y"] + handle["height"] / 2, steps=5)
+    page.mouse.up()
+    assert page.evaluate("() => CMP.x") < before
+
+    page.evaluate("() => toggleDataset('SAATCHI_BIOMASS', false)")
+    assert not page.locator("#compare-handle").is_visible()   # one layer left: comparison ends
+    assert page.evaluate(f"() => S.layers.get('{GAMI}').leafletLayer.getContainer().style.clip") == ""
