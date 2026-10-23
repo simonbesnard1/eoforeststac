@@ -290,6 +290,15 @@ ALS_PRODUCTS_CFG = {
         "pv_20_40": {"data_type": "float32", "nodata": -9999.0},
         "pv_above40": {"data_type": "float32", "nodata": -9999.0},
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "chm": "mean",
+            "dsm": "mean",
+            "dtm": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

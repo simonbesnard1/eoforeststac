@@ -12,12 +12,9 @@ interrupted run continues from the chunks it has not finished:
     python scripts/fix_hansen_tree_cover.py --dry-run --limit 200  # sample, no writes
     python scripts/fix_hansen_tree_cover.py --workers 16
 
-The overview pyramid was built from the old encoding, and finished levels are
-never rebuilt, so delete it and build it again afterwards:
+The overview pyramid must be built from the corrected data afterwards:
 
-    aws --profile atlaseo-glm --endpoint-url https://s3.gfz.de s3 rm --recursive \
-        s3://dog.atlaseo-glm.eo-gridded-data/collections/HANSEN_GFC/HANSEN_GFC_v1.12_pyramid.zarr
-    python scripts/build_catalog_pyramids.py --collection HANSEN_GFC
+    eoforeststac-pyramids --rebuild HANSEN_GFC
 """
 
 from __future__ import annotations
@@ -127,7 +124,7 @@ def main() -> None:
     verb = "would change" if args.dry_run else "changed"
     print(f"Done: {verb} {counts['pixels']:,} pixels in {counts['changed']} chunks")
     if not args.dry_run:
-        print("Next: delete and rebuild the HANSEN_GFC pyramid, then restart titiler")
+        print("Next: eoforeststac-pyramids --rebuild HANSEN_GFC, then restart titiler")
 
 
 if __name__ == "__main__":

@@ -128,6 +128,13 @@ RESTOR_LANDUSE_CFG = {
     "analytics": {
         "lulc": {"kind": "class_area", "quantity": "Area by land use", "exclude": [14]}
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "lulc": "first",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

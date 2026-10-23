@@ -63,10 +63,11 @@ python -m http.server 8080 --directory webapp
 
 ### Building visualization pyramids
 
-The high-resolution global products use precomputed Zarr overview levels for
-responsive map display. See [scripts/PYRAMIDS.md](scripts/PYRAMIDS.md) for the
-reviewed product list, aggregation policies, server setup, dry-run validation,
-and resumable production commands.
+Large stores are drawn from precomputed Zarr overview levels. On a server
+close to GFZ Ceph, `eoforeststac-pyramids` builds every missing or unfinished
+pyramid (`--dry-run` shows the plan first). See
+[eoforeststac/pyramids/README.md](eoforeststac/pyramids/README.md) for the
+options and the per-variable aggregation rules.
 
 ## Installation
 

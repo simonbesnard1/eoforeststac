@@ -52,6 +52,9 @@ dependencies = [
     "pyproj>=3.7.2"
 ]
 
+[project.scripts]
+eoforeststac-pyramids = "eoforeststac.pyramids.cli:main"
+
 [project.urls]
 homepage = "https://github.com/simonbesnard1/eoforeststac"
 documentation = "https://eoforeststac.readthedocs.io/en/latest/"

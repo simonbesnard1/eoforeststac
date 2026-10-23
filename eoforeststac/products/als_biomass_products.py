@@ -260,6 +260,13 @@ ALS_BIOMASS_PRODUCTS_CFG = {
             "total_units": "Mg",
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "biomass": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

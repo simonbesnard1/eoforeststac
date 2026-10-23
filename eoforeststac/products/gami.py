@@ -134,6 +134,13 @@ GAMI_CFG = {
     # Region statistics in the explorer (eoforeststac.analytics); keys are
     # the variable names in the Zarr store
     "analytics": {"forest_age": {"kind": "mean", "quantity": "Forest age"}},
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "forest_age": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

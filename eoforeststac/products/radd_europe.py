@@ -184,6 +184,15 @@ RADD_EUROPE_CFG = {
             "classes": {1: "forest"},
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "alert_yydoy": "max",
+            "disturbance_occurrence": "max",
+            "forest_mask": "first",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

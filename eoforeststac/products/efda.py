@@ -178,6 +178,14 @@ EFDA_CFG = {
             "exclude": [0],
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "disturbance_agent": "first",
+            "disturbance_occurrence": "max",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

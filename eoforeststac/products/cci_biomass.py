@@ -159,6 +159,14 @@ CCI_BIOMASS_CFG = {
             "quantity": "Aboveground biomass uncertainty, 1 sigma",
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "aboveground_biomass": "mean",
+            "aboveground_biomass_std": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

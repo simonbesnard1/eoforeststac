@@ -138,6 +138,13 @@ SAATCHI_BIOMASS_CFG = {
             "total_units": "Mg",
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "agb": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

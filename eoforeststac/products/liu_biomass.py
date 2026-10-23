@@ -167,6 +167,15 @@ LIU_BIOMASS_CFG = {
         "canopy_cover": {"kind": "cover", "quantity": "Canopy cover"},
         "canopy_height": {"kind": "mean", "quantity": "Canopy height"},
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "aboveground_biomass": "mean",
+            "canopy_cover": "mean",
+            "canopy_height": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

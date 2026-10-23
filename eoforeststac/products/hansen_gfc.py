@@ -171,6 +171,16 @@ HANSEN_GFC_CFG = {
             "classes": {1: "gain"},
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "data_mask": "first",
+            "gain": "max",
+            "loss_year": "max",
+            "tree_cover": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

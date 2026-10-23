@@ -151,6 +151,13 @@ FORESTPATHS_GENUS_CFG = {
             "exclude": [7],
         }
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "genus": "first",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

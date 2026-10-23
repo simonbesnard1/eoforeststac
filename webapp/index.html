@@ -2317,7 +2317,7 @@ function renderLayerPanel() {
            ${layer.zoomFloor > 3 ? `<div class="fld-hint">
              ${esc(layer.width)}×${esc(layer.height)} px at ${esc(layer.dtype || 'unknown dtype')} exceeds the tile server's
              1&nbsp;GB array limit below z${layer.zoomFloor}. Build overviews to see it globally:
-             <code class="hint-code">python scripts/build_pyramid.py &lt;zarr-url&gt; --levels 6</code>
+             <code class="hint-code">eoforeststac-pyramids</code>
            </div>` : ''}`}
     </div>`;
   }).join('');

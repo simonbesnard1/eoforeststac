@@ -189,6 +189,18 @@ JRC_TMF_CFG = {
             "years": [1990, 2024],
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "AnnualChange": "first",
+            "DeforestationYear": "max",
+            "DegradationYear": "max",
+            "TransitionMap_MainClasses": "first",
+            "TransitionMap_Subtypes": "first",
+            "UndisturbedDegradedForest": "max",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",

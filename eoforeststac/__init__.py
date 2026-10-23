@@ -20,7 +20,15 @@ except Exception:
 # -----------------------------------------------------------------------------
 # Importing one submodule (e.g. eoforeststac.analytics on the tile server)
 # must not pull in the writers, catalog builders and S3 stack.
-_SUBMODULES = {"analytics", "catalog", "products", "providers", "writers", "core"}
+_SUBMODULES = {
+    "analytics",
+    "catalog",
+    "products",
+    "providers",
+    "pyramids",
+    "writers",
+    "core",
+}
 _ATTRIBUTES = {
     # writers (high-level, stable API)
     "BaseZarrWriter": "eoforeststac.writers.base",

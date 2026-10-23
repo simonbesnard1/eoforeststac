@@ -193,6 +193,21 @@ ROBINSON_CR_CFG = {
             "quantity": "Age at maximum accumulation rate",
         },
     },
+    # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
+    # continuous fields, "max" for event years and presence, "first" for classes
+    "pyramid": {
+        "reducers": {
+            "age_at_max_rate": "mean",
+            "cr_a": "mean",
+            "cr_a_error": "mean",
+            "cr_b": "mean",
+            "cr_b_error": "mean",
+            "cr_k": "mean",
+            "cr_k_error": "mean",
+            "max_rate": "mean",
+            "max_removal_potential_benefit_25": "mean",
+        }
+    },
     "item_assets": {
         "zarr": {
             "title": "Zarr dataset",
