@@ -1,0 +1,27 @@
+name: Catalog drift
+
+# Is the live STAC catalog still what the code generates? Fails when it was
+# edited by hand or when catalog code changed without being published
+# (publish with scripts/publish_theme.py --theme <id> --apply). Also runs
+# daily: a newly finished pyramid makes the code add an overview asset.
+on:
+  push:
+    branches: [main]
+    paths: ["eoforeststac/catalog/**", "eoforeststac/products/**", ".github/workflows/catalog.yml"]
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install the package
+        run: python -m pip install -e .
+      - name: Compare the live catalog with the code
+        run: python -m eoforeststac.catalog.drift
