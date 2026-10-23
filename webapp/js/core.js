@@ -264,6 +264,9 @@ function applyTheme(t) {
 function initMap() {
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('mapState')); } catch {}
+  // A shared link's view wins over the one remembered in this browser
+  const shared = parseShareHash().view;
+  if (shared) saved = { lat: shared.center[0], lng: shared.center[1], z: shared.zoom };
 
   S.map = L.map('map', {
     center: saved ? [saved.lat, saved.lng] : CFG.home.center,
@@ -290,6 +293,7 @@ function initMap() {
   S.map.on('moveend', () => {
     const c = S.map.getCenter();
     localStorage.setItem('mapState', JSON.stringify({ lat: c.lat, lng: c.lng, z: S.map.getZoom() }));
+    syncShareUrl();
   });
   S.map.on('zoomend', () => {
     const zoom = S.map.getZoom();

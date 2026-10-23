@@ -44,8 +44,11 @@ def page(browser):
 
 
 def wait_for_tiles(pg, layer_id, timeout=180_000):
+    """Until the layer has tiles and none is still loading. "Not loading"
+    alone is also true for a moment before the first tile is requested."""
     pg.wait_for_function(
-        "id => { const l = S.layers.get(id)?.leafletLayer; return l && !l.isLoading(); }",
+        """id => { const l = S.layers.get(id)?.leafletLayer;
+                   return l && Object.keys(l._tiles || {}).length > 0 && !l.isLoading(); }""",
         arg=layer_id,
         timeout=timeout,
     )

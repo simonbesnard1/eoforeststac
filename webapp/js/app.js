@@ -108,6 +108,7 @@ function initUI() {
   el('t-out').addEventListener('click', () => S.map.zoomOut());
   el('t-fit').addEventListener('click', zoomToAllLayers);
   el('t-home').addEventListener('click', () => S.map.flyTo(CFG.home.center, CFG.home.zoom, { duration: 0.8 }));
+  el('t-share').addEventListener('click', e => copyShareLink(e.currentTarget));
   el('t-full').addEventListener('click', () => {
     if (document.fullscreenElement) document.exitFullscreen();
     else document.documentElement.requestFullscreen?.();
@@ -132,4 +133,8 @@ function initUI() {
   await checkTiTiler();
   await Promise.all([loadColormapNames(), loadCatalog()]);
   syncLayerCount();
+  await restoreFromUrl();
+  // Settings change through many controls; checking the state once a second
+  // keeps the address bar shareable without wiring every one of them
+  setInterval(syncShareUrl, 1000);
 })();

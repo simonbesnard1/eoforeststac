@@ -111,3 +111,38 @@ def test_spaceborne_lidar_groups_by_sensor(page):
         return
     headers = group.locator(".ds-sub").all_inner_texts()
     assert any(h.startswith("GEDI") for h in headers) and any(h.startswith("ICESat-2") for h in headers), headers
+
+
+def test_a_shared_link_reopens_the_same_view(page, browser):
+    from conftest import BASE_URL
+
+    page.evaluate(f"() => toggleDataset('{GAMI}', true)")
+    wait_for_tiles(page, GAMI)
+    # After switching on: "zoom to layer" flies to GAMI's global extent
+    page.wait_for_timeout(1500)
+    page.evaluate("() => S.map.setView([-3, 22], 5, {animate: false})")
+    card = page.locator(f'.lc[data-card="{GAMI}"]')
+    card.locator('select[data-prop="resolution"]').select_option(index=2)
+    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.zarrIndex === 2")
+    card = page.locator(f'.lc[data-card="{GAMI}"]')
+    card.locator('select[data-prop^="extra:"]').first.select_option(index=3)
+    card.locator('select[data-prop="colormap"]').select_option("magma")
+    page.wait_for_function(
+        "() => /c%3Amagma|c:magma/.test(location.hash) && /map=5(%2F|\\/)/.test(location.hash)",
+        timeout=10_000,
+    )
+    url = page.url
+
+    other = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+    other.goto(url)
+    other.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer && !S.restoring", timeout=180_000)
+    state = other.evaluate(
+        f"""() => {{ const l = S.layers.get('{GAMI}'); const c = S.map.getCenter();
+              return {{ res: l.zarrIndex, member: l.extraDims[0].index, cmap: l.colormap,
+                        zoom: S.map.getZoom(), lat: c.lat, lng: c.lng }}; }}"""
+    )
+    other.context.close()
+    assert state["res"] == 2 and state["member"] == 3 and state["cmap"] == "magma", state
+    # Within a pixel (0.044 degrees at zoom 5): opening the side panel shifts
+    # the map by a fraction of one
+    assert state["zoom"] == 5 and abs(state["lat"] + 3) < 0.05 and abs(state["lng"] - 22) < 0.05, state
