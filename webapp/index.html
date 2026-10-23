@@ -1028,7 +1028,7 @@ const CFG = {
       icon:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>' },
     'land-use-land-cover':  { label:'Land Use & Land Cover',  short:'Land use',    cls:'lu',
       icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>' },
-    'spaceborne-lidar':     { label:'Spaceborne LiDAR',       short:'Spaceborne',  cls:'sl',
+    'spaceborne-lidar':     { label:'Satellite LiDAR',        short:'Satellite LiDAR', cls:'sl',
       icon:'<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/>' },
   },
   themeIconFallback: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
@@ -1529,7 +1529,7 @@ function renderCatalog() {
 function renderDatasetRow(col) {
   const on = S.layers.has(col.id) || S.fp.has(col.id);
   const f = col.facts;
-  const facts = [f.time, f.gsd, f.region, f.provider].filter(Boolean).join(' · ');
+  const facts = col.rowFacts ?? [f.time, f.gsd, f.region, f.provider].filter(Boolean).join(' · ');
   const search = [col.title, col.id, col.parent?.title || '', ...col.providers.map(p => p.name), ...col.keywords].join(' ').toLowerCase();
   const site = col.parent ? `data-parent="${esc(col.parent.id)}"` : '';
   return `<div class="ds ${on ? 'on' : ''} ${col.parent ? 'ds-site' : ''}" id="ds-${esc(col.id)}" data-search="${esc(search)}" ${site}>
@@ -2623,6 +2623,10 @@ const FP = { minZoom: 11, maxTiles: 24, concurrency: 4, tileDeg: 0.2, bins: 32 }
 const fpColor = (layer, t) => colorAt(layer.colormap, 0.2 + 0.8 * t);
 const fpGradient = layer => `linear-gradient(90deg, ${Array.from({ length: 11 }, (_, i) => fpColor(layer, i / 10)).join(', ')})`;
 const FP_THEME = 'spaceborne-lidar';
+const FP_SENSORS = {
+  gedi: { id: 'gedi', title: 'GEDI · 25 m footprints · 52° S–52° N · 2019–present' },
+  icesat2: { id: 'icesat2', title: 'ICESat-2 · 100 m segments · global · 2018–present' },
+};
 S.fp = new Map();          // id -> footprint layer
 S.fpSources = null;        // service metadata
 let _fpQueue = [], _fpActive = 0, _fpCanvas = null, _fpRedrawTimer = null;
@@ -2634,9 +2638,13 @@ async function loadFootprintSources() {
     FP.tileDeg = meta.tile_deg || FP.tileDeg;
     return {
       id: FP_THEME,
-      title: 'Spaceborne LiDAR',
+      title: 'Satellite LiDAR',
+      // Grouped by sensor (a sub-header each, like the ALS countries); rows
+      // are named by what they measure, the product code goes in the facts
       collections: meta.sources.map(src => ({
         id: src.id, title: src.title, footprint: true, fp: src,
+        parent: FP_SENSORS[src.provider] || { id: src.provider, title: src.provider },
+        siteLabel: src.quantity,
         version: '', variables: [src.quantity], zarrs: [], bbox: null,
         summaries: { variables: [src.quantity], units_by_variable: { [src.quantity]: src.units } },
         description: `${src.description}\n\nFootprints are samples along the satellite tracks, not a map: zoom in (level ${FP.minZoom}+) to load them, or draw an area in the Analysis tab for per-year statistics.`,
@@ -2644,6 +2652,8 @@ async function loadFootprintSources() {
         providers: [{ name: src.provider === 'gedi' ? 'NASA GEDI · gediDB (GFZ)' : 'NASA ICESat-2 · icesat2DB (GFZ)' }],
         keywords: ['lidar', 'footprints', src.provider === 'gedi' ? 'GEDI' : 'ICESat-2', src.quantity],
         links: [{ rel: 'about', href: src.docs, title: 'Database documentation' }],
+        rowFacts: [(src.title.match(/\b(L\d[AB]|ATL\d+)\b/) || [])[1], src.units, 'quality-filtered']
+          .filter(Boolean).join(' · '),
         facts: { time: src.provider === 'gedi' ? '2019–present' : '2018–present',
                  gsd: src.provider === 'gedi' ? '25 m footprints' : '100 m segments',
                  region: src.provider === 'gedi' ? '52° S–52° N' : 'global',
