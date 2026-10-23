@@ -6,9 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY deploy/footprints/requirements.txt ./requirements.txt
+COPY deploy/footprints/requirements.txt deploy/footprints/constraints.txt ./
 RUN python -m pip install --upgrade pip && \
-    python -m pip install --requirement requirements.txt
+    python -m pip install --requirement requirements.txt --constraint constraints.txt
 
 COPY deploy/footprints/app.py ./
 # Footprint statistics come from the package (eoforeststac.analytics); only

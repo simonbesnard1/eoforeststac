@@ -10,9 +10,9 @@ RUN apt-get update && \
     apt-get install --yes --no-install-recommends libexpat1 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY deploy/titiler/requirements.txt ./requirements.txt
+COPY deploy/titiler/requirements.txt deploy/titiler/constraints.txt ./
 RUN python -m pip install --upgrade pip && \
-    python -m pip install --requirement requirements.txt
+    python -m pip install --requirement requirements.txt --constraint constraints.txt
 
 COPY deploy/titiler/app.py deploy/titiler/download.py deploy/titiler/analysis.py ./
 # Region statistics come from the package (eoforeststac.analytics). Only the
