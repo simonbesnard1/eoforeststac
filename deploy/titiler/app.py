@@ -86,10 +86,33 @@ def _trim_overlapping_longitudes(ds, variable: str):
     return ds.isel({x_dim: slice(int(inside[0]), int(inside[-1]) + 1)})
 
 
+def _avoid_unit_origin(ds, variable: str):
+    """Nudge 1-degree grids by 1e-9 degrees so no window starts at exactly 0/0.
+
+    A window of a 1-degree grid whose corner is at longitude 0, latitude 0
+    has the transform (1, 0, 0, 0, -1, 0), which GDAL's warper (3.10, via
+    rasterio) treats as ungeoreferenced: tiles there came back empty (GAMI
+    age classes at 1 degree lost everything from 0-90 E south of the
+    equator). The shift is far below any pixel, so nothing visibly moves.
+    """
+    da = ds[variable]
+    x_dim = next((d for d in ("x", *xarray_io.X_DIM_NAMES) if d in da.dims), None)
+    y_dim = next((d for d in ("y", *xarray_io.Y_DIM_NAMES) if d in da.dims), None)
+    if not x_dim or not y_dim or x_dim not in ds.coords or y_dim not in ds.coords:
+        return ds
+    xs, ys = ds[x_dim].values, ds[y_dim].values
+    if xs.size < 2 or ys.size < 2 or not np.issubdtype(xs.dtype, np.floating):
+        return ds
+    if not (
+        np.isclose(abs(xs[1] - xs[0]), 1.0) and np.isclose(abs(ys[1] - ys[0]), 1.0)
+    ):
+        return ds
+    return ds.assign_coords({x_dim: xs + 1e-9, y_dim: ys + 1e-9})
+
+
 def get_variable(ds, variable, sel=None):
-    return _titiler_get_variable(
-        _trim_overlapping_longitudes(ds, variable), variable, sel=sel
-    )
+    ds = _avoid_unit_origin(_trim_overlapping_longitudes(ds, variable), variable)
+    return _titiler_get_variable(ds, variable, sel=sel)
 
 
 # Reader resolves get_variable from the module at call time.

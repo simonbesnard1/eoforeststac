@@ -1668,7 +1668,12 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
     const dims = res?.dims || [];
     if (dims.length >= 2) {
       const main = dims.find(d => d.values.some(v => /^\d{4}-\d{2}-\d{2}/.test(v))) || dims[0];
-      layer.extraDims = dims.filter(d => d !== main).map(d => ({ name: d.name, values: d.values, index: 0 }));
+      /* Numeric labels in numeric order: GAMI stores its members as
+         4, 1, 2, 7, 0, ... Selection is by value, so reordering is safe;
+         text labels (age classes) keep the store's order. */
+      const ordered = values => values.every(v => v !== '' && Number.isFinite(Number(v)))
+        ? [...values].sort((a, b) => Number(a) - Number(b)) : values;
+      layer.extraDims = dims.filter(d => d !== main).map(d => ({ name: d.name, values: ordered(d.values), index: 0 }));
       return fetchVariableMeta(layer, { resetRange });
     }
   }
