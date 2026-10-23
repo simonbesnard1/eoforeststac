@@ -53,13 +53,19 @@ GitHub Pages publishes the STAC Browser through `.github/workflows/deploy.yml`.
 The explorer and TiTiler are deployed with Docker Compose on the VM; see
 [deploy/vm/README.md](deploy/vm/README.md).
 
-For local development:
+For local development, from the repository root (the explorer's
+`webapp/config.js` points at `http://localhost:8000`):
 
 ```bash
 python -m pip install -r deploy/titiler/requirements.txt
-uvicorn deploy.titiler.app:app --reload --port 8000
-python -m http.server 8080 --directory webapp
+PYTHONPATH=. DOWNLOAD_DIR=/tmp/eoforeststac-downloads \
+TITILER_XARRAY_API_CORS_ALLOW_METHODS=GET,POST \
+  uvicorn app:app --app-dir deploy/titiler --reload --port 8000
+python -m http.server 8080 --directory webapp      # then open localhost:8080
 ```
+
+`POST` must be allowed because the explorer runs on another port and posts
+analysis and download jobs; on the VM both share one origin behind nginx.
 
 ### Building visualization pyramids
 
