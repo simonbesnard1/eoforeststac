@@ -77,6 +77,10 @@ function initUI() {
   });
   openView('data');
 
+  el('nav-about').addEventListener('click', e => { e.preventDefault(); openAbout(); });
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-about]')) { e.preventDefault(); openAbout(); }
+  });
   const dlg = el('ds-info-dlg');
   el('dlg-close').addEventListener('click', () => dlg.close());
   dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
@@ -139,3 +143,29 @@ function initUI() {
   // keeps the address bar shareable without wiring every one of them
   setInterval(syncShareUrl, 1000);
 })();
+
+/* Who made the explorer and what it builds on: from the header's About link
+   and the credit line on the map. */
+function openAbout() {
+  el('dlg-eyebrow').textContent = 'About';
+  el('dlg-title').textContent = 'EOForestSTAC explorer';
+  el('dlg-body').innerHTML = `
+    <p>An interactive map of the forest Earth observation datasets in the
+      EOForestSTAC catalog, developed at the
+      <a href="https://www.gfz.de" target="_blank" rel="noopener noreferrer">GFZ Helmholtz Centre for Geosciences</a>
+      by Simon Besnard.</p>
+    <dl class="dlg-facts">
+      <dt>Code</dt>
+      <dd>Written with <a href="https://claude.com/claude-code" target="_blank" rel="noopener noreferrer">Claude Code</a>
+        (Anthropic), directed and reviewed by the author.</dd>
+      <dt>Design</dt>
+      <dd>Interface inspired by <a href="https://www.globalforestwatch.org" target="_blank" rel="noopener noreferrer">Global Forest Watch</a>.</dd>
+      <dt>Data</dt>
+      <dd>Each dataset belongs to its producers; its info button lists the source, licence and how to cite it.</dd>
+      <dt>Source</dt>
+      <dd><a href="https://github.com/simonbesnard1/eoforeststac" target="_blank" rel="noopener noreferrer">github.com/simonbesnard1/eoforeststac</a>
+        (EUPL 1.2)</dd>
+    </dl>`;
+  el('dlg-body').scrollTop = 0;
+  el('ds-info-dlg').showModal();
+}

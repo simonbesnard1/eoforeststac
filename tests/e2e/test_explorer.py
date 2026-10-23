@@ -214,3 +214,14 @@ def test_compare_two_layers_side_by_side(page):
         )
         == ""
     )
+
+
+def test_credits_are_visible(page):
+    credit = page.locator(".leaflet-control-attribution").inner_text()
+    assert "Claude Code" in credit and "Global Forest Watch" in credit, credit
+    page.locator("#nav-about").click()
+    dialog = page.locator("#ds-info-dlg")
+    assert dialog.is_visible()
+    text = dialog.inner_text()
+    for expected in ("GFZ", "Simon Besnard", "Claude Code", "Global Forest Watch"):
+        assert expected in text, expected

@@ -596,3 +596,17 @@ input[type=range]::-moz-range-thumb{
   background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px 8px;box-shadow:var(--shadow)}
 .cmp-l{right:10px}.cmp-r{left:10px}
 .tool.on{color:var(--accent-t);background:var(--accent)}
+
+/* Links in dialogs (About, dataset info) */
+.dlg-body a{color:var(--accent);font-weight:500}
+
+/* Leaflet's corner anchors (missing from the bundled Leaflet styles, so the
+   attribution sat at the top left). Credits go bottom right, readable. */
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-control{pointer-events:auto}
+/* Two lines at most, right-aligned, clear of the coordinate readout */
+.leaflet-bottom.leaflet-right .leaflet-control-attribution{float:right;clear:both;margin:0 10px 10px 0;max-width:370px;text-align:right;
+  font-size:11px;line-height:1.4;padding:3px 9px!important;border-radius:6px;color:var(--text-2)!important;
+  border:1px solid var(--line);box-shadow:var(--shadow)}
+.leaflet-control-attribution a{color:var(--accent)!important;font-weight:500}
