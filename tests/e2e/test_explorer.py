@@ -43,12 +43,18 @@ def test_resolution_and_member_pickers(page):
     options = res.locator("option").all_inner_texts()
     assert options[0].endswith("finest") and "1°" in options[-1], options
 
-    members = card.locator('select[data-prop^="extra:"]').first.locator("option").all_inner_texts()
+    members = (
+        card.locator('select[data-prop^="extra:"]')
+        .first.locator("option")
+        .all_inner_texts()
+    )
     assert members == sorted(members, key=float), members
 
     tiles = tile_responses(page)
     res.select_option(index=len(options) - 1)
-    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.zarrIndex === {len(options) - 1}")
+    page.wait_for_function(
+        f"() => S.layers.get('{GAMI}')?.zarrIndex === {len(options) - 1}"
+    )
     wait_for_tiles(page, GAMI)
     assert tiles and all("_1deg_" in r.url for r in tiles)
     assert "1°" in page.locator(".leg-ds").first.inner_text()
@@ -56,13 +62,17 @@ def test_resolution_and_member_pickers(page):
 
 def test_analysis_of_a_drawn_area(page):
     page.evaluate(f"() => toggleDataset('{GAMI}', true)")
-    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000)
+    page.wait_for_function(
+        f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000
+    )
     page.evaluate(
         """() => { S.legTab = 'analysis'; renderLegend();
                    setArea({type: 'Polygon', coordinates: [[[20, -5], [24, -5], [24, -1], [20, -1], [20, -5]]]}); }"""
     )
     page.locator("#an-go").click()
-    page.wait_for_function("() => !S.an.running && (S.an.result || S.an.error)", timeout=300_000)
+    page.wait_for_function(
+        "() => !S.an.running && (S.an.result || S.an.error)", timeout=300_000
+    )
     assert page.evaluate("() => S.an.error") is None
     assert page.locator("#an-results .an-card").count() >= 1
 
@@ -78,8 +88,13 @@ def test_both_themes_render(page):
 
 def test_time_labels_are_readable(page):
     page.evaluate(f"() => toggleDataset('{GAMI}', true)")
-    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000)
-    text = page.locator(f'.lc[data-card="{GAMI}"]').inner_text() + page.locator("#leg-items").inner_text()
+    page.wait_for_function(
+        f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000
+    )
+    text = (
+        page.locator(f'.lc[data-card="{GAMI}"]').inner_text()
+        + page.locator("#leg-items").inner_text()
+    )
     assert not re.search(r"T00:00:00", text), "raw timestamps shown"
 
 
@@ -110,7 +125,9 @@ def test_spaceborne_lidar_groups_by_sensor(page):
     if not group.count():  # no footprint service in this stack (e.g. CI)
         return
     headers = group.locator(".ds-sub").all_inner_texts()
-    assert any(h.startswith("GEDI") for h in headers) and any(h.startswith("ICESat-2") for h in headers), headers
+    assert any(h.startswith("GEDI") for h in headers) and any(
+        h.startswith("ICESat-2") for h in headers
+    ), headers
 
 
 def test_a_shared_link_reopens_the_same_view(page, browser):
@@ -135,17 +152,25 @@ def test_a_shared_link_reopens_the_same_view(page, browser):
 
     other = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
     other.goto(url)
-    other.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer && !S.restoring", timeout=180_000)
+    other.wait_for_function(
+        f"() => S.layers.get('{GAMI}')?.leafletLayer && !S.restoring", timeout=180_000
+    )
     state = other.evaluate(
         f"""() => {{ const l = S.layers.get('{GAMI}'); const c = S.map.getCenter();
               return {{ res: l.zarrIndex, member: l.extraDims[0].index, cmap: l.colormap,
                         zoom: S.map.getZoom(), lat: c.lat, lng: c.lng }}; }}"""
     )
     other.context.close()
-    assert state["res"] == 2 and state["member"] == 3 and state["cmap"] == "magma", state
+    assert (
+        state["res"] == 2 and state["member"] == 3 and state["cmap"] == "magma"
+    ), state
     # Within a pixel (0.044 degrees at zoom 5): opening the side panel shifts
     # the map by a fraction of one
-    assert state["zoom"] == 5 and abs(state["lat"] + 3) < 0.05 and abs(state["lng"] - 22) < 0.05, state
+    assert (
+        state["zoom"] == 5
+        and abs(state["lat"] + 3) < 0.05
+        and abs(state["lng"] - 22) < 0.05
+    ), state
 
 
 def test_footprint_coverage_shows_when_zoomed_out(page):
@@ -157,21 +182,41 @@ def test_footprint_coverage_shows_when_zoomed_out(page):
     for r in range(80, 100):
         for c in range(150, 230):
             counts[r][c] = 1000 * (r - 79)
-    grid = {"provider": "gedi", "cell_deg": 1, "origin": [90, -180], "rows": 180, "cols": 360,
-            "total": sum(map(sum, counts)), "counts": counts}
-    page.route("**/footprints/coverage_*.json", lambda route: route.fulfill(
-        status=200, content_type="application/json", headers={"Access-Control-Allow-Origin": "*"}, body=json.dumps(grid)))
+    grid = {
+        "provider": "gedi",
+        "cell_deg": 1,
+        "origin": [90, -180],
+        "rows": 180,
+        "cols": 360,
+        "total": sum(map(sum, counts)),
+        "counts": counts,
+    }
+    page.route(
+        "**/footprints/coverage_*.json",
+        lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            headers={"Access-Control-Allow-Origin": "*"},
+            body=json.dumps(grid),
+        ),
+    )
     page.evaluate("() => S.map.setView([0, 20], 3, {animate: false})")
     page.evaluate("() => toggleDataset('GEDI_L4A_AGBD', true)")
-    page.wait_for_function("() => /per 1° cell/.test(el('leg-items')?.innerText || '')", timeout=30_000)
-    drawn = page.evaluate("""() => { const c = document.querySelector('.fp-canvas');
+    page.wait_for_function(
+        "() => /per 1° cell/.test(el('leg-items')?.innerText || '')", timeout=30_000
+    )
+    drawn = page.evaluate(
+        """() => { const c = document.querySelector('.fp-canvas');
         const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-        let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; }""")
+        let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; }"""
+    )
     assert drawn > 1000, drawn
 
 
 def test_compare_two_layers_side_by_side(page):
-    page.evaluate("() => { S.autoZoom = false; S.map.setView([0, 20], 3, {animate: false}); }")
+    page.evaluate(
+        "() => { S.autoZoom = false; S.map.setView([0, 20], 3, {animate: false}); }"
+    )
     assert page.locator("#t-compare").is_disabled()
     for layer in (GAMI, "SAATCHI_BIOMASS"):
         page.evaluate(f"() => toggleDataset('{layer}', true)")
@@ -179,20 +224,33 @@ def test_compare_two_layers_side_by_side(page):
     page.locator("#t-compare").click()
     assert page.locator("#compare-handle").is_visible()
     tags = page.locator(".cmp-tag").all_inner_texts()
-    assert any("GAMI" in t for t in tags) and any("Saatchi" in t or "SAATCHI" in t for t in tags), tags
-    clips = page.evaluate(f"""() => [S.layers.get('{GAMI}'), S.layers.get('SAATCHI_BIOMASS')]
-        .map(l => l.leafletLayer.getContainer().style.clip)""")
+    assert any("GAMI" in t for t in tags) and any(
+        "Saatchi" in t or "SAATCHI" in t for t in tags
+    ), tags
+    clips = page.evaluate(
+        f"""() => [S.layers.get('{GAMI}'), S.layers.get('SAATCHI_BIOMASS')]
+        .map(l => l.leafletLayer.getContainer().style.clip)"""
+    )
     assert all(c.startswith("rect(") for c in clips), clips
 
     # Drag the divider to the left: the left layer's clip narrows
     handle = page.locator("#compare-handle").bounding_box()
     before = page.evaluate("() => CMP.x")
-    page.mouse.move(handle["x"] + handle["width"] / 2, handle["y"] + handle["height"] / 2)
+    page.mouse.move(
+        handle["x"] + handle["width"] / 2, handle["y"] + handle["height"] / 2
+    )
     page.mouse.down()
     page.mouse.move(handle["x"] - 200, handle["y"] + handle["height"] / 2, steps=5)
     page.mouse.up()
     assert page.evaluate("() => CMP.x") < before
 
     page.evaluate("() => toggleDataset('SAATCHI_BIOMASS', false)")
-    assert not page.locator("#compare-handle").is_visible()   # one layer left: comparison ends
-    assert page.evaluate(f"() => S.layers.get('{GAMI}').leafletLayer.getContainer().style.clip") == ""
+    assert not page.locator(
+        "#compare-handle"
+    ).is_visible()  # one layer left: comparison ends
+    assert (
+        page.evaluate(
+            f"() => S.layers.get('{GAMI}').leafletLayer.getContainer().style.clip"
+        )
+        == ""
+    )

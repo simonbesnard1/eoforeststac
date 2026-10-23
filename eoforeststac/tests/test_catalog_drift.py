@@ -2,7 +2,11 @@ from eoforeststac.catalog.drift import differences
 
 
 def test_identical_documents_have_no_differences():
-    doc = {"id": "X", "links": [{"rel": "self", "href": "a"}], "assets": {"zarr": {"gsd": 10}}}
+    doc = {
+        "id": "X",
+        "links": [{"rel": "self", "href": "a"}],
+        "assets": {"zarr": {"gsd": 10}},
+    }
     assert differences(doc, doc) == []
 
 
