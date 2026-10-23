@@ -23,6 +23,7 @@ except Exception:
 _SUBMODULES = {
     "analytics",
     "catalog",
+    "checks",
     "products",
     "providers",
     "pyramids",
