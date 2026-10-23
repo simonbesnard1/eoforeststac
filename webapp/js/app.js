@@ -151,7 +151,7 @@ function openAbout() {
   el('dlg-title').textContent = 'EOForestSTAC';
   el('dlg-body').innerHTML = `
     <p>EOForestSTAC (the STAC catalog, the Python package and the data
-      processing behind them) is developed by Simon Besnard at the
+      processing behind them) is developed by Simon Besnard and Felix Dombrowski at the
       <a href="https://www.gfz.de" target="_blank" rel="noopener noreferrer">GFZ Helmholtz Centre for Geosciences</a>.
       This map viewer is the catalog's interactive front end.</p>
     <dl class="dlg-facts">

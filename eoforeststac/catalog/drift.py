@@ -24,6 +24,7 @@ import pystac
 
 from eoforeststac.catalog.root import (
     DEFAULT_VERSIONS,
+    INTERNAL_THEMES,
     THEMES,
     _build_base_tree,
     _iter_collections,
@@ -106,6 +107,17 @@ def main(argv: list[str] | None = None) -> None:
     for variant in args.variant or list(VARIANTS):
         publish_base, http_base = VARIANTS[variant]
         for theme in args.theme or list(THEMES):
+            if variant == "public" and theme in INTERNAL_THEMES:
+                # Must not be public: neither linked from the root nor present
+                root = _get(f"{http_base.rstrip('/')}/catalog.json") or {}
+                linked = any(
+                    l.get("rel") == "child" and f"/{theme}/" in l.get("href", "")
+                    for l in root.get("links", [])
+                )
+                if linked or _get(f"{http_base.rstrip('/')}/{theme}/catalog.json"):
+                    print(f"[public] internal theme is public: {theme}")
+                    drift += 1
+                continue
             docs = generated_docs(theme, publish_base, http_base)
             for url, new in docs.items():
                 live = _get(url)

@@ -170,16 +170,19 @@ REGIONS = {
 ALS_BIOMASS_PRODUCTS_CFG = {
     "id": "ALS_BIOMASS_PRODUCTS",
     "short_title": "ALS Biomass Products",
-    "title": "ALS Biomass Products – 10 m forest biomass from NFI and ALS [Experimental]",
+    "title": "ALS Biomass Products – harmonized 10 m forest aboveground biomass from ALS (V1.0)",
     "description": (
-        "⚠️ This collection is under active development. Data coverage, variables, "
-        "and metadata are subject to change without notice.\n\n"
-        "Forest biomass maps at 10 m resolution derived from National Forest "
-        "Inventory plots and airborne laser scanning, for Finland, Ireland, Italy, "
-        "the Netherlands, Spain and Sweden.\n\n"
+        "Version 1.0. Internal to GFZ: not for public distribution.\n\n"
+        "Harmonized forest aboveground biomass maps at 10 m resolution derived from "
+        "airborne laser scanning and National Forest Inventory plots, in selected "
+        "regions of Finland, Spain and the Netherlands.\n\n"
         "Each country is a child collection in its national CRS. Its Zarr store holds "
         "biomass(time, y, x) with one time step per ALS campaign year; every year "
-        "covers the area scanned that year and is NaN elsewhere."
+        "covers the area scanned that year and is NaN elsewhere.\n\n"
+        "Citation: Song, Q., Enguehard, L., Kuschnerus, M., & Herold, M. (2026). "
+        "Harmonized Airborne Laser Scanning-derived forest above ground biomass maps "
+        "in selected regions of Finland, Spain, and the Netherlands (Version V 1.0) "
+        "[Dataset]. Zenodo. https://doi.org/10.5281/zenodo.23591088"
     ),
     "bbox": [-180.0, -90.0, 180.0, 90.0],
     "geometry": {
@@ -215,7 +218,6 @@ ALS_BIOMASS_PRODUCTS_CFG = {
         "Europe",
         "zarr",
         "stac",
-        "experimental",
     ],
     "themes": ["lidar", "forest structure", "canopy height"],
     "links": [
@@ -227,9 +229,11 @@ ALS_BIOMASS_PRODUCTS_CFG = {
         },
         {
             "rel": "cite-as",
-            "href": "https://github.com/simonbesnard1/alsdb",
+            "href": "https://doi.org/10.5281/zenodo.23591088",
             "type": "text/html",
-            "title": "alsdb – ALS gridded products pipeline (cite repository until DOI is available)",
+            "title": "Song, Q., Enguehard, L., Kuschnerus, M., & Herold, M. (2026). Harmonized "
+            "Airborne Laser Scanning-derived forest above ground biomass maps in selected "
+            "regions of Finland, Spain, and the Netherlands (Version V 1.0). Zenodo.",
         },
     ],
     "stac_extensions": [

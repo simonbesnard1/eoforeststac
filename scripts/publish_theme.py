@@ -8,6 +8,8 @@ are deleted. Zarr stores are never touched: only ``.json`` keys are considered.
 
 With ``--remove``, a theme that is no longer in THEMES is retired instead: its
 link is dropped from the root catalog first, then all of its JSON is deleted.
+A theme marked ``internal`` in THEMES is published to the internal variant and
+retired from the public one the same way.
 
 Dry run by default; pass ``--apply`` to write and delete.
 
@@ -25,6 +27,7 @@ import pystac
 
 from eoforeststac.catalog.root import (
     DEFAULT_VERSIONS,
+    INTERNAL_THEMES,
     THEMES,
     _build_base_tree,
     _iter_collections,
@@ -140,7 +143,8 @@ def main() -> None:
     plan = []  # (variant, action, url, doc)
     for name, publish_base, write_base in variants:
         root_url = f"{write_base.rstrip('/')}/catalog.json"
-        if args.remove:
+        # An internal theme is retired from the public variant only
+        if args.remove or (name == "public" and args.theme in INTERNAL_THEMES):
             # Unlink first (writes run before deletes), then drop every file
             new_root = _root_without_theme_link(
                 json.loads(fs.cat(root_url)), args.theme

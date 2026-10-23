@@ -133,13 +133,12 @@ DEFAULT_VERSIONS: Dict[str, Union[List[str], SiteVersions]] = {
     "ULS_PRODUCTS": {
         "hohes_holz": ["1.0"],
     },
+    # V1.0 covers these three; Ireland, Italy and Sweden are defined in the
+    # product config but not part of the release
     "ALS_BIOMASS_PRODUCTS": {
         "finland": ["1.0"],
-        "ireland": ["1.0"],
-        "italy": ["1.0"],
         "netherlands": ["1.0"],
         "spain": ["1.0"],
-        "sweden": ["1.0"],
     },
 }
 
@@ -223,6 +222,9 @@ THEMES: Dict[str, Dict[str, object]] = {
             "national forest inventory",
         ],
         "products": ["ALS_BIOMASS_PRODUCTS"],
+        # The producers asked to keep V1.0 within GFZ: in the internal catalog
+        # (the explorer, GFZ network only), not in the public one (STAC Browser)
+        "internal": True,
     },
     "land-use-land-cover": {
         "title": "Land Use & Land Cover",
@@ -233,6 +235,9 @@ THEMES: Dict[str, Dict[str, object]] = {
         ],  # "POTAPOV_LCLUC" commented out until data is ready
     },
 }
+
+# Themes left out of the public (STAC Browser) variant of the catalog
+INTERNAL_THEMES = frozenset(t for t, meta in THEMES.items() if meta.get("internal"))
 
 
 @dataclass(frozen=True)
@@ -584,6 +589,11 @@ def _write_browser_variant(
         documentation_url=documentation_url,
         stac_browser=stac_browser,
     )
+
+    # Internal-only themes are not part of the public variant
+    for theme_id in INTERNAL_THEMES:
+        pub_root.remove_child(theme_id)
+        dst_root.remove_child(theme_id)
 
     # Normalize hrefs for traversal / destinations
     pub_root.normalize_hrefs(publish_base)
