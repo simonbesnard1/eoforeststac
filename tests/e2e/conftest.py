@@ -5,6 +5,7 @@
 
 They need Playwright with Chromium (pip install playwright pytest &&
 playwright install chromium) and a stack that can read the public S3 data.
+BROWSER_CHANNEL=chrome uses an installed Google Chrome instead.
 """
 
 import os
@@ -13,12 +14,13 @@ import pytest
 from playwright.sync_api import sync_playwright
 
 BASE_URL = os.environ.get("BASE_URL", "http://127.0.0.1:8080").rstrip("/")
+CHANNEL = os.environ.get("BROWSER_CHANNEL") or None
 
 
 @pytest.fixture(scope="session")
 def browser():
     with sync_playwright() as p:
-        b = p.chromium.launch(headless=True)
+        b = p.chromium.launch(headless=True, channel=CHANNEL)
         yield b
         b.close()
 
