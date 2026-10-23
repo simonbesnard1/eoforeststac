@@ -1028,7 +1028,7 @@ const CFG = {
       icon:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>' },
     'land-use-land-cover':  { label:'Land Use & Land Cover',  short:'Land use',    cls:'lu',
       icon:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>' },
-    'spaceborne-lidar':     { label:'Satellite LiDAR',        short:'Satellite LiDAR', cls:'sl',
+    'spaceborne-lidar':     { label:'Spaceborne LiDAR',       short:'Spaceborne LiDAR', cls:'sl',
       icon:'<path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/>' },
   },
   themeIconFallback: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
@@ -2638,7 +2638,7 @@ async function loadFootprintSources() {
     FP.tileDeg = meta.tile_deg || FP.tileDeg;
     return {
       id: FP_THEME,
-      title: 'Satellite LiDAR',
+      title: 'Spaceborne LiDAR',
       // Grouped by sensor (a sub-header each, like the ALS countries); rows
       // are named by what they measure, the product code goes in the facts
       collections: meta.sources.map(src => ({
