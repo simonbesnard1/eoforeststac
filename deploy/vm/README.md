@@ -29,12 +29,14 @@ Commit and push to `main`, then on the VM:
 
 ```bash
 cd ~/eoforeststac/app
-git pull --ff-only
-docker compose -f deploy/vm/compose.yaml up -d --build
-docker compose -f deploy/vm/compose.yaml ps
-curl --fail http://127.0.0.1:8080/healthz
-curl --fail http://127.0.0.1:8080/api/healthz
+deploy/vm/deploy.sh
 ```
+
+It pulls, rebuilds what changed, waits for the services to be healthy, clears
+Docker's build cache, and then checks every path the browser uses: that
+`/api/` reaches TiTiler, a map tile, a point value, an analysis job, the
+footprint service, the download route and HTTPS. It exits with status 1 and
+lists what failed. `deploy/vm/deploy.sh --check` runs only the checks.
 
 ## First install
 
