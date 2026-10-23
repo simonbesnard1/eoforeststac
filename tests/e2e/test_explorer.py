@@ -81,3 +81,33 @@ def test_time_labels_are_readable(page):
     page.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000)
     text = page.locator(f'.lc[data-card="{GAMI}"]').inner_text() + page.locator("#leg-items").inner_text()
     assert not re.search(r"T00:00:00", text), "raw timestamps shown"
+
+
+def test_every_panel_opens(page):
+    for view in ("layers", "basemap", "download", "appearance", "settings"):
+        button = page.locator(f'.rail-btn[data-view="{view}"]')
+        if button.count():
+            button.first.click()
+            page.wait_for_timeout(200)
+    assert "About" in page.locator("#view-settings").inner_text()
+
+
+def test_clicking_the_map_shows_pixel_values(page):
+    page.evaluate("() => S.map.setView([-1, 21], 6, {animate: false})")
+    page.evaluate(f"() => toggleDataset('{GAMI}', true)")
+    wait_for_tiles(page, GAMI)
+    box = page.locator("#map").bounding_box()
+    page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+    page.wait_for_function(
+        "() => !el('inspector').hidden && !/Querying/.test(el('ins-rows').innerText)",
+        timeout=60_000,
+    )
+    assert "forest_age" in page.locator("#ins-rows").inner_text()
+
+
+def test_spaceborne_lidar_groups_by_sensor(page):
+    group = page.locator('.grp[data-grp="spaceborne-lidar"]')
+    if not group.count():  # no footprint service in this stack (e.g. CI)
+        return
+    headers = group.locator(".ds-sub").all_inner_texts()
+    assert any(h.startswith("GEDI") for h in headers) and any(h.startswith("ICESat-2") for h in headers), headers
