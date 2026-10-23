@@ -1,0 +1,83 @@
+"""What a user does in the explorer, checked by what is rendered."""
+
+import re
+
+from conftest import wait_for_tiles
+
+GAMI = "GAMI_AGECLASS"
+
+
+def tile_responses(pg):
+    responses = []
+    pg.on("response", lambda r: "/tiles/" in r.url and responses.append(r))
+    return responses
+
+
+def test_catalog_lists_the_categories(page):
+    labels = page.locator("#rail-cats .rail-label").all_inner_texts()
+    for expected in ("Biomass", "Disturbance", "Structure", "Land use"):
+        assert expected in labels, labels
+    page.locator('#rail-cats .rail-btn[data-cat="biomass-carbon"]').click()
+    rows = page.locator('.grp[data-grp="biomass-carbon"] .ds-name').all_inner_texts()
+    assert len(rows) >= 3, rows
+
+
+def test_a_layer_draws_tiles_and_a_legend(page):
+    tiles = tile_responses(page)
+    page.evaluate("() => S.map.setView([0, 20], 3, {animate: false})")
+    page.evaluate(f"() => toggleDataset('{GAMI}', true)")
+    wait_for_tiles(page, GAMI)
+    assert tiles and all(r.status == 200 for r in tiles), [r.status for r in tiles]
+    legend = page.locator("#leg-items").inner_text()
+    assert "Forest age-class fraction" in legend
+    ticks = [float(t) for t in page.locator(".leg-ticks span").all_inner_texts()]
+    assert ticks[0] >= 0 and ticks[-1] <= 1, ticks  # never a fill value like -9999
+
+
+def test_resolution_and_member_pickers(page):
+    page.evaluate("() => S.map.setView([0, 20], 3, {animate: false})")
+    page.evaluate(f"() => toggleDataset('{GAMI}', true)")
+    wait_for_tiles(page, GAMI)
+    card = page.locator(f'.lc[data-card="{GAMI}"]')
+    res = card.locator('select[data-prop="resolution"]')
+    options = res.locator("option").all_inner_texts()
+    assert options[0].endswith("finest") and "1°" in options[-1], options
+
+    members = card.locator('select[data-prop^="extra:"]').first.locator("option").all_inner_texts()
+    assert members == sorted(members, key=float), members
+
+    tiles = tile_responses(page)
+    res.select_option(index=len(options) - 1)
+    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.zarrIndex === {len(options) - 1}")
+    wait_for_tiles(page, GAMI)
+    assert tiles and all("_1deg_" in r.url for r in tiles)
+    assert "1°" in page.locator(".leg-ds").first.inner_text()
+
+
+def test_analysis_of_a_drawn_area(page):
+    page.evaluate(f"() => toggleDataset('{GAMI}', true)")
+    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000)
+    page.evaluate(
+        """() => { S.legTab = 'analysis'; renderLegend();
+                   setArea({type: 'Polygon', coordinates: [[[20, -5], [24, -5], [24, -1], [20, -1], [20, -5]]]}); }"""
+    )
+    page.locator("#an-go").click()
+    page.wait_for_function("() => !S.an.running && (S.an.result || S.an.error)", timeout=300_000)
+    assert page.evaluate("() => S.an.error") is None
+    assert page.locator("#an-results .an-card").count() >= 1
+
+
+def test_both_themes_render(page):
+    for theme, accent in (("light", "#002864"), ("dark", "#43d3ff")):
+        page.evaluate("t => applyTheme(t)", theme)
+        value = page.evaluate(
+            "() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()"
+        )
+        assert value == accent, (theme, value)
+
+
+def test_time_labels_are_readable(page):
+    page.evaluate(f"() => toggleDataset('{GAMI}', true)")
+    page.wait_for_function(f"() => S.layers.get('{GAMI}')?.leafletLayer", timeout=120_000)
+    text = page.locator(f'.lc[data-card="{GAMI}"]').inner_text() + page.locator("#leg-items").inner_text()
+    assert not re.search(r"T00:00:00", text), "raw timestamps shown"

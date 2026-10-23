@@ -2106,6 +2106,19 @@ function parseDimInfo(info) {
   return { name: dims[0], type: isCategorical ? 'categorical' : 'index', values: labels, length: bands.length };
 }
 
+/* Dates as people read them: "2010" for annual data, "2010-06" for monthly,
+   "2010-06-15" otherwise, instead of 2010-01-01T00:00:00.000000000. Only for
+   display: requests keep the full value. */
+function dimLabel(value, values = [value]) {
+  const iso = v => String(v).match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ].*)?$/);
+  const m = iso(value);
+  if (!m) return String(value);
+  const all = values.map(iso).filter(Boolean);
+  if (all.every(d => d[2] === '01' && d[3] === '01')) return m[1];
+  if (all.every(d => d[3] === '01')) return `${m[1]}-${m[2]}`;
+  return `${m[1]}-${m[2]}-${m[3]}`;
+}
+
 /* titiler.xarray exposes only `sel` — there is no `isel`. An unrecognised
    query param is silently dropped, which leaves every band of the extra
    dimension loaded (and renders the wrong slice). `sel` selects by coordinate
@@ -2288,18 +2301,18 @@ function renderLayerPanel() {
         dimFld = `<div class="fld">
           <div class="fld-lbl"><span>${esc(di.name)}</span></div>
           <select data-id="${esc(layer.id)}" data-prop="dimValue">
-            ${di.values.map((v, i) => `<option value="${i}" ${i === layer.dimValue ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+            ${di.values.map((v, i) => `<option value="${i}" ${i === layer.dimValue ? 'selected' : ''}>${esc(dimLabel(v, di.values))}</option>`).join('')}
           </select>
         </div>`;
       } else {
         dimFld = `<div class="fld">
           <div class="fld-lbl">
             <span>${esc(di.name)}</span>
-            <span class="fld-val" data-role="dimlabel">${esc(di.values[layer.dimValue] ?? `[${layer.dimValue}]`)}</span>
+            <span class="fld-val" data-role="dimlabel">${esc(di.values[layer.dimValue] != null ? dimLabel(di.values[layer.dimValue], di.values) : `[${layer.dimValue}]`)}</span>
           </div>
           <input type="range" min="0" max="${di.length - 1}" step="1" value="${layer.dimValue}"
                  data-id="${esc(layer.id)}" data-prop="dimValue"
-                 data-labels='${esc(JSON.stringify(di.values))}'>
+                 data-labels='${esc(JSON.stringify(di.values.map(v => dimLabel(v, di.values))))}'>
         </div>`;
       }
     }
@@ -2307,7 +2320,7 @@ function renderLayerPanel() {
     const extraFld = (layer.extraDims || []).map((d, i) => `<div class="fld">
         <div class="fld-lbl"><span>${esc(d.name)}</span></div>
         <select data-id="${esc(layer.id)}" data-prop="extra:${i}">
-          ${d.values.map((v, j) => `<option value="${j}" ${j === d.index ? 'selected' : ''}>${esc(v)}</option>`).join('')}
+          ${d.values.map((v, j) => `<option value="${j}" ${j === d.index ? 'selected' : ''}>${esc(dimLabel(v, d.values))}</option>`).join('')}
         </select>
       </div>`).join('');
     dimFld = extraFld + dimFld;
@@ -2549,9 +2562,9 @@ function renderLegend() {
       const pills = [];
       if (zoom < layer.minZoom)          pills.push(`no tiles below z${layer.minZoom}`);
       else if (layer.pyramidUrl && lvl > 0) pills.push(`overview L${lvl}`);
-      for (const d of layer.extraDims || []) pills.push(`${d.name} ${d.values[d.index]}`);
+      for (const d of layer.extraDims || []) pills.push(`${d.name} ${dimLabel(d.values[d.index], d.values)}`);
       if (layer.dimInfo && layer.dimInfo.length > 1)
-        pills.push(`${layer.dimInfo.name} ${layer.dimInfo.values[layer.dimValue] ?? layer.dimValue}`);
+        pills.push(`${layer.dimInfo.name} ${layer.dimInfo.values[layer.dimValue] != null ? dimLabel(layer.dimInfo.values[layer.dimValue], layer.dimInfo.values) : layer.dimValue}`);
 
       const body = layer.classes
         ? `<div class="leg-classes">
@@ -3850,7 +3863,7 @@ function dlPayload(layer) {
   const col = findCollection(layer.id);
   const allTimes = el('dl-alltime').checked;
   const sel = allTimes ? extraSels(layer) : selParams(layer);
-  const shown = !allTimes && selParam(layer) ? String(layer.dimInfo.values[layer.dimValue]).slice(0, 10) : '';
+  const shown = !allTimes && selParam(layer) ? dimLabel(layer.dimInfo.values[layer.dimValue], layer.dimInfo.values) : '';
   const cite = (col?.links || []).find(l => l.rel === 'cite-as' && /^https?:\/\//i.test(l.href || ''))?.href || '';
   return {
     url: layer.zarrUrl,
