@@ -1330,6 +1330,10 @@ async function loadCollection(link, base) {
         rasterBands: Array.isArray(a['raster:bands']) ? a['raster:bands'] : [],
       }));
     if (!zarrs.length) return null;
+    // Several stores per item are resolutions of the same data: finest first,
+    // so the layer opens at full detail; the layer card offers the others
+    zarrs.forEach(z => Object.assign(z, zarrResolution(z)));
+    zarrs.sort((a, b) => (a.metres ?? Infinity) - (b.metres ?? Infinity));
     return {
       id: col.id,
       title: col.title || col.id,
@@ -1349,6 +1353,18 @@ async function loadCollection(link, base) {
       zarrs,
     };
   } catch { return null; }
+}
+
+/* Resolution of a store from its asset title or key: "0.0833deg", "10m". */
+function zarrResolution(z) {
+  const m = String(`${z.title} ${z.key}`).match(/(\d+(?:\.\d+)?)\s*(deg|km|m)\b/i);
+  if (!m) return { metres: null, resLabel: z.title };
+  const v = Number(m[1]), unit = m[2].toLowerCase();
+  const metres = unit === 'deg' ? v * 111320 : unit === 'km' ? v * 1000 : v;
+  const resLabel = unit === 'deg'
+    ? `${v}° (~${metres >= 1000 ? `${Math.round(metres / 1000)} km` : `${Math.round(metres)} m`})`
+    : `${v} ${unit}`;
+  return { metres, resLabel };
 }
 
 /* The one-line "annual 2005–2024 · 100 m · global · ESA CCI" summary, built
@@ -2011,8 +2027,10 @@ function buildClasses(layer) {
   }));
 }
 
-async function activateLayer(col) {
-  const zarrUrl = col.zarrs[0].href;
+async function activateLayer(col, { slot } = {}) {
+  const zarrIndex = Math.min(col.zarrIndex ?? 0, col.zarrs.length - 1);
+  const zarr = col.zarrs[zarrIndex];
+  const zarrUrl = zarr.href;
   const layer = {
     id: col.id,
     title: col.title,
@@ -2029,8 +2047,10 @@ async function activateLayer(col) {
     nativeMinZoom: 4, minZoom: 4, maxZoom: 18,
     bounds: col.bbox,
     summaries: col.summaries || {},
-    rasterBands: col.zarrs[0].rasterBands || [],
-    slot: freeColorSlot(),
+    rasterBands: zarr.rasterBands || [],
+    zarrIndex,
+    resolution: col.zarrs.length > 1 ? zarr.resLabel : '',
+    slot: slot ?? freeColorSlot(),
     color: null,          // set from slot below
     footprintLayer: null, footprintLabel: null, leafletLayer: null,
     pyramidUrl: null, numPyramidLevels: 0, _lastPyramidLevel: null,
@@ -2167,6 +2187,33 @@ function removeLayer(id) {
   S.layers.delete(id);
 }
 
+/* Reopen a layer on another resolution of the same data, keeping its colour,
+   opacity, variable and ramp; the value range is measured again. */
+async function switchResolution(layer, index) {
+  const col = findCollection(layer.id);
+  if (!col || index === layer.zarrIndex) return;
+  col.zarrIndex = index;
+  const keep = { activeVar: layer.activeVar, opacity: layer.opacity,
+                 colormap: layer.colormapManual ? layer.colormap : null };
+  const autoZoom = S.autoZoom;
+  removeLayer(layer.id);
+  S.autoZoom = false;
+  try { await activateLayer(col, { slot: layer.slot }); } finally { S.autoZoom = autoZoom; }
+  const fresh = S.layers.get(layer.id);
+  if (fresh) {
+    fresh.opacity = keep.opacity;
+    if (keep.colormap) Object.assign(fresh, { colormap: keep.colormap, colormapManual: true });
+    if (keep.activeVar !== fresh.activeVar && fresh.variables.includes(keep.activeVar)) {
+      fresh.activeVar = fresh.label = keep.activeVar;
+      await fetchVariableMeta(fresh);
+    }
+    updateLeafletLayer(fresh.id);
+  }
+  renderLayerPanel();
+  renderLegend();
+  syncLayerCount();
+}
+
 /* Footprint outline while the map is zoomed out past the layer's tile floor */
 function updateFootprint(layer) {
   const bb = boundsToLatLng(layer.bounds);
@@ -2264,6 +2311,14 @@ function renderLayerPanel() {
           ? `<div class="fld-hint">${esc(layer.label)}${layer.units ? ` · ${esc(layer.units)}` : ''}</div>` : ''}
       </div>`;
 
+    const zarrs = findCollection(layer.id)?.zarrs || [];
+    const resFld = zarrs.length > 1 ? `<div class="fld">
+        <div class="fld-lbl"><span>Resolution</span><span class="fld-val">${zarrs.length} available</span></div>
+        <select data-id="${esc(layer.id)}" data-prop="resolution">
+          ${zarrs.map((z, i) => `<option value="${i}" ${i === layer.zarrIndex ? 'selected' : ''}>${esc(z.resLabel)}${i === 0 ? ' · finest' : ''}</option>`).join('')}
+        </select>
+      </div>` : '';
+
     return `<div class="lc" data-card="${esc(layer.id)}">
       <div class="lc-top">
         <span class="lc-swatch" style="background:${layer.color}"></span>
@@ -2276,6 +2331,7 @@ function renderLayerPanel() {
         </button>
       </div>
 
+      ${resFld}
       ${varFld}
       ${dimFld}
 
@@ -2358,6 +2414,8 @@ function onLayerControl(ctrl) {
   const { id, prop } = ctrl.dataset;
   const layer = S.layers.get(id);
   if (!layer) return;
+
+  if (prop === 'resolution') { switchResolution(layer, parseInt(ctrl.value, 10)); return; }
 
   if (prop.startsWith('extra:')) {
     const dim = layer.extraDims?.[parseInt(prop.slice(6), 10)];
@@ -2517,7 +2575,7 @@ function renderLegend() {
           <span class="leg-key" style="background:${layer.color}"></span>
           ${esc(layer.label || layer.activeVar)}
         </div>
-        <div class="leg-ds">${esc(layer.title)}${layer.units ? ` · ${esc(layer.units)}` : ''}</div>
+        <div class="leg-ds">${esc(layer.title)}${layer.resolution ? ` · ${esc(layer.resolution)}` : ''}${layer.units ? ` · ${esc(layer.units)}` : ''}</div>
         ${varPicker}
         ${body}
         <div class="leg-nodata">
