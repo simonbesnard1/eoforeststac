@@ -155,6 +155,9 @@ JRC_GFC_CFG = {
             "classes": {0: "non-forest", 1: "forest"},
         }
     },
+    # Convention checks (eoforeststac.checks): accepted exceptions.
+    # A forest / non-forest class map: no units
+    "checks": {"accept": ["units-missing"]},
     # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
     # continuous fields, "max" for event years and presence, "first" for classes
     "pyramid": {

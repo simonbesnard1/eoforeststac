@@ -189,6 +189,9 @@ JRC_TMF_CFG = {
             "years": [1990, 2024],
         },
     },
+    # Convention checks (eoforeststac.checks): accepted exceptions.
+    # 0 is no data / no event in every TMF layer; class layers have no units
+    "checks": {"accept": ["zero-fill", "units-missing"]},
     # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
     # continuous fields, "max" for event years and presence, "first" for classes
     "pyramid": {

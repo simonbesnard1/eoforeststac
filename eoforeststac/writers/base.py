@@ -73,7 +73,26 @@ class BaseZarrWriter:
     ) -> str:
         store = self.make_store(zarr_path)
         ds.to_zarr(store=store, mode="w", encoding=encoding, consolidated=consolidated)
+        if consolidated:
+            self.report_conventions(zarr_path)
         return zarr_path
+
+    def report_conventions(self, zarr_path: str, accept=()) -> list:
+        """Print where a written store departs from the catalog's conventions.
+
+        Writers that stream their output and consolidate it themselves call
+        this at the end. Findings are printed, never raised: the store is
+        already written. ``eoforeststac-check`` reports the same for the
+        whole bucket.
+        """
+        from eoforeststac.checks.conventions import accepted, check_store
+
+        path = self.s3._strip_protocol(zarr_path).rstrip("/")
+        findings = accepted(check_store(self.s3, path), accept)
+        for f in findings:
+            where = f" [{f.variable}]" if f.variable else ""
+            print(f"Convention {f.level}: {f.rule}{where}: {f.message}")
+        return findings
 
     @staticmethod
     def apply_fillvalue(ds: xr.Dataset, fill_value=-9999) -> xr.Dataset:

@@ -278,4 +278,5 @@ class ALSBiomassProductsWriter(BaseZarrWriter):
         # Legend range for the explorer, which cannot measure stores this large
         ranges = add_display_range(output_zarr, fs=self.s3)
         print(f"Display range (p2-p98): {ranges}")
+        self.report_conventions(output_zarr)
         return output_zarr

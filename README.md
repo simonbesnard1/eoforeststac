@@ -67,6 +67,17 @@ python -m http.server 8080 --directory webapp      # then open localhost:8080
 `POST` must be allowed because the explorer runs on another port and posts
 analysis and download jobs; on the VM both share one origin behind nginx.
 
+### Checking stores before publishing
+
+`eoforeststac-check` compares every Zarr store on S3 with the catalog's
+conventions (a declared fill value, north-to-south latitude, CF dates, time
+first, a CRS link, units, a sane legend range) from metadata alone, in
+seconds. It exits with status 1 on an error, so it can gate a release;
+writers print the same findings after a write. A product accepts a known
+exception in its config, e.g. `"checks": {"accept": ["zero-fill"]}` for
+LIU, whose source maps use 0 for no data. The rules are in
+[eoforeststac/checks/conventions.py](eoforeststac/checks/conventions.py).
+
 ### Building visualization pyramids
 
 Large stores are drawn from precomputed Zarr overview levels. On a server

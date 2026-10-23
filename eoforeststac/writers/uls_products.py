@@ -71,6 +71,7 @@ class ULSProductsWriter(BaseZarrWriter):
                 continue
             ds[var] = ds[var].astype("float32")
             ds[var] = ds[var].where(np.isfinite(ds[var]), fill_value)
+            ds[var].attrs["grid_mapping"] = "spatial_ref"
 
             # attrs = VARIABLE_ATTRS.get(var, {}).copy()
             # attrs.update(

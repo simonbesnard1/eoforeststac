@@ -167,6 +167,9 @@ LIU_BIOMASS_CFG = {
         "canopy_cover": {"kind": "cover", "quantity": "Canopy cover"},
         "canopy_height": {"kind": "mean", "quantity": "Canopy height"},
     },
+    # Convention checks (eoforeststac.checks): accepted exceptions.
+    # The source maps use 0 for no data (canopy cover runs 1-100)
+    "checks": {"accept": ["zero-fill"]},
     # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
     # continuous fields, "max" for event years and presence, "first" for classes
     "pyramid": {

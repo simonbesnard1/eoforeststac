@@ -171,6 +171,17 @@ HANSEN_GFC_CFG = {
             "classes": {1: "gain"},
         },
     },
+    # Convention checks (eoforeststac.checks): accepted exceptions.
+    # 0 means "no gain" / "no loss" / no data in the source layers; the
+    # gain and mask layers are flags without units
+    "checks": {
+        "accept": [
+            "zero-fill:gain",
+            "zero-fill:loss_year",
+            "zero-fill:data_mask",
+            "units-missing",
+        ]
+    },
     # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
     # continuous fields, "max" for event years and presence, "first" for classes
     "pyramid": {

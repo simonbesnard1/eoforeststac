@@ -184,6 +184,9 @@ RADD_EUROPE_CFG = {
             "classes": {1: "forest"},
         },
     },
+    # Convention checks (eoforeststac.checks): accepted exceptions.
+    # Alert codes, flags and masks: no units
+    "checks": {"accept": ["units-missing"]},
     # Map overviews (eoforeststac.pyramids): reducer per variable, "mean" for
     # continuous fields, "max" for event years and presence, "first" for classes
     "pyramid": {

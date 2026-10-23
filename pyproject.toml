@@ -54,6 +54,7 @@ dependencies = [
 
 [project.scripts]
 eoforeststac-pyramids = "eoforeststac.pyramids.cli:main"
+eoforeststac-check = "eoforeststac.checks.cli:main"
 
 [project.urls]
 homepage = "https://github.com/simonbesnard1/eoforeststac"
