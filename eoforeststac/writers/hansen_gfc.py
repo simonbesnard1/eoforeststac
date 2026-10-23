@@ -7,6 +7,9 @@ from typing import Dict, Optional
 from eoforeststac.writers.base import BaseZarrWriter
 from eoforeststac.core.zarr import DEFAULT_COMPRESSOR
 
+# Tree cover runs 0-100 %; 255 marks pixels without observations
+TREE_COVER_FILL = 255
+
 
 class HansenGFCWriter(BaseZarrWriter):
     """
@@ -169,6 +172,16 @@ class HansenGFCWriter(BaseZarrWriter):
             ds["loss_year"] = loss_year
 
         # --------------------------------------------------
+        # Tree cover: 0 % is a real value, so no data needs its own code,
+        # taken from the data mask (0 = no data, 1 = land, 2 = water)
+        # --------------------------------------------------
+        if "tree_cover" in ds and "data_mask" in ds:
+            observed = ds["data_mask"].fillna(0) > 0
+            ds["tree_cover"] = (
+                ds["tree_cover"].fillna(0).where(observed, TREE_COVER_FILL)
+            )
+
+        # --------------------------------------------------
         # Handle remaining variables
         # --------------------------------------------------
         for name, meta in self.VARIABLES.items():
@@ -183,7 +196,9 @@ class HansenGFCWriter(BaseZarrWriter):
                     "long_name": meta["long_name"],
                     "description": meta["description"],
                     "grid_mapping": "spatial_ref",
-                    "_FillValue": fill_value,
+                    "_FillValue": (
+                        TREE_COVER_FILL if name == "tree_cover" else fill_value
+                    ),
                 }
             )
 

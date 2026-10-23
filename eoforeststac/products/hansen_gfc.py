@@ -147,7 +147,7 @@ HANSEN_GFC_CFG = {
         "loss_period": ["2001–2024"],
     },
     "raster_bands": {
-        "treecover2000": {"data_type": "uint8", "nodata": 0},
+        "treecover2000": {"data_type": "uint8", "nodata": 255},
         "loss": {"data_type": "uint8", "nodata": 0},
         "lossyear": {"data_type": "uint8", "nodata": 0},
         "gain": {"data_type": "uint8", "nodata": 0},
