@@ -602,7 +602,8 @@ body{font-size:14px;background:var(--bg)}
 .rail-sec{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.38);padding:12px 11px 4px}
 .rail-sec.first{padding-top:2px}
 #rail-cats{display:contents}
-.rail-label{overflow:hidden;text-overflow:ellipsis}
+/* A long label wraps to a second line rather than being cut off */
+.rail-label{white-space:normal;line-height:1.15;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 /* Catalog: one category at a time; search spans all categories. */
 .grp{margin:2px 10px 10px}
 .grp-h{display:none;align-items:center;gap:8px;padding:8px 4px 7px;font-size:10.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-2)}
