@@ -44,7 +44,8 @@ enc() { python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[
 services() { $COMPOSE ps --format '{{.Service}} {{.Status}}' | grep -v healthy && return 1; echo "all healthy"; }
 
 titiler_routed() {  # /api/ must reach TiTiler, not another container
-    curl -fsS -m 20 "$WEB/api/healthz" | grep -q '"titiler"' && echo "TiTiler answers /api/"
+    local reply; reply=$(curl -fsS -m 20 "$WEB/api/healthz") || return 1
+    grep -q '"titiler"' <<<"$reply" && echo "TiTiler answers /api/"
 }
 
 tile() {  # a GAMI 1-degree tile over southern Africa must be a non-empty PNG
@@ -85,10 +86,14 @@ footprints() {
 }
 
 downloads() {  # the download route reaches TiTiler (unknown jobs: 404 with its message)
-    curl -sS -m 20 "$WEB/api/download/0" | grep -q "Unknown or expired download" && echo "routed"
+    local reply; reply=$(curl -sS -m 20 "$WEB/api/download/0") || return 1
+    grep -q "Unknown or expired download" <<<"$reply" && echo "routed"
 }
 
-explorer() { curl -fsS -m 20 "$WEB/" | grep -q "EOForestSTAC" && echo "page served"; }
+explorer() {  # read the whole page first: grep -q would cut curl off mid-transfer
+    local page; page=$(curl -fsS -m 20 "$WEB/") || return 1
+    grep -q "EOForestSTAC" <<<"$page" && echo "page served"
+}
 
 https_site() {  # Caddy: valid certificate, and HTTP redirects to HTTPS
     curl -fsS -m 20 -o /dev/null "$SITE/" || return 1
