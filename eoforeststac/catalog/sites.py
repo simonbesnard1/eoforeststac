@@ -24,7 +24,10 @@ def create_site_collection(cfg: dict, site_id: str) -> pystac.Collection:
         **cfg,
         "id": reg["zarr_name"],
         "title": f"{cfg['short_title']} – {reg['label']}",
-        "description": reg["description"],
+        # Notes shared by every site (version, citation) follow its own text
+        "description": "\n\n".join(
+            filter(None, [reg["description"], cfg.get("site_notes")])
+        ),
         "bbox": reg["bbox"],
         "geometry": reg["geometry"],
         "start_datetime": reg["start_datetime"],

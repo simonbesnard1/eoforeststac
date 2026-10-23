@@ -171,6 +171,14 @@ ALS_BIOMASS_PRODUCTS_CFG = {
     "id": "ALS_BIOMASS_PRODUCTS",
     "short_title": "ALS Biomass Products",
     "title": "ALS Biomass Products – harmonized 10 m forest aboveground biomass from ALS (V1.0)",
+    # Appended to each country's description (see catalog/sites.py)
+    "site_notes": (
+        "Version 1.0. Internal to GFZ: not for public distribution.\n\n"
+        "Citation: Song, Q., Enguehard, L., Kuschnerus, M., & Herold, M. (2026). "
+        "Harmonized Airborne Laser Scanning-derived forest above ground biomass maps "
+        "in selected regions of Finland, Spain, and the Netherlands (Version V 1.0) "
+        "[Dataset]. Zenodo. https://doi.org/10.5281/zenodo.23591088"
+    ),
     "description": (
         "Version 1.0. Internal to GFZ: not for public distribution.\n\n"
         "Harmonized forest aboveground biomass maps at 10 m resolution derived from "
