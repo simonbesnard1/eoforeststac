@@ -12,9 +12,10 @@ async function loadCatalog() {
     const themes = await Promise.all(
       root.links.filter(l => l.rel === 'child').map(tl => loadTheme(tl, CFG.catalog))
     );
-    S.catalog = { themes: themes.filter(t => t && t.collections.length) };
+    // Published in one step, footprints included, so nothing sees a
+    // catalog without them
     const fpTheme = await loadFootprintSources();
-    if (fpTheme) S.catalog.themes.push(fpTheme);
+    S.catalog = { themes: [...themes.filter(t => t && t.collections.length), ...(fpTheme ? [fpTheme] : [])] };
     if (!S.catalog.themes.some(t => t.id === S.cat)) S.cat = firstThemeId();
     renderRailCats();
     renderCatalog();

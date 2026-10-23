@@ -67,8 +67,28 @@ function fpTilesInView() {
   return out;
 }
 
+/* Footprint counts per 1° cell (deploy/footprints/coverage.py), shown below
+   the zoom where footprints load so users see where to zoom in. Absent until
+   that grid has been built; then this is simply skipped. */
+const FP_COVERAGE_URL = p => CFG.catalog.replace(/catalog\.json$/, `footprints/coverage_${p}.json`);
+const _fpCoverage = new Map();   // provider -> grid | null (missing) | Promise
+function fpCoverage(provider) {
+  if (!_fpCoverage.has(provider)) {
+    _fpCoverage.set(provider, fetchJSON(FP_COVERAGE_URL(provider))
+      .then(g => { _fpCoverage.set(provider, g?.counts ? g : null); fpRedraw(); })
+      .catch(() => _fpCoverage.set(provider, null)));
+  }
+  const v = _fpCoverage.get(provider);
+  return v instanceof Promise ? null : v;
+}
+
 function fpStatus(layer) {
-  if (S.map.getZoom() < FP.minZoom) return { kind: 'zoom', text: `Zoom in to level ${FP.minZoom}+ to load footprints` };
+  if (S.map.getZoom() < FP.minZoom) {
+    const cov = fpCoverage(layer.src.provider);
+    return { kind: 'zoom', coverage: !!cov, text: cov
+      ? `Footprints per 1° cell; zoom in to level ${FP.minZoom}+ to see them`
+      : `Zoom in to level ${FP.minZoom}+ to load footprints` };
+  }
   const tiles = fpTilesInView();
   if (tiles.length > FP.maxTiles) return { kind: 'zoom', text: 'Zoom in a little further to load footprints' };
   let loading = 0, count = 0, shown = 0, errors = 0;
@@ -196,7 +216,7 @@ const FootprintCanvas = L.Layer.extend({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, this._c.width, this._c.height);
     const z = this._map.getZoom();
-    if (z < FP.minZoom) return;
+    if (z < FP.minZoom) { this.drawCoverage(ctx); return; }
     const r = z >= 15 ? 3 : z >= 13 ? 2 : 1.5;
     const size = this._map.getSize();
     for (const layer of S.fp.values()) {
@@ -222,6 +242,29 @@ const FootprintCanvas = L.Layer.extend({
     }
   },
 });
+
+/* Coverage grid: one cell per 1°, coloured by log(count) in the layer's ramp;
+   each provider once, in its first layer's colours. */
+FootprintCanvas.prototype.drawCoverage = function (ctx) {
+  const seen = new Set();
+  for (const layer of S.fp.values()) {
+    const provider = layer.src.provider;
+    if (seen.has(provider)) continue;
+    seen.add(provider);
+    const g = fpCoverage(provider);
+    if (!g) continue;
+    const max = Math.log10(1 + Math.max(...g.counts.flat()));
+    const [lat0, lon0] = g.origin, d = g.cell_deg;
+    ctx.globalAlpha = 0.75;
+    g.counts.forEach((row, r) => row.forEach((n, c) => {
+      if (!n) return;
+      const nw = this._map.latLngToContainerPoint([lat0 - r * d, lon0 + c * d]);
+      const se = this._map.latLngToContainerPoint([lat0 - (r + 1) * d, lon0 + (c + 1) * d]);
+      ctx.fillStyle = fpColor(layer, Math.log10(1 + n) / (max || 1));
+      ctx.fillRect(nw.x, nw.y, Math.max(1, se.x - nw.x), Math.max(1, se.y - nw.y));
+    }));
+  }
+};
 
 /* Nearest drawn footprint within a few pixels of a map click. */
 function fpPick(latlng) {
@@ -264,7 +307,10 @@ function renderFootprintCards() {
 function footprintLegendItems() {
   return [...S.fp.values()].map(layer => {
     const st = fpStatus(layer);
-    const ticks = st.kind === 'zoom' ? '' : `<div class="leg-ramp" style="background:${fpGradient(layer)}"></div>
+    const ticks = st.kind === 'zoom' && !st.coverage ? '' : st.coverage
+      ? `<div class="leg-ramp" style="background:${fpGradient(layer)}"></div>
+         <div class="leg-ticks"><span>few</span><span>footprints per cell (log)</span><span>many</span></div>`
+      : `<div class="leg-ramp" style="background:${fpGradient(layer)}"></div>
       <div class="leg-ticks">${Array.from({ length: 5 }, (_, i) => `<span>${fmtNum(layer.rMin + (layer.rMax - layer.rMin) * i / 4)}</span>`).join('')}</div>`;
     return `<div class="leg-item">
       <div class="leg-vn"><span class="leg-key" style="background:${layer.color}"></span>${esc(layer.src.quantity)}</div>
