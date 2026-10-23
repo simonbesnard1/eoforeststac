@@ -278,7 +278,7 @@ function initMap() {
   });
   // Who made the explorer, on the map itself (the About dialog has the details)
   S.map.attributionControl.setPrefix(
-    '<a href="#" data-about>EOForestSTAC</a> (GFZ) · built with Claude Code · '
+    '<a href="#" data-about>EOForestSTAC</a> by GFZ · this map viewer coded with Claude Code, '
     + 'design inspired by <a href="https://www.globalforestwatch.org" target="_blank" rel="noopener noreferrer">Global Forest Watch</a>');
 
   // Labels ride above data tiles (tilePane 200) but below vectors (overlayPane 400)

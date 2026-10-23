@@ -148,18 +148,18 @@ function initUI() {
    and the credit line on the map. */
 function openAbout() {
   el('dlg-eyebrow').textContent = 'About';
-  el('dlg-title').textContent = 'EOForestSTAC explorer';
+  el('dlg-title').textContent = 'EOForestSTAC';
   el('dlg-body').innerHTML = `
-    <p>An interactive map of the forest Earth observation datasets in the
-      EOForestSTAC catalog, developed at the
-      <a href="https://www.gfz.de" target="_blank" rel="noopener noreferrer">GFZ Helmholtz Centre for Geosciences</a>
-      by Simon Besnard.</p>
+    <p>EOForestSTAC (the STAC catalog, the Python package and the data
+      processing behind them) is developed by Simon Besnard at the
+      <a href="https://www.gfz.de" target="_blank" rel="noopener noreferrer">GFZ Helmholtz Centre for Geosciences</a>.
+      This map viewer is the catalog's interactive front end.</p>
     <dl class="dlg-facts">
-      <dt>Code</dt>
-      <dd>Written with <a href="https://claude.com/claude-code" target="_blank" rel="noopener noreferrer">Claude Code</a>
+      <dt>Map viewer</dt>
+      <dd>Its code was written with <a href="https://claude.com/claude-code" target="_blank" rel="noopener noreferrer">Claude Code</a>
         (Anthropic), directed and reviewed by the author.</dd>
       <dt>Design</dt>
-      <dd>Interface inspired by <a href="https://www.globalforestwatch.org" target="_blank" rel="noopener noreferrer">Global Forest Watch</a>.</dd>
+      <dd>The viewer's interface is inspired by <a href="https://www.globalforestwatch.org" target="_blank" rel="noopener noreferrer">Global Forest Watch</a>.</dd>
       <dt>Data</dt>
       <dd>Each dataset belongs to its producers; its info button lists the source, licence and how to cite it.</dd>
       <dt>Source</dt>

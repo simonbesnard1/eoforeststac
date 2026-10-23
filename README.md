@@ -156,7 +156,7 @@ For questions or support:
 
 The development of EOForestSTAC was supported by the European Union through the [FORWARDS](https://forwards-project.eu/) project.
 
-The web explorer's code was written with [Claude Code](https://claude.com/claude-code) (Anthropic), directed and reviewed by the author, and its interface design is inspired by [Global Forest Watch](https://www.globalforestwatch.org).
+The web explorer's code (`webapp/`) was written with [Claude Code](https://claude.com/claude-code) (Anthropic), directed and reviewed by the author, and its interface design is inspired by [Global Forest Watch](https://www.globalforestwatch.org).
 
 The author thanks **Konstantin Ntokas** ([Brockmann Consult](https://www.brockmann-consult.de/)) for technical assistance, and the [EO-LINCS](https://www.eo-lincs.org/) project for valuable feedback on data structure and improvements to the STAC catalog design.
 
