@@ -163,7 +163,7 @@ def test_footprint_coverage_shows_when_zoomed_out(page):
         status=200, content_type="application/json", headers={"Access-Control-Allow-Origin": "*"}, body=json.dumps(grid)))
     page.evaluate("() => S.map.setView([0, 20], 3, {animate: false})")
     page.evaluate("() => toggleDataset('GEDI_L4A_AGBD', true)")
-    page.wait_for_function("() => /per 1° cell/.test(el('leg-items').innerText)", timeout=30_000)
+    page.wait_for_function("() => /per 1° cell/.test(el('leg-items')?.innerText || '')", timeout=30_000)
     drawn = page.evaluate("""() => { const c = document.querySelector('.fp-canvas');
         const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
         let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++; return n; }""")

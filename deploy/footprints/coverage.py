@@ -1,13 +1,21 @@
 """Where the lidar footprints are: footprint counts per 1-degree cell.
 
 Built from TileDB's fragment index (each fragment's data-tile bounding boxes
-and record counts), so no footprint is read and a run takes minutes. Reading
+and record counts), so no footprint is read and a run takes seconds. Reading
 that index needs permission to list the database bucket, which anonymous
-access does not have: run it with credentials that can, e.g. on the
-ingestion server:
+access does not have: each database is read with its own credential profile
+from ~/.aws/credentials, "default" for gediDB and "icesat2db" for icesat2DB:
 
-    AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... \\
-        python deploy/footprints/coverage.py --upload --profile atlaseo-glm
+    python deploy/footprints/coverage.py --upload --profile atlaseo-glm
+
+It needs tiledb (the footprint service's environment) and, for --upload,
+s3fs with botocore 1.35: newer botocore breaks writes to the GFZ Ceph, so
+without that, build the files locally and upload them from the package's
+environment.
+
+The index's tile boxes span about 2 x 5 degrees (each holds about 200,000
+footprints), so the grid shows where the data is, blurred over about one box
+(near coasts, density spills over the sea): hence 2-degree cells.
 
 It writes coverage_gedi.json and coverage_icesat2.json next to the catalog
 (collections/footprints/ on the eoforeststac bucket, public), which the
@@ -24,11 +32,17 @@ from typing import Iterable
 
 import numpy as np
 
-CELL_DEG = 1.0
+CELL_DEG = 2.0
+# Cells below this many footprints are dropped: they are almost all large
+# index boxes over open sea whose few footprints (islands, coasts) get spread
+# across the whole box (0.03 % of GEDI and 0.12 % of ICESat-2 footprints)
+MIN_COUNT = 10_000
 DATABASES = {
     "gedi": "s3://dog-ext.gedidb.gedi-l2-l4-v002.0/array_uri",
     "icesat2": "s3://dog-ext.icesat2db.icesat2-atl08-v007/array_uri",
 }
+# Credential profile that may list each database bucket
+PROFILES = {"gedi": "default", "icesat2": "icesat2db"}
 COVERAGE_PREFIX = "dog.atlaseo-glm.eo-gridded-data/collections/footprints"
 
 
@@ -98,9 +112,36 @@ def fragment_boxes(uri: str, ctx) -> list[tuple[float, float, float, float, floa
     return boxes
 
 
-def coverage_document(provider: str, counts: np.ndarray) -> dict:
+def tiledb_context(profile: str):
+    """A TileDB context with the keys of one ~/.aws/credentials profile."""
+    import configparser
+
+    import tiledb
+
+    creds = configparser.ConfigParser()
+    creds.read(os.path.expanduser("~/.aws/credentials"))
+    if profile not in creds:
+        raise SystemExit(f"No profile [{profile}] in ~/.aws/credentials")
+    keys = creds[profile]
+    return tiledb.Ctx(
+        {
+            "vfs.s3.endpoint_override": os.getenv("FOOTPRINT_S3_HOST", "s3.gfz.de"),
+            "vfs.s3.scheme": "https",
+            "vfs.s3.use_virtual_addressing": "false",
+            "vfs.s3.region": "eu-central-1",
+            "vfs.s3.aws_access_key_id": keys["aws_access_key_id"],
+            "vfs.s3.aws_secret_access_key": keys["aws_secret_access_key"],
+        }
+    )
+
+
+def coverage_document(
+    provider: str, counts: np.ndarray, min_count: float = MIN_COUNT
+) -> dict:
+    counts = np.where(counts >= min_count, counts, 0)
     return {
         "provider": provider,
+        "approximate": "spread over the database index's tile boxes (about 2 x 5 degrees)",
         "cell_deg": CELL_DEG,
         "origin": [90, -180],
         "rows": counts.shape[0],
@@ -118,20 +159,14 @@ def main() -> None:
         "--upload", action="store_true", help="Write the JSON to S3 (else to ./)"
     )
     ap.add_argument("--profile", help="Profile for writing to the eoforeststac bucket")
+    for provider, profile in PROFILES.items():
+        ap.add_argument(
+            f"--{provider}-profile",
+            default=profile,
+            help=f"Profile that may list the {provider} database (default {profile})",
+        )
     args = ap.parse_args()
 
-    import tiledb
-
-    ctx = tiledb.Ctx(
-        {
-            "vfs.s3.endpoint_override": os.getenv("FOOTPRINT_S3_HOST", "s3.gfz.de"),
-            "vfs.s3.scheme": "https",
-            "vfs.s3.use_virtual_addressing": "false",
-            "vfs.s3.region": "eu-central-1",
-            "vfs.s3.aws_access_key_id": os.environ.get("AWS_ACCESS_KEY_ID", ""),
-            "vfs.s3.aws_secret_access_key": os.environ.get("AWS_SECRET_ACCESS_KEY", ""),
-        }
-    )
     fs = None
     if args.upload:
         import s3fs
@@ -140,6 +175,7 @@ def main() -> None:
             profile=args.profile, client_kwargs={"endpoint_url": "https://s3.gfz.de"}
         )
     for provider in args.provider or list(DATABASES):
+        ctx = tiledb_context(getattr(args, f"{provider}_profile"))
         counts = grid_counts(fragment_boxes(DATABASES[provider], ctx))
         doc = json.dumps(
             coverage_document(provider, counts), separators=(",", ":")

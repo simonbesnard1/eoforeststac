@@ -67,7 +67,7 @@ function fpTilesInView() {
   return out;
 }
 
-/* Footprint counts per 1° cell (deploy/footprints/coverage.py), shown below
+/* Footprint counts per grid cell (deploy/footprints/coverage.py), shown below
    the zoom where footprints load so users see where to zoom in. Absent until
    that grid has been built; then this is simply skipped. */
 const FP_COVERAGE_URL = p => CFG.catalog.replace(/catalog\.json$/, `footprints/coverage_${p}.json`);
@@ -86,7 +86,7 @@ function fpStatus(layer) {
   if (S.map.getZoom() < FP.minZoom) {
     const cov = fpCoverage(layer.src.provider);
     return { kind: 'zoom', coverage: !!cov, text: cov
-      ? `Footprints per 1° cell; zoom in to level ${FP.minZoom}+ to see them`
+      ? `Footprints per ${cov.cell_deg}° cell (approximate); zoom in to level ${FP.minZoom}+ to see them`
       : `Zoom in to level ${FP.minZoom}+ to load footprints` };
   }
   const tiles = fpTilesInView();
@@ -246,7 +246,7 @@ const FootprintCanvas = L.Layer.extend({
   },
 });
 
-/* Coverage grid: one cell per 1°, coloured by log(count) in the layer's ramp;
+/* Coverage grid: one rectangle per cell, coloured by log(count) in the layer's ramp;
    each provider once, in its first layer's colours. */
 FootprintCanvas.prototype.drawCoverage = function (ctx) {
   const seen = new Set();
