@@ -69,8 +69,9 @@ services:
     security_opt:
       - no-new-privileges:true
     pids_limit: 256
-    mem_limit: 10g
-    cpus: 6.0
+    # Sized for the VM; smaller machines (CI) override them
+    mem_limit: ${TITILER_MEM_LIMIT:-10g}
+    cpus: ${TITILER_CPUS:-6.0}
     ulimits:
       nofile:
         soft: 8192

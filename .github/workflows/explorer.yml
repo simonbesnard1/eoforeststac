@@ -19,6 +19,10 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Start web and TiTiler
+        env:
+          # GitHub's runners have 4 CPUs and 16 GB; the VM limits are larger
+          TITILER_CPUS: "3"
+          TITILER_MEM_LIMIT: 8g
         run: |
           docker compose -f deploy/vm/compose.yaml up -d --build --wait web titiler
           curl --fail --retry 10 --retry-delay 3 --retry-all-errors http://127.0.0.1:8080/api/healthz
