@@ -11,6 +11,7 @@ from eoforeststac.core.config import BASE_S3_URL, S3_HTTP_PUBLIC_BASE
 from eoforeststac.core.io import write_json
 from eoforeststac.catalog.writer import write_collection, write_item
 from eoforeststac.catalog.sites import update_extent_from_sites
+from eoforeststac.catalog.enrich import enrich_tree
 
 # Import collection/item builders
 from eoforeststac.catalog.cci_biomass import (
@@ -430,6 +431,8 @@ def _build_base_tree(
                 site_col.add_item(item_factory(site_id, v))
         update_extent_from_sites(col)
 
+    # Version links, pyramid assets and per-asset resolutions (catalog/enrich.py)
+    enrich_tree(_iter_collections(root))
     return root, collections
 
 

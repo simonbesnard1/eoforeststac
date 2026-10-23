@@ -34,6 +34,7 @@ def create_gami_ageclass_item(version: str) -> pystac.Item:
         )
         if raster_bands:
             asset.extra_fields["raster:bands"] = raster_bands
+        asset.extra_fields["gsd"] = meta["gsd"]
         item.add_asset(f"zarr_{res}", asset)
 
     return item

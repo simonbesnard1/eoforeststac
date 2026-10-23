@@ -459,7 +459,9 @@ async function activateLayer(col, { slot } = {}) {
   layer.label = layer.activeVar;
 
   if (S.tiOk) {
-    const pyramidUrl = zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
+    // The catalog lists the pyramid as an overview asset; older catalogs
+    // only by name (<store>_pyramid.zarr)
+    const pyramidUrl = zarr.overview || zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
     const numLevels = await completePyramidLevels(pyramidUrl);
     if (numLevels) {                // otherwise no (finished) pyramid for this dataset
       layer.pyramidUrl = pyramidUrl;

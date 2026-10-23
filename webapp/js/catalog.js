@@ -67,13 +67,19 @@ async function loadCollection(link, base) {
     }
     const itemLinks = col.links.filter(l => l.rel === 'item');
     if (!itemLinks.length) return null;
-    const item = await fetchJSON(resolveUrl(url, latestItemLink(itemLinks).href), { viaTiTiler: true });
-    const zarrs = Object.entries(item.assets || {})
-      .filter(([, a]) => a.href?.endsWith('.zarr'))
+    // The catalog names the newest item (version extension); older catalogs
+    // only encode it in the file names
+    const latest = col.links.find(l => l.rel === 'latest-version') || latestItemLink(itemLinks);
+    const item = await fetchJSON(resolveUrl(url, latest.href), { viaTiTiler: true });
+    const assets = item.assets || {};
+    const zarrs = Object.entries(assets)
+      .filter(([key, a]) => a.href?.endsWith('.zarr') && !(a.roles || []).includes('overview'))
       .map(([key, a]) => ({
         key,
         href: a.href,
         title: a.title || key,
+        gsd: Number(a.gsd) || null,
+        overview: assets[`${key}_overview`]?.href || null,
         rasterBands: Array.isArray(a['raster:bands']) ? a['raster:bands'] : [],
       }));
     if (!zarrs.length) return null;
@@ -102,12 +108,13 @@ async function loadCollection(link, base) {
   } catch { return null; }
 }
 
-/* Resolution of a store from its asset title or key: "0.0833deg", "10m". */
+/* Resolution of a store: the asset's gsd (metres) when the catalog gives it,
+   and its title or key ("0.0833deg", "10m") for the label. */
 function zarrResolution(z) {
   const m = String(`${z.title} ${z.key}`).match(/(\d+(?:\.\d+)?)\s*(deg|km|m)\b/i);
-  if (!m) return { metres: null, resLabel: z.title };
+  if (!m) return { metres: z.gsd, resLabel: z.title };
   const v = Number(m[1]), unit = m[2].toLowerCase();
-  const metres = unit === 'deg' ? v * 111320 : unit === 'km' ? v * 1000 : v;
+  const metres = z.gsd || (unit === 'deg' ? v * 111320 : unit === 'km' ? v * 1000 : v);
   const resLabel = unit === 'deg'
     ? `${v}° (~${metres >= 1000 ? `${Math.round(metres / 1000)} km` : `${Math.round(metres)} m`})`
     : `${v} ${unit}`;
