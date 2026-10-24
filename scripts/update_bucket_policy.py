@@ -64,11 +64,15 @@ def policy() -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--apply", action="store_true", help="Set the policy (default: show it)")
+    ap.add_argument(
+        "--apply", action="store_true", help="Set the policy (default: show it)"
+    )
     ap.add_argument("--profile", default="atlaseo-glm")
     args = ap.parse_args()
 
-    s3 = boto3.Session(profile_name=args.profile).client("s3", endpoint_url="https://s3.gfz.de")
+    s3 = boto3.Session(profile_name=args.profile).client(
+        "s3", endpoint_url="https://s3.gfz.de"
+    )
     new = json.dumps(policy(), indent=2)
     if not args.apply:
         print(new)

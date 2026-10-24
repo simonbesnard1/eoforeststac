@@ -39,7 +39,15 @@ ORDER = ["rebuild", "build", "finish", "ok", "small", "unfinished-data", "delete
 
 
 def make_fs(profile: str | None) -> s3fs.S3FileSystem:
-    kwargs: dict = {"client_kwargs": {"endpoint_url": S3_ENDPOINT_URL}}
+    kwargs: dict = {
+        "client_kwargs": {"endpoint_url": S3_ENDPOINT_URL},
+        # Long builds meet a busy Ceph: generous timeouts, adaptive retries
+        "config_kwargs": {
+            "connect_timeout": 60,
+            "read_timeout": 300,
+            "retries": {"max_attempts": 10, "mode": "adaptive"},
+        },
+    }
     if os.environ.get("AWS_ACCESS_KEY_ID") and not profile:
         kwargs["key"] = os.environ["AWS_ACCESS_KEY_ID"]
         kwargs["secret"] = os.environ.get("AWS_SECRET_ACCESS_KEY")

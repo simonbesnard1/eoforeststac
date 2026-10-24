@@ -14,12 +14,14 @@ from __future__ import annotations
 
 import json
 import math
-from collections.abc import Callable, Mapping
+import time
+from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any
 
 import dask
 import fsspec
 import xarray as xr
+import zarr
 
 SPATIAL_DIMS = (("latitude", "longitude"), ("lat", "lon"), ("y", "x"))
 REDUCERS = {"mean", "max", "first"}
@@ -158,11 +160,51 @@ def _write_root(
     fs.pipe(f"{output}/.zattrs", json.dumps(attrs, indent=4).encode())
 
 
+class RetryingStore(MutableMapping):
+    """A Zarr 2 store that retries failed chunk writes.
+
+    One chunk upload dropped by a busy object store (Ceph answers 499 when a
+    request stalls) otherwise fails the whole level, hours of work for a
+    global product. Each write is retried with growing pauses; reads and
+    deletes pass straight through.
+    """
+
+    def __init__(self, store: MutableMapping, attempts: int = 6, pause: float = 2.0):
+        self.store, self.attempts, self.pause = store, attempts, pause
+
+    def __setitem__(self, key, value):
+        for attempt in range(self.attempts):
+            try:
+                self.store[key] = value
+                return
+            except OSError:
+                if attempt == self.attempts - 1:
+                    raise
+                time.sleep(self.pause * 2**attempt)
+
+    def __getitem__(self, key):
+        return self.store[key]
+
+    def __delitem__(self, key):
+        del self.store[key]
+
+    def __contains__(self, key):
+        return key in self.store
+
+    def __iter__(self):
+        return iter(self.store)
+
+    def __len__(self):
+        return len(self.store)
+
+
 def _to_zarr(ds: xr.Dataset, mapper: Any) -> None:
+    # Zarr 2 (pinned) takes any mapping; Zarr 3 wants its own store types
+    store = RetryingStore(mapper) if zarr.__version__.startswith("2") else mapper
     try:
-        ds.to_zarr(mapper, mode="w", consolidated=True, zarr_format=2)
+        ds.to_zarr(store, mode="w", consolidated=True, zarr_format=2)
     except TypeError:  # older xarray
-        ds.to_zarr(mapper, mode="w", consolidated=True, zarr_version=2)
+        ds.to_zarr(store, mode="w", consolidated=True, zarr_version=2)
 
 
 def build_pyramid(

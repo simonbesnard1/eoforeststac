@@ -193,3 +193,31 @@ def test_every_configured_reducer_is_valid():
     for cid, config in product_configs().items():
         for var, reducer in config.get("pyramid", {}).get("reducers", {}).items():
             assert reducer in {"mean", "max", "first"}, (cid, var, reducer)
+
+
+def test_dropped_chunk_writes_are_retried():
+    from eoforeststac.pyramids.build import RetryingStore
+
+    class Flaky(dict):
+        """Drops the first two writes of every key, as a busy Ceph might (499)."""
+
+        def __init__(self):
+            super().__init__()
+            self.failures = {}
+
+        def __setitem__(self, key, value):
+            n = self.failures.get(key, 0)
+            if n < 2:
+                self.failures[key] = n + 1
+                raise OSError(
+                    "An error occurred (499) when calling the PutObject operation"
+                )
+            super().__setitem__(key, value)
+
+    store = RetryingStore(Flaky(), attempts=4, pause=0)
+    store["0.0"] = b"chunk"
+    assert store["0.0"] == b"chunk" and "0.0" in store and len(store) == 1
+
+    hopeless = RetryingStore(Flaky(), attempts=2, pause=0)
+    with pytest.raises(OSError):
+        hopeless["0.0"] = b"chunk"
