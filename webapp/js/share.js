@@ -20,6 +20,7 @@ function shareHash() {
     if (layer.dimValue) parts.push(`t:${layer.dimValue}`);
     if (layer.extraDims?.some(d => d.index)) parts.push(`x:${layer.extraDims.map(d => d.index).join('.')}`);
     if (layer.colormapManual) parts.push(`c:${layer.colormap}`);
+    if (layer.showZeros) parts.push('z:1');
     if (layer.opacity !== SHARE_DEFAULT_OPACITY) parts.push(`o:${layer.opacity}`);
     if (layer.rangeSource === 'manual') parts.push(`lo:${layer.rMin}`, `hi:${layer.rMax}`);
     p.append('layer', parts.join('~'));
@@ -82,6 +83,7 @@ async function restoreFromUrl() {
       const t = parseInt(spec.t, 10);
       if (layer.dimInfo && t >= 0 && t < layer.dimInfo.length) layer.dimValue = t;
       if (spec.c) Object.assign(layer, { colormap: spec.c, colormapManual: true });
+      if (spec.z === '1') layer.showZeros = true;
       const o = parseFloat(spec.o);
       if (o >= 0 && o <= 1) layer.opacity = o;
       const lo = parseFloat(spec.lo), hi = parseFloat(spec.hi);

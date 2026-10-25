@@ -88,6 +88,9 @@ function renderLayerPanel() {
           ${colormapOptions(layer.colormap)}
         </select>
         <div class="cmap-bar" data-role="ramp" style="background:${gradientFor(layer.colormap)}"></div>
+        ${!layer.classes && layer.rMin === 0 ? `<label class="fld-check">
+          <input type="checkbox" data-id="${esc(layer.id)}" data-prop="showZeros" ${layer.showZeros ? 'checked' : ''}>
+          <span>Show zero values</span></label>` : ''}
       </div>
 
       <div class="fld">
@@ -163,6 +166,12 @@ function onLayerControl(ctrl) {
   if (!layer) return;
 
   if (prop === 'resolution') { switchResolution(layer, parseInt(ctrl.value, 10)); return; }
+  if (prop === 'showZeros') {
+    layer.showZeros = ctrl.checked;
+    updateLeafletLayer(id);
+    renderLegend();
+    return;
+  }
 
   if (prop.startsWith('extra:')) {
     const dim = layer.extraDims?.[parseInt(prop.slice(6), 10)];

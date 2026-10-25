@@ -120,7 +120,7 @@ function renderLegend() {
           <span class="leg-chip leg-chip-nil"></span>
           <span class="leg-class-lbl">no data</span>
         </div>
-        <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}</div>
+        <div class="leg-prov">${esc(RANGE_NOTE[layer.rangeSource] || RANGE_NOTE.manual)}${zeroTransparent(layer) ? ' · 0 shown transparent' : ''}</div>
         ${pills.length ? `<div class="leg-pills">${pills.map(p => `<span class="leg-lvl">${esc(p)}</span>`).join('')}</div>` : ''}
         <div class="leg-pills" data-loading="${esc(layer.id)}" ${layer.loading ? '' : 'hidden'}><span class="leg-lvl">loading tiles…</span></div>
       </div>`;

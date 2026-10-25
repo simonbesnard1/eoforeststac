@@ -276,6 +276,11 @@ function initMap() {
     worldCopyJump: true,
     minZoom: 2,
   });
+  // The pixel inspector sits above the credit line, whose height depends on
+  // the basemap's attribution
+  new ResizeObserver(([entry]) => document.documentElement.style.setProperty(
+    '--attrib-h', `${Math.ceil(entry.target.getBoundingClientRect().height)}px`))
+    .observe(S.map.attributionControl.getContainer());
   // Who made the explorer, on the map itself (the About dialog has the details)
   S.map.attributionControl.setPrefix(
     '<a href="#" data-about>EOForestSTAC</a> by GFZ · this map viewer coded with Claude Code, '

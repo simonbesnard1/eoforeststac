@@ -8,11 +8,32 @@ from urllib.parse import urlsplit
 import anyio.to_thread
 import httpx
 import numpy as np
-from fastapi import HTTPException, Query, Request
-from fastapi.responses import Response
-from starlette.responses import JSONResponse
-from titiler.xarray import io as xarray_io
-from titiler.xarray.main import app
+import rio_tiler.colormap
+
+
+def _register_transparent_zero_colormaps() -> None:
+    """Add '<name>_z' for every colormap: the same, with its lowest entry
+    transparent. Biomass, height and cover stores hold 0 on treeless land and
+    open water (CCI covers the oceans with 0); drawn in the ramp's palest
+    colour they paint whole oceans. Must run before TiTiler is imported: its
+    colormap_name parameter only accepts names known at that point.
+    """
+    registry = rio_tiler.colormap.cmap
+    for name in list(registry.list()):
+        if name.endswith("_z"):
+            continue
+        colors = dict(registry.get(name))
+        colors[0] = (0, 0, 0, 0)
+        registry.data[f"{name}_z"] = colors
+
+
+_register_transparent_zero_colormaps()
+
+from fastapi import HTTPException, Query, Request  # noqa: E402
+from fastapi.responses import Response  # noqa: E402
+from starlette.responses import JSONResponse  # noqa: E402
+from titiler.xarray import io as xarray_io  # noqa: E402
+from titiler.xarray.main import app  # noqa: E402
 
 from analysis import create_router as create_analysis_router
 from download import create_router

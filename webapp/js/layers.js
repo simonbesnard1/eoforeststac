@@ -530,6 +530,14 @@ function selParams(layer) {
   return [...extraSels(layer), selParam(layer)].filter(Boolean);
 }
 
+/* Continuous layers whose range starts at 0 draw 0 transparent (a '_z'
+   colormap on the tile server): CCI and others hold 0 over open water and
+   treeless land, which otherwise paints whole oceans in the palest colour.
+   Values are unchanged; the layer card can show zeros again. */
+function zeroTransparent(layer) {
+  return !layer.classes && layer.rMin === 0 && !layer.showZeros;
+}
+
 function buildTileUrl(layer, zoom) {
   const zarr = getEffectiveZarrUrl(layer, zoom ?? S.map.getZoom());
   /* No `nodata` override: xarray already decodes the zarr fill_value to NaN,
@@ -539,7 +547,7 @@ function buildTileUrl(layer, zoom) {
     url: zarr,
     variable: layer.activeVar,
     rescale: `${layer.rMin},${layer.rMax}`,
-    colormap_name: layer.colormap,
+    colormap_name: layer.colormap + (zeroTransparent(layer) ? '_z' : ''),
   });
   for (const s of selParams(layer)) p.append('sel', s);
   /* Without an extension TiTiler sends JPEG for gap-free tiles; its artefacts

@@ -526,7 +526,8 @@ input[type=range]::-moz-range-thumb{
 
 /* Inspector (bottom-right) */
 #inspector{
-  position:absolute;right:14px;bottom:14px;z-index:500;
+  /* Above the credit line in the same corner (its height is measured) */
+  position:absolute;right:14px;bottom:calc(var(--attrib-h, 40px) + 20px);z-index:500;
   width:250px;background:var(--panel);border:1px solid var(--line);
   border-radius:6px;box-shadow:var(--shadow-lg);
 }
@@ -610,3 +611,7 @@ input[type=range]::-moz-range-thumb{
   font-size:11px;line-height:1.4;padding:3px 9px!important;border-radius:6px;color:var(--text-2)!important;
   border:1px solid var(--line);box-shadow:var(--shadow)}
 .leaflet-control-attribution a{color:var(--accent)!important;font-weight:500}
+
+/* A checkbox under a layer-card field */
+.fld-check{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12px;color:var(--text-2);cursor:pointer}
+.fld-check input{width:auto;margin:0;accent-color:var(--accent)}
