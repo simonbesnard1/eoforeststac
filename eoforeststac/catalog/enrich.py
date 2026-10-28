@@ -2,9 +2,13 @@
 
 After the tree is built, every collection gets:
 
-- version links (STAC version extension): ``latest-version`` from the
-  collection and each item to the newest item, ``predecessor-version`` and
-  ``successor-version`` between items;
+- version links (STAC version extension) between its items:
+  ``latest-version`` from each older item to the newest, and
+  ``predecessor-version`` / ``successor-version`` between neighbours. The
+  collection itself gets none: STAC Browser reads a ``latest-version`` link
+  on a collection as "this collection is outdated". Its item links carry
+  each item's ``version`` instead, so clients can pick the newest without
+  opening every item;
 - an ``overview`` asset on the newest item for each Zarr asset whose
   visualization pyramid exists on S3 (``<store>_pyramid.zarr``);
 - ``gsd`` (metres) on Zarr assets that come in several resolutions, read from
@@ -74,24 +78,26 @@ def enrich_collection(
         return
     latest = items[-1]
 
-    for rel in ("latest-version",):
-        collection.remove_links(rel)
-    collection.add_link(
-        pystac.Link(
-            "latest-version",
-            latest,
-            media_type="application/json",
-            title=f"Latest version ({latest.properties.get('version', '')})",
-        )
-    )
+    # Older catalogs put latest-version on the collection, which STAC
+    # Browser shows as an "Outdated" banner on every collection page
+    collection.remove_links("latest-version")
+    for link in collection.get_links("item"):
+        # get_items() above resolved every item link to its Item
+        version = link.target.properties.get("version")
+        if version:
+            link.extra_fields["version"] = str(version)
+
     for i, item in enumerate(items):
         for rel in ("latest-version", "predecessor-version", "successor-version"):
             item.remove_links(rel)
         if VERSION_EXTENSION not in item.stac_extensions:
             item.stac_extensions.append(VERSION_EXTENSION)
-        item.add_link(
-            pystac.Link("latest-version", latest, media_type="application/json")
-        )
+        # Only older versions point to the latest; on the latest itself the
+        # link would mark it outdated too
+        if item is not latest:
+            item.add_link(
+                pystac.Link("latest-version", latest, media_type="application/json")
+            )
         if i > 0:
             item.add_link(
                 pystac.Link(

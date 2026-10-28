@@ -39,10 +39,11 @@ async function loadTheme(link, base) {
   } catch { return null; }
 }
 
-/* The newest version's item: links are named ..._v<version>.json; versions
-   compare part by part (3.10 > 3.9). Older versions stay in the catalog. */
+/* The newest version's item: item links carry the item's version (older
+   catalogs only name it, ..._v<version>.json); versions compare part by part
+   (3.10 > 3.9). Older versions stay in the catalog. */
 function latestItemLink(links) {
-  const ver = l => (String(l.href).match(/_v(\d[\d.]*)(?:\/|\.json|$)/)?.[1] || '').split('.').filter(Boolean).map(Number);
+  const ver = l => String(l.version || String(l.href).match(/_v(\d[\d.]*)(?:\/|\.json|$)/)?.[1] || '').split('.').filter(Boolean).map(Number);
   const cmp = (a, b) => {
     for (let i = 0; i < Math.max(a.length, b.length); i++) {
       const d = (a[i] ?? -1) - (b[i] ?? -1);
@@ -68,9 +69,7 @@ async function loadCollection(link, base) {
     }
     const itemLinks = col.links.filter(l => l.rel === 'item');
     if (!itemLinks.length) return null;
-    // The catalog names the newest item (version extension); older catalogs
-    // only encode it in the file names
-    const latest = col.links.find(l => l.rel === 'latest-version') || latestItemLink(itemLinks);
+    const latest = latestItemLink(itemLinks);
     const item = await fetchJSON(resolveUrl(url, latest.href), { viaTiTiler: true });
     const assets = item.assets || {};
     const zarrs = Object.entries(assets)
