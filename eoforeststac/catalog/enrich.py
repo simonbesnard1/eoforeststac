@@ -2,10 +2,10 @@
 
 After the tree is built, every collection gets:
 
-- version links (STAC version extension) between its items:
-  ``latest-version`` from each older item to the newest, and
-  ``predecessor-version`` / ``successor-version`` between neighbours. The
-  collection itself gets none: STAC Browser reads a ``latest-version`` link
+- version links (STAC version extension) on its older items:
+  ``latest-version`` to the newest, and ``predecessor-version`` /
+  ``successor-version`` to their neighbours. The newest item and the
+  collection itself get none: STAC Browser reads a ``latest-version`` link
   on a collection as "this collection is outdated". Its item links carry
   each item's ``version`` instead, so clients can pick the newest without
   opening every item;
@@ -92,12 +92,14 @@ def enrich_collection(
             item.remove_links(rel)
         if VERSION_EXTENSION not in item.stac_extensions:
             item.stac_extensions.append(VERSION_EXTENSION)
-        # Only older versions point to the latest; on the latest itself the
-        # link would mark it outdated too
-        if item is not latest:
-            item.add_link(
-                pystac.Link("latest-version", latest, media_type="application/json")
-            )
+        # Only older versions get version links. STAC Browser shows an
+        # "other versions available" notice for any of them, which reads as
+        # if the newest item were outdated; the collection lists all versions
+        if item is latest:
+            continue
+        item.add_link(
+            pystac.Link("latest-version", latest, media_type="application/json")
+        )
         if i > 0:
             item.add_link(
                 pystac.Link(
