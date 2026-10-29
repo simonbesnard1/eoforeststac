@@ -54,6 +54,23 @@ def test_pyramid_level_matches_display_resolution(page):
     assert levels == {"2": 6, "5": 5, "7": 3, "11": 0}
 
 
+def test_turning_off_a_loading_layer_cancels_activation(page):
+    state = page.evaluate(
+        f"""async () => {{
+          const opening = toggleDataset('{GAMI}', true);
+          await new Promise(resolve => setTimeout(resolve, 10));
+          await toggleDataset('{GAMI}', false);
+          await Promise.allSettled([opening]);
+          return {{
+            active: S.layers.has('{GAMI}'),
+            pending: PENDING_ACTIVATIONS.has('{GAMI}'),
+            checked: Boolean(document.querySelector('#ds-{GAMI} input')?.checked),
+          }};
+        }}"""
+    )
+    assert state == {"active": False, "pending": False, "checked": False}
+
+
 def test_resolution_and_member_pickers(page):
     page.evaluate("() => S.map.setView([0, 20], 3, {animate: false})")
     page.evaluate(f"() => toggleDataset('{GAMI}', true)")

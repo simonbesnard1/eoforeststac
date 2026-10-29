@@ -2,6 +2,39 @@
    Classic script sharing globals with the others; index.html loads them in order. */
 'use strict';
 
+/* One pending activation per catalog row. Turning a row off aborts its
+   metadata requests and, crucially, prevents the old async continuation from
+   adding a layer after the checkbox has already been cleared. */
+const PENDING_ACTIVATIONS = new Map();
+
+/* Versioned Zarr metadata is immutable in normal use. Keep small discovery
+   responses for the browser session so reopening a layer does not repeat API
+   and S3 metadata reads. Rejected/aborted requests are never cached. */
+const LAYER_META_CACHE = new Map();
+async function cachedLayerMeta(key, load) {
+  if (LAYER_META_CACHE.has(key)) return LAYER_META_CACHE.get(key);
+  try {
+    const stored = sessionStorage.getItem(`eoforest-meta:v1:${key}`);
+    if (stored !== null) {
+      const value = JSON.parse(stored);
+      LAYER_META_CACHE.set(key, value);
+      return value;
+    }
+  } catch { /* storage may be unavailable */ }
+  const pending = Promise.resolve().then(load);
+  LAYER_META_CACHE.set(key, pending);
+  try {
+    const value = await pending;
+    LAYER_META_CACHE.set(key, value);
+    try { sessionStorage.setItem(`eoforest-meta:v1:${key}`, JSON.stringify(value)); }
+    catch { /* storage may be full or unavailable */ }
+    return value;
+  } catch (error) {
+    if (LAYER_META_CACHE.get(key) === pending) LAYER_META_CACHE.delete(key);
+    throw error;
+  }
+}
+
 /* ══════════════════════════════════════════════════════════════════
    PYRAMID HELPERS
 ══════════════════════════════════════════════════════════════════ */
@@ -49,8 +82,21 @@ async function toggleDataset(id, on) {
     const col = findCollection(id);
     if (!col) return;
     if (col.footprint) await toggleFootprints(col, true);
-    else await activateLayer(col);
+    else {
+      PENDING_ACTIVATIONS.get(id)?.abort();
+      const controller = new AbortController();
+      PENDING_ACTIVATIONS.set(id, controller);
+      let added = false;
+      try { added = Boolean(await activateLayer(col, { signal: controller.signal })); }
+      catch (error) { if (error?.name !== 'AbortError') throw error; }
+      finally {
+        if (PENDING_ACTIVATIONS.get(id) === controller) PENDING_ACTIVATIONS.delete(id);
+      }
+      if (!added) return;
+    }
   } else {
+    PENDING_ACTIVATIONS.get(id)?.abort();
+    PENDING_ACTIVATIONS.delete(id);
     row?.classList.remove('on');
     const box = row?.querySelector('input[type=checkbox]');
     if (box) box.checked = false;
@@ -69,39 +115,53 @@ async function toggleDataset(id, on) {
    `variables` property is often absent or stale. `/dataset/keys` is the
    registered endpoint here; `/variables` is NOT mounted by titiler.xarray's
    default app, so asking for it just 404s. */
-async function fetchVariables(zarrUrl, fallback = []) {
-  if (S.tiOk) {
-    for (const route of ['/dataset/keys', '/variables']) {
-      try {
-        const keys = await fetchJSON(`${S.tiTiler}${route}?` + new URLSearchParams({ url: zarrUrl }));
-        const usable = (Array.isArray(keys) ? keys : []).filter(k => !CFG.skipVars.has(k));
-        if (usable.length) return usable;
-      } catch { /* try next route */ }
-    }
+async function fetchVariables(zarrUrl, fallback = [], signal) {
+  const key = `variables:${zarrUrl}`;
+  try {
+    return await cachedLayerMeta(key, async () => {
+      if (S.tiOk) {
+        for (const route of ['/dataset/keys', '/variables']) {
+          try {
+            const keys = await fetchJSON(`${S.tiTiler}${route}?` + new URLSearchParams({ url: zarrUrl }), { signal });
+            const usable = (Array.isArray(keys) ? keys : []).filter(k => !CFG.skipVars.has(k));
+            if (usable.length) return usable;
+          } catch (error) {
+            if (signal?.aborted) throw error;
+          }
+        }
+      }
+      const fb = fallback.filter(k => !CFG.skipVars.has(k));
+      return fb.length ? fb : ['data'];
+    });
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    const fb = fallback.filter(k => !CFG.skipVars.has(k));
+    return fb.length ? fb : ['data'];
   }
-  const fb = fallback.filter(k => !CFG.skipVars.has(k));
-  return fb.length ? fb : ['data'];
 }
 
 /* Pull everything that depends on the chosen variable: dimensions, value
    range, zoom floor and geographic bounds. tilejson carries minzoom/maxzoom
    and minmax; /info carries the variable's xarray attrs and dim names. */
-async function fetchVariableMeta(layer, { resetRange = true } = {}) {
+async function fetchVariableMeta(layer, { resetRange = true, signal } = {}) {
   if (!S.tiOk) return;
   const qs = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
   for (const s of extraSels(layer)) qs.append('sel', s);
 
   const [info, tj] = await Promise.all([
-    fetchJSON(`${S.tiTiler}/info?${qs}`).catch(() => null),
-    fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`).catch(() => null),
+    cachedLayerMeta(`info:${qs}`, () => fetchJSON(`${S.tiTiler}/info?${qs}`, { signal })).catch(() => null),
+    cachedLayerMeta(`tilejson:${qs}`, () => fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`, { signal })).catch(() => null),
   ]);
+  if (signal?.aborted) return;
 
   /* /info refuses variables with more than one extra dimension (GAMI is
      members × time × y × x). Pin every extra dimension but the time-like one
      and ask again; the remaining one becomes the usual slider. */
   if (!info && !layer.extraDims) {
-    const res = await fetchJSON(`${S.tiTiler}/dataset/dims?` +
-      new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar })).catch(() => null);
+    const dimsQs = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
+    const res = await cachedLayerMeta(`dims:${dimsQs}`, () =>
+      fetchJSON(`${S.tiTiler}/dataset/dims?${dimsQs}`, { signal })).catch(() => null);
+    if (signal?.aborted) return;
     const dims = res?.dims || [];
     if (dims.length >= 2) {
       const main = dims.find(d => d.values.some(v => /^\d{4}-\d{2}-\d{2}/.test(v))) || dims[0];
@@ -111,7 +171,7 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
       const ordered = values => values.every(v => v !== '' && Number.isFinite(Number(v)))
         ? [...values].sort((a, b) => Number(a) - Number(b)) : values;
       layer.extraDims = dims.filter(d => d !== main).map(d => ({ name: d.name, values: ordered(d.values), index: 0 }));
-      return fetchVariableMeta(layer, { resetRange });
+      return fetchVariableMeta(layer, { resetRange, signal });
     }
   }
 
@@ -146,8 +206,9 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
   if (!layer.colormapManual) layer.colormap = automaticColormap(layer);
   if (resetRange) {
     const declared = metadataClasses(layer);
-    if (!(declared?.length && applyClassRange(layer, declared))) await reconcileRange(layer);
+    if (!(declared?.length && applyClassRange(layer, declared))) await reconcileRange(layer, signal);
   }
+  if (signal?.aborted) return;
   await loadLUT(layer.colormap);   // class swatches need the real LUT
   layer.classes = buildClasses(layer);
 
@@ -166,17 +227,25 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
    gets a _SUCCESS marker; an interrupted build leaves levels that exist but
    are partly or wholly empty (HANSEN's level 1 had no loss_year chunks), which
    rendered blank maps and empty statistics. Read straight from S3. */
-async function completePyramidLevels(pyramidUrl) {
-  /* These are independent object-store probes.  Doing them sequentially made
-     every layer activation pay the sum of up to ten S3 round trips. */
-  const found = await Promise.all(Array.from({ length: 10 }, async (_, i) => {
-    try {
-      const r = await fetch(`${pyramidUrl}/${i + 1}/_SUCCESS`, { method: 'HEAD', cache: 'no-store' });
-      return r.ok;
-    } catch { return false; }
-  }));
-  const firstMissing = found.indexOf(false);
-  return firstMissing < 0 ? found.length : firstMissing;
+async function completePyramidLevels(pyramidUrl, signal) {
+  const key = `pyramid-levels:${pyramidUrl}`;
+  return cachedLayerMeta(key, async () => {
+    /* These are independent object-store probes. Doing them sequentially made
+       every layer activation pay the sum of up to ten S3 round trips. */
+    const found = await Promise.all(Array.from({ length: 10 }, async (_, i) => {
+      try {
+        const r = await fetch(`${pyramidUrl}/${i + 1}/_SUCCESS`, {
+          method: 'HEAD', cache: 'no-store', signal,
+        });
+        return r.ok;
+      } catch (error) {
+        if (signal?.aborted) throw error;
+        return false;
+      }
+    }));
+    const firstMissing = found.indexOf(false);
+    return firstMissing < 0 ? found.length : firstMissing;
+  });
 }
 
 /* Where, and over what area, can /statistics read? rio-tiler clips to the
@@ -220,7 +289,7 @@ function statisticsTarget(layer) {
 /* Measure the actual distribution. Returns null when it can't be read.
    titiler.xarray only serves POST /statistics, with the area as a GeoJSON
    Feature; the result comes back in properties.statistics. */
-async function measureStatistics(layer) {
+async function measureStatistics(layer, signal) {
   const target = statisticsTarget(layer);
   if (!target || !S.tiOk) return null;
   try {
@@ -232,7 +301,7 @@ async function measureStatistics(layer) {
       geometry: { type: 'Polygon', coordinates: [[[w, s], [e, s], [e, n], [w, n], [w, s]]] },
     };
     const r = await fetch(`${S.tiTiler}/statistics?${qs}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(feature),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(feature), signal,
     });
     if (!r.ok) return null;
     const stats = (await r.json())?.properties?.statistics;
@@ -253,7 +322,7 @@ async function measureStatistics(layer) {
    declared stretch leaves most of the map in the bottom of the ramp. Display
    the measured p2–p98 whenever it can be read, kept inside the declared
    bounds; the declared/STAC/tilejson range is only the fallback. */
-async function reconcileRange(layer) {
+async function reconcileRange(layer, signal) {
   layer.dataRange = null;
   /* Small integer ranges are codes or masks — a percentile stretch would cut
      off the rare values. */
@@ -274,7 +343,7 @@ async function reconcileRange(layer) {
     if (cached) { setDataRange(layer, cached[0], cached[1], 'measured'); return; }
   } catch { /* storage may be disabled */ }
 
-  const st = await measureStatistics(layer);
+  const st = await measureStatistics(layer, signal);
   if (!st) return;
   /* A sample of the view is only a stand-in: it must not override a range the
      dataset declares (HANSEN tree_cover is 0–100 %, a West African window
@@ -462,7 +531,7 @@ function buildClasses(layer) {
   }));
 }
 
-async function activateLayer(col, { slot } = {}) {
+async function activateLayer(col, { slot, signal } = {}) {
   const zarrIndex = Math.min(col.zarrIndex ?? 0, col.zarrs.length - 1);
   const zarr = col.zarrs[zarrIndex];
   const zarrUrl = zarr.href;
@@ -497,8 +566,12 @@ async function activateLayer(col, { slot } = {}) {
      overlap their network latency instead of serialising it. */
   const pyramidUrl = zarr.overview || zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
   const [variables, numLevels] = S.tiOk
-    ? await Promise.all([fetchVariables(zarrUrl, col.variables), completePyramidLevels(pyramidUrl)])
+    ? await Promise.all([
+        fetchVariables(zarrUrl, col.variables, signal),
+        zarr.overviewLevels || completePyramidLevels(pyramidUrl, signal),
+      ])
     : [col.variables?.length ? col.variables : ['data'], 0];
+  if (signal?.aborted) return null;
   layer.variables = variables;
   layer.activeVar = layer.variables[0];
   layer.label = layer.activeVar;
@@ -512,13 +585,16 @@ async function activateLayer(col, { slot } = {}) {
       layer.minZoom = 0;
     }
 
-    await fetchVariableMeta(layer);
+    await fetchVariableMeta(layer, { signal });
   }
+
+  if (signal?.aborted) return null;
 
   S.layers.set(col.id, layer);
   addLeafletLayer(layer);
   updateFootprint(layer);
   if (S.autoZoom) zoomToLayer(layer);
+  return layer;
 }
 
 function parseDimInfo(info) {

@@ -74,14 +74,18 @@ async function loadCollection(link, base) {
     const assets = item.assets || {};
     const zarrs = Object.entries(assets)
       .filter(([key, a]) => a.href?.endsWith('.zarr') && !(a.roles || []).includes('overview'))
-      .map(([key, a]) => ({
-        key,
-        href: a.href,
-        title: a.title || key,
-        gsd: Number(a.gsd) || null,
-        overview: assets[`${key}_overview`]?.href || null,
-        rasterBands: Array.isArray(a['raster:bands']) ? a['raster:bands'] : [],
-      }));
+      .map(([key, a]) => {
+        const overview = assets[`${key}_overview`];
+        return {
+          key,
+          href: a.href,
+          title: a.title || key,
+          gsd: Number(a.gsd) || null,
+          overview: overview?.href || null,
+          overviewLevels: Number(overview?.['overview:levels']) || 0,
+          rasterBands: Array.isArray(a['raster:bands']) ? a['raster:bands'] : [],
+        };
+      });
     if (!zarrs.length) return null;
     // Several stores per item are resolutions of the same data: finest first,
     // so the layer opens at full detail; the layer card offers the others

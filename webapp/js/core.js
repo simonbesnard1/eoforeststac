@@ -234,15 +234,17 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 ══════════════════════════════════════════════════════════════════ */
 /* noStore: for polling. TiTiler marks GET responses cacheable for an hour, so
    without it every poll after the first was answered from the browser cache. */
-async function fetchJSON(url, { viaTiTiler = false, noStore = false } = {}) {
+async function fetchJSON(url, { viaTiTiler = false, noStore = false, signal } = {}) {
   const target = (viaTiTiler && S.tiOk)
     ? `${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`
     : url;
   let r;
-  try { r = await fetch(target, noStore ? { cache: 'no-store' } : undefined); }
+  const options = { ...(noStore ? { cache: 'no-store' } : {}), ...(signal ? { signal } : {}) };
+  try { r = await fetch(target, options); }
   catch (e) {
+    if (signal?.aborted) throw e;
     if (!viaTiTiler && S.tiOk)
-      r = await fetch(`${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`);
+      r = await fetch(`${S.tiTiler}/proxy/fetch?url=${encodeURIComponent(url)}`, options);
     else throw e;
   }
   if (!r.ok) throw new Error(`${r.status} ${url}`);

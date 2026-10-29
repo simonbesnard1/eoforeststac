@@ -21,6 +21,7 @@ falls back to the conventions for anything not listed.
 from __future__ import annotations
 
 import re
+import json
 import urllib.error
 import urllib.request
 from functools import lru_cache
@@ -43,36 +44,41 @@ def gsd_from_label(label: str) -> float | None:
     if not m:
         return None
     value, unit = float(m[1]), m[2].lower()
-    return round(
-        value * 111_320 if unit == "deg" else value * 1000 if unit == "km" else value, 2
-    )
+    return round(value * 111_320 if unit == "deg" else value * 1000 if unit == "km" else value, 2)
 
 
 @lru_cache(maxsize=512)
-def pyramid_exists(store_href: str) -> bool:
-    """Whether ``<store>_pyramid.zarr`` has its root metadata (public HTTPS)."""
-    url = (
-        store_href.replace("s3://", "https://s3.gfz.de/", 1).removesuffix(".zarr")
-        + "_pyramid.zarr/.zattrs"
+def pyramid_levels(store_href: str) -> int:
+    """Number of contiguous completed levels in ``<store>_pyramid.zarr``."""
+    root = (
+        store_href.replace("s3://", "https://s3.gfz.de/", 1).removesuffix(".zarr") + "_pyramid.zarr"
     )
     try:
-        with urllib.request.urlopen(
-            urllib.request.Request(url, method="HEAD"), timeout=20
-        ) as r:
-            return r.status == 200
-    except (urllib.error.URLError, TimeoutError, ValueError):
-        return False
+        with urllib.request.urlopen(f"{root}/.zattrs", timeout=20) as response:
+            attrs = json.load(response)
+        datasets = attrs["multiscales"][0].get("datasets", [])
+        complete = 0
+        for item in datasets:
+            marker = f"{root}/{item['path']}/_SUCCESS"
+            try:
+                with urllib.request.urlopen(
+                    urllib.request.Request(marker, method="HEAD"), timeout=20
+                ) as response:
+                    if response.status != 200:
+                        break
+            except (urllib.error.URLError, TimeoutError):
+                break
+            complete += 1
+        return complete
+    except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError):
+        return 0
 
 
 def _zarr_assets(item: pystac.Item) -> list[tuple[str, pystac.Asset]]:
-    return [
-        (k, a) for k, a in item.assets.items() if a.href.rstrip("/").endswith(".zarr")
-    ]
+    return [(k, a) for k, a in item.assets.items() if a.href.rstrip("/").endswith(".zarr")]
 
 
-def enrich_collection(
-    collection: pystac.Collection, check_pyramids: bool = True
-) -> None:
+def enrich_collection(collection: pystac.Collection, check_pyramids: bool = True) -> None:
     items = sorted(collection.get_items(), key=_version_key)
     if not items:
         return
@@ -91,20 +97,14 @@ def enrich_collection(
             item.stac_extensions.append(VERSION_EXTENSION)
         if item is latest:
             continue
-        item.add_link(
-            pystac.Link("latest-version", latest, media_type="application/json")
-        )
+        item.add_link(pystac.Link("latest-version", latest, media_type="application/json"))
         if i > 0:
             item.add_link(
-                pystac.Link(
-                    "predecessor-version", items[i - 1], media_type="application/json"
-                )
+                pystac.Link("predecessor-version", items[i - 1], media_type="application/json")
             )
         if i + 1 < len(items):
             item.add_link(
-                pystac.Link(
-                    "successor-version", items[i + 1], media_type="application/json"
-                )
+                pystac.Link("successor-version", items[i + 1], media_type="application/json")
             )
 
     for item in items:
@@ -118,24 +118,23 @@ def enrich_collection(
 
     if check_pyramids:
         for key, asset in _zarr_assets(latest):
-            if pyramid_exists(asset.href):
+            levels = pyramid_levels(asset.href)
+            if levels:
                 latest.add_asset(
                     f"{key}_overview",
                     pystac.Asset(
-                        href=asset.href.rstrip("/").removesuffix(".zarr")
-                        + "_pyramid.zarr",
+                        href=asset.href.rstrip("/").removesuffix(".zarr") + "_pyramid.zarr",
                         media_type="application/vnd.zarr",
                         title=f"Map overviews of {asset.title or key}",
                         description="Coarsened copies for display (eoforeststac.pyramids); "
                         "level 0 is the data store itself. Not for analysis.",
                         roles=["overview", "visual"],
+                        extra_fields={"overview:levels": levels},
                     ),
                 )
 
 
-def enrich_tree(
-    collections: Iterable[pystac.Collection], check_pyramids: bool = True
-) -> None:
+def enrich_tree(collections: Iterable[pystac.Collection], check_pyramids: bool = True) -> None:
     """Enrich every collection that holds items (site collections included)."""
     for collection in collections:
         enrich_collection(collection, check_pyramids=check_pyramids)
