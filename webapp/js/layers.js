@@ -7,6 +7,30 @@
 ══════════════════════════════════════════════════════════════════ */
 function getPyramidLevel(layer, zoom) {
   if (!layer.pyramidUrl) return null;
+
+  /* Pick the coarsest overview whose pixels are no larger than a screen
+     pixel.  The previous nativeMinZoom - zoom rule was a memory-safety
+     heuristic: on Saatchi it selected the native 100 m grid at z7 even
+     though an L3 (800 m) pixel is still smaller than a map pixel.  That made
+     each visible tile fetch and resample many more S3 chunks than necessary.
+
+     Web Mercator has a constant longitude scale; its latitude scale shrinks
+     by cos(latitude).  Use the tighter axis so an overview never visibly
+     undersamples either direction. */
+  const bb = boundsToLatLng(layer.bounds);
+  if (layer.width > 0 && layer.height > 0 && bb) {
+    const tileSize = 256;
+    const mapLonPx = 360 / (tileSize * 2 ** zoom);
+    const latitude = bb.getCenter().lat * Math.PI / 180;
+    const mapLatPx = mapLonPx * Math.max(0.01, Math.cos(latitude));
+    const dataLonPx = Math.max(1e-12, (bb.getEast() - bb.getWest()) / layer.width);
+    const dataLatPx = Math.max(1e-12, (bb.getNorth() - bb.getSouth()) / layer.height);
+    const scale = Math.min(mapLonPx / dataLonPx, mapLatPx / dataLatPx);
+    const level = scale >= 1 ? Math.floor(Math.log2(scale)) : 0;
+    return Math.min(Math.max(0, level), layer.numPyramidLevels - 1);
+  }
+
+  // Metadata-less fallback for older or non-raster catalog entries.
   return Math.min(Math.max(0, layer.nativeMinZoom - zoom), layer.numPyramidLevels - 1);
 }
 function getEffectiveZarrUrl(layer, zoom) {
@@ -561,6 +585,11 @@ function addLeafletLayer(layer) {
   layer._lastPyramidLevel = getPyramidLevel(layer, zoom);
   const opts = {
     opacity: layer.opacity, minZoom: layer.minZoom, maxZoom: 22, tileSize: 256,
+    /* A tile can trigger several remote Zarr chunk reads.  Wait until a pan
+       or animated zoom settles instead of starting work for intermediate
+       views that the browser immediately cancels.  Keep one surrounding row
+       for smoothness without Leaflet's default two-row request burst. */
+    updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 1,
   };
   /* Tiles that miss the data entirely still cost a full server-side read, and
      for projected grids a bbox outside the CRS's area of use reprojects to

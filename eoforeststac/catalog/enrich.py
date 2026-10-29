@@ -78,11 +78,8 @@ def enrich_collection(
         return
     latest = items[-1]
 
-    # Older catalogs put latest-version on the collection, which STAC
-    # Browser shows as an "Outdated" banner on every collection page
     collection.remove_links("latest-version")
     for link in collection.get_links("item"):
-        # get_items() above resolved every item link to its Item
         version = link.target.properties.get("version")
         if version:
             link.extra_fields["version"] = str(version)
@@ -92,9 +89,6 @@ def enrich_collection(
             item.remove_links(rel)
         if VERSION_EXTENSION not in item.stac_extensions:
             item.stac_extensions.append(VERSION_EXTENSION)
-        # Only older versions get version links. STAC Browser shows an
-        # "other versions available" notice for any of them, which reads as
-        # if the newest item were outdated; the collection lists all versions
         if item is latest:
             continue
         item.add_link(

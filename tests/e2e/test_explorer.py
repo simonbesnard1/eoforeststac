@@ -32,6 +32,24 @@ def test_a_layer_draws_tiles_and_a_legend(page):
     assert "Forest age-class fraction" in legend
     ticks = [float(t) for t in page.locator(".leg-ticks span").all_inner_texts()]
     assert ticks[0] >= 0 and ticks[-1] <= 1, ticks  # never a fill value like -9999
+    options = page.evaluate(f"() => S.layers.get('{GAMI}').leafletLayer.options")
+    assert options["updateWhenIdle"] is True
+    assert options["updateWhenZooming"] is False
+    assert options["keepBuffer"] == 1
+
+
+def test_pyramid_level_matches_display_resolution(page):
+    """Global 100 m products use overviews until the map can show native detail."""
+    levels = page.evaluate(
+        """() => {
+          const layer = {
+            pyramidUrl: 'test', numPyramidLevels: 7, nativeMinZoom: 7,
+            bounds: [-180, -60, 180, 80], width: 415158, height: 161272,
+          };
+          return Object.fromEntries([2, 5, 7, 11].map(z => [z, getPyramidLevel(layer, z)]));
+        }"""
+    )
+    assert levels == {"2": 6, "5": 5, "7": 3, "11": 0}
 
 
 def test_resolution_and_member_pickers(page):
