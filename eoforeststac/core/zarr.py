@@ -23,6 +23,7 @@ def add_display_range(
     values_per_chunk: int = 50_000,
     seed: int = 0,
     fs: Optional[fsspec.AbstractFileSystem] = None,
+    overwrite: bool = False,
     **storage_options,
 ) -> Dict[str, list]:
     """
@@ -39,6 +40,11 @@ def add_display_range(
     random, each subsampled at the same rate (``values_per_chunk`` values per
     full chunk).
 
+    Pass an explicit ``variables`` list to include integer-backed continuous
+    rasters (categorical integer variables are deliberately skipped by
+    default). Existing valid ranges are returned without rereading chunks
+    unless ``overwrite`` is true.
+
     Pass ``fs`` to reuse an authenticated filesystem; otherwise one is built
     from ``url`` and ``storage_options``. Returns {variable: [p2, p98]}.
     """
@@ -54,8 +60,19 @@ def add_display_range(
     for name, arr in group.arrays():
         if variables is not None and name not in variables:
             continue
-        if arr.ndim < 2 or np.dtype(arr.dtype).kind != "f":
+        kind = np.dtype(arr.dtype).kind
+        if arr.ndim < 2 or kind not in "fiu" or (kind in "iu" and variables is None):
             continue
+        existing = arr.attrs.get("display_range")
+        if not overwrite and isinstance(existing, (list, tuple)) and len(existing) == 2:
+            try:
+                lo, hi = (float(v) for v in existing)
+            except (TypeError, ValueError):
+                pass
+            else:
+                if np.isfinite(lo) and np.isfinite(hi) and hi > lo:
+                    ranges[name] = [lo, hi]
+                    continue
 
         prefix = f"{root}/{name}/"
         keys = [

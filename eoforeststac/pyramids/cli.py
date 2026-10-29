@@ -23,7 +23,7 @@ import time
 import s3fs
 
 from eoforeststac.core.config import BASE_S3_URL, S3_ENDPOINT_URL, S3_PROFILE
-from eoforeststac.pyramids.build import build_pyramid
+from eoforeststac.pyramids.build import add_store_display_ranges, build_pyramid
 from eoforeststac.pyramids.maintain import plan, remove_pyramid
 
 SYMBOLS = {
@@ -83,6 +83,18 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--workers", type=int, default=4, help="Dask threads per build")
     parser.add_argument("--target-size", type=int, default=8192)
     parser.add_argument("--chunk-size", type=int, default=512)
+    parser.add_argument(
+        "--display-ranges",
+        action="store_true",
+        help="Calculate missing p2-p98 display ranges from the coarsest pyramid "
+        "level and write them to native/overview Zarr metadata",
+    )
+    parser.add_argument(
+        "--overwrite-display-ranges",
+        action="store_true",
+        help="Recalculate display ranges that are already present (implies "
+        "--display-ranges)",
+    )
     parser.add_argument("--profile", help=f"Credential profile (default {S3_PROFILE})")
     parser.add_argument("--prefix", default=BASE_S3_URL)
     return parser
@@ -138,6 +150,30 @@ def main(argv: list[str] | None = None) -> None:
         except Exception as exc:  # keep going with the other products
             print(f"  FAILED: {type(exc).__name__}: {exc}", flush=True)
             failures.append(t.label)
+
+    if args.display_ranges or args.overwrite_display_ranges:
+        range_tasks = [
+            t
+            for t in tasks
+            if t.store is not None
+            and t.kind in ("build", "finish", "rebuild", "ok", "small")
+            and t.label not in failures
+        ]
+        print(f"\nWriting display ranges for {len(range_tasks)} store(s)", flush=True)
+        for number, t in enumerate(range_tasks, start=1):
+            print(f"[{number}/{len(range_tasks)}] {t.label}", flush=True)
+            try:
+                add_store_display_ranges(
+                    fs,
+                    t.store.path,
+                    t.reducers,
+                    pyramid=t.path,
+                    overwrite=args.overwrite_display_ranges,
+                    log=lambda m: print(m, flush=True),
+                )
+            except Exception as exc:
+                print(f"  FAILED: {type(exc).__name__}: {exc}", flush=True)
+                failures.append(t.label)
 
     if unused and not args.delete_unused:
         print(

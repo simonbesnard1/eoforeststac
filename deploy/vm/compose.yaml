@@ -13,8 +13,10 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
-      - /var/cache/nginx:size=16m,uid=101,gid=101
       - /var/run:size=1m,uid=101,gid=101
+    volumes:
+      # Bounded rendered-tile cache; survives container recreation/deployment.
+      - tile-cache:/var/cache/nginx
     cap_drop:
       - ALL
     security_opt:
@@ -125,6 +127,7 @@ services:
 
 volumes:
   downloads: {}
+  tile-cache: {}
 
 networks:
   backend:

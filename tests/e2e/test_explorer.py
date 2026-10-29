@@ -36,6 +36,8 @@ def test_a_layer_draws_tiles_and_a_legend(page):
     assert options["updateWhenIdle"] is True
     assert options["updateWhenZooming"] is False
     assert options["keepBuffer"] == 1
+    if options["minZoom"] >= 1:
+        assert options["tileSize"] == 512 and options["zoomOffset"] == -1
 
 
 def test_pyramid_level_matches_display_resolution(page):

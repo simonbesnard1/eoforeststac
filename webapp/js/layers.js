@@ -167,15 +167,16 @@ async function fetchVariableMeta(layer, { resetRange = true } = {}) {
    are partly or wholly empty (HANSEN's level 1 had no loss_year chunks), which
    rendered blank maps and empty statistics. Read straight from S3. */
 async function completePyramidLevels(pyramidUrl) {
-  let n = 0;
-  for (let lvl = 1; lvl <= 10; lvl++) {
+  /* These are independent object-store probes.  Doing them sequentially made
+     every layer activation pay the sum of up to ten S3 round trips. */
+  const found = await Promise.all(Array.from({ length: 10 }, async (_, i) => {
     try {
-      const r = await fetch(`${pyramidUrl}/${lvl}/_SUCCESS`, { method: 'HEAD', cache: 'no-store' });
-      if (!r.ok) break;
-      n = lvl;
-    } catch { break; }
-  }
-  return n;
+      const r = await fetch(`${pyramidUrl}/${i + 1}/_SUCCESS`, { method: 'HEAD', cache: 'no-store' });
+      return r.ok;
+    } catch { return false; }
+  }));
+  const firstMissing = found.indexOf(false);
+  return firstMissing < 0 ? found.length : firstMissing;
 }
 
 /* Where, and over what area, can /statistics read? rio-tiler clips to the
@@ -264,6 +265,15 @@ async function reconcileRange(layer) {
   const stored = parseRangeAttr(layer.attrs?.display_range);
   if (stored) { setDataRange(layer, stored[0], stored[1], 'data'); return; }
 
+  /* Whole-product percentiles are stable for a version/variable/selection but
+     can take several seconds to read.  Keep them across layer removal and page
+     reloads rather than recomputing whenever a user returns to the layer. */
+  const cacheKey = `eoforest-range:${layer.zarrUrl}:${layer.activeVar}:${selParams(layer).join('|')}`;
+  try {
+    const cached = parseRangeAttr(localStorage.getItem(cacheKey));
+    if (cached) { setDataRange(layer, cached[0], cached[1], 'measured'); return; }
+  } catch { /* storage may be disabled */ }
+
   const st = await measureStatistics(layer);
   if (!st) return;
   /* A sample of the view is only a stand-in: it must not override a range the
@@ -276,6 +286,10 @@ async function reconcileRange(layer) {
   if (layer.rangeKnown) { lo = Math.max(lo, layer.rMin); hi = Math.min(hi, layer.rMax); }
   if (!Number.isFinite(lo) || !Number.isFinite(hi) || hi <= lo) return;
   setDataRange(layer, lo, hi, st.whole ? 'measured' : 'measured-view');
+  if (st.whole) {
+    try { localStorage.setItem(cacheKey, JSON.stringify([layer.rMin, layer.rMax])); }
+    catch { /* storage may be full or disabled */ }
+  }
 }
 
 function parseRangeAttr(v) {
@@ -478,15 +492,20 @@ async function activateLayer(col, { slot } = {}) {
   };
 
   layer.color = LAYER_COLORS[layer.slot];
-  layer.variables = await fetchVariables(zarrUrl, col.variables);
+
+  /* Variable discovery and pyramid discovery touch unrelated objects, so
+     overlap their network latency instead of serialising it. */
+  const pyramidUrl = zarr.overview || zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
+  const [variables, numLevels] = S.tiOk
+    ? await Promise.all([fetchVariables(zarrUrl, col.variables), completePyramidLevels(pyramidUrl)])
+    : [col.variables?.length ? col.variables : ['data'], 0];
+  layer.variables = variables;
   layer.activeVar = layer.variables[0];
   layer.label = layer.activeVar;
 
   if (S.tiOk) {
     // The catalog lists the pyramid as an overview asset; older catalogs
     // only by name (<store>_pyramid.zarr)
-    const pyramidUrl = zarr.overview || zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
-    const numLevels = await completePyramidLevels(pyramidUrl);
     if (numLevels) {                // otherwise no (finished) pyramid for this dataset
       layer.pyramidUrl = pyramidUrl;
       layer.numPyramidLevels = numLevels + 1;
@@ -570,6 +589,7 @@ function buildTileUrl(layer, zoom) {
   const p = new URLSearchParams({
     url: zarr,
     variable: layer.activeVar,
+    tilesize: String(layer.renderTileSize || 256),
     rescale: `${layer.rMin},${layer.rMax}`,
     colormap_name: layer.colormap + (zeroTransparent(layer) ? '_z' : ''),
   });
@@ -583,14 +603,22 @@ function buildTileUrl(layer, zoom) {
 function addLeafletLayer(layer) {
   const zoom = S.map.getZoom();
   layer._lastPyramidLevel = getPyramidLevel(layer, zoom);
+  /* At 512 CSS pixels, one request covers the same view as four conventional
+     256 px tiles.  This avoids repeatedly downloading overlapping Zarr chunks.
+     zoomOffset keeps the XYZ coordinates geographically correct.  A layer
+     visible at z0 cannot address z-1, so retain 256 px tiles for those small
+     datasets. */
+  layer.renderTileSize = layer.minZoom >= 1 ? 512 : 256;
   const opts = {
-    opacity: layer.opacity, minZoom: layer.minZoom, maxZoom: 22, tileSize: 256,
+    opacity: layer.opacity, minZoom: layer.minZoom, maxZoom: 22,
+    tileSize: layer.renderTileSize,
     /* A tile can trigger several remote Zarr chunk reads.  Wait until a pan
        or animated zoom settles instead of starting work for intermediate
        views that the browser immediately cancels.  Keep one surrounding row
        for smoothness without Leaflet's default two-row request burst. */
     updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 1,
   };
+  if (layer.renderTileSize === 512) opts.zoomOffset = -1;
   /* Tiles that miss the data entirely still cost a full server-side read, and
      for projected grids a bbox outside the CRS's area of use reprojects to
      something enormous. Let Leaflet skip them. */

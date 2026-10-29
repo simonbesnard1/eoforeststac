@@ -9,12 +9,20 @@ def _store(path, data, fill_value):
     if zarr.__version__.startswith("2"):
         group = zarr.open_group(str(path), mode="w")
         arr = group.create_dataset(
-            "v", shape=data.shape, chunks=(50, 50), dtype="f4", fill_value=fill_value
+            "v",
+            shape=data.shape,
+            chunks=(50, 50),
+            dtype=data.dtype,
+            fill_value=fill_value,
         )
     else:
         group = zarr.open_group(str(path), mode="w", zarr_format=2)
         arr = group.create_array(
-            "v", shape=data.shape, chunks=(50, 50), dtype="f4", fill_value=fill_value
+            "v",
+            shape=data.shape,
+            chunks=(50, 50),
+            dtype=data.dtype,
+            fill_value=fill_value,
         )
     arr[:] = data
     zarr.consolidate_metadata(str(path))
@@ -41,3 +49,13 @@ def test_nan_fill_value_store(tmp_path):
     lo, hi = add_display_range(str(tmp_path / "s.zarr"))["v"]
 
     assert 0 <= lo < hi <= 5
+
+
+def test_explicit_integer_continuous_variable(tmp_path):
+    data = np.arange(10000, dtype="int32").reshape(100, 100)
+    _store(tmp_path / "s.zarr", data, fill_value=-9999)
+
+    assert add_display_range(str(tmp_path / "s.zarr")) == {}
+    lo, hi = add_display_range(str(tmp_path / "s.zarr"), variables=["v"])["v"]
+
+    assert 0 <= lo < hi <= 9999

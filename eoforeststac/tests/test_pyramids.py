@@ -7,6 +7,7 @@ import fsspec
 import pytest
 
 from eoforeststac.pyramids.build import (
+    add_store_display_ranges,
     build_pyramid,
     coarsen_level,
     infer_reducer,
@@ -180,6 +181,13 @@ def test_build_pyramid_end_to_end_and_resume(fs):
     level1 = xr.open_zarr(fs.get_mapper(f"{out}/1"), consolidated=True)
     np.testing.assert_allclose(level1.v.values[0, 0, 0], np.mean([0, 1, 8, 9]))
     assert xr.open_zarr(fs.get_mapper(f"{out}/2"), consolidated=True).sizes["x"] == 2
+
+    ranges = add_store_display_ranges(fs, path, {"v": "mean"}, log=lambda m: None)
+    assert "v" in ranges
+    for target in (path, f"{out}/1", f"{out}/2"):
+        attrs = xr.open_zarr(fs.get_mapper(target), consolidated=True).v.attrs
+        assert attrs["display_range"] == ranges["v"]
+        assert "pyramid level 2" in attrs["display_range_method"]
 
     # An interrupted run: level 2 lost its marker; only it is rebuilt
     fs.rm(f"{out}/2/_SUCCESS")

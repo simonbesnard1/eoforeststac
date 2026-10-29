@@ -23,6 +23,8 @@ import fsspec
 import xarray as xr
 import zarr
 
+from eoforeststac.core.zarr import add_display_range
+
 SPATIAL_DIMS = (("latitude", "longitude"), ("lat", "lon"), ("y", "x"))
 REDUCERS = {"mean", "max", "first"}
 
@@ -258,3 +260,74 @@ def build_pyramid(
         parent = open_store(fs, level_path)
     log(f"  complete: {output}")
     return output
+
+
+def add_store_display_ranges(
+    fs: fsspec.AbstractFileSystem,
+    source: str,
+    reducers: Mapping[str, str],
+    *,
+    pyramid: str | None = None,
+    overwrite: bool = False,
+    log: Callable[[str], None] = print,
+) -> dict[str, list]:
+    """Measure continuous-variable display ranges and store them everywhere.
+
+    A completed pyramid's coarsest level is the cheapest representative sample
+    and is also what the explorer previously measured at runtime. The resulting
+    p2-p98 range is copied to the native store and every completed overview so
+    any client can read it directly from variable metadata. Small stores without
+    a pyramid are sampled directly. Only variables configured with the ``mean``
+    reducer are treated as continuous; integer classes and event-year rasters
+    are left alone.
+    """
+    source = source.rstrip("/")
+    pyramid = (pyramid or pyramid_path(source)).rstrip("/")
+    variables = [name for name, method in reducers.items() if method == "mean"]
+    if not variables:
+        log("  display ranges: no continuous variables")
+        return {}
+
+    complete_levels: list[str] = []
+    try:
+        multiscales = json.loads(fs.cat(f"{pyramid}/.zattrs"))["multiscales"][0]
+        complete_levels = [
+            str(item["path"])
+            for item in multiscales.get("datasets", [])
+            if fs.exists(f"{pyramid}/{item['path']}/_SUCCESS")
+        ]
+    except (FileNotFoundError, KeyError, IndexError, TypeError, ValueError):
+        pass
+
+    sample = f"{pyramid}/{complete_levels[-1]}" if complete_levels else source
+    log(f"  display ranges: sampling {sample}")
+    ranges = add_display_range(
+        sample,
+        variables=variables,
+        fs=fs,
+        overwrite=overwrite,
+    )
+    if not ranges:
+        log("  display ranges: no valid samples")
+        return {}
+
+    method = "2nd-98th percentile of valid values, sampled from " + (
+        f"visualization pyramid level {complete_levels[-1]}"
+        if complete_levels
+        else "the native store"
+    )
+    targets = [source] + [f"{pyramid}/{level}" for level in complete_levels]
+    for target in targets:
+        group = zarr.open_group(fs.get_mapper(target), mode="r+")
+        changed = False
+        for name, display_range in ranges.items():
+            if name not in group:
+                continue
+            group[name].attrs.update(
+                {"display_range": display_range, "display_range_method": method}
+            )
+            changed = True
+        if changed:
+            zarr.consolidate_metadata(fs.get_mapper(target))
+    log(f"  display ranges: {json.dumps(ranges, sort_keys=True)}")
+    return ranges

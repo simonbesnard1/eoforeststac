@@ -171,13 +171,19 @@ def plan(
         if collections and store.collection not in collections:
             continue
         target = pyramid_path(store.path)
+        reducers = configured_reducers(store.collection)
         if max(store.height, store.width) <= target_size:
             tasks.append(
-                Task("small", target, f"{store.height:,} x {store.width:,} px", store)
+                Task(
+                    "small",
+                    target,
+                    f"{store.height:,} x {store.width:,} px",
+                    store,
+                    reducers,
+                )
             )
             continue
         needed.add(target)
-        reducers = configured_reducers(store.collection)
         if rebuild and (store.collection in rebuild or store.name in rebuild):
             tasks.append(Task("rebuild", target, "requested", store, reducers))
             continue
