@@ -277,13 +277,17 @@ def add_store_display_ranges(
     and is also what the explorer previously measured at runtime. The resulting
     p2-p98 range is copied to the native store and every completed overview so
     any client can read it directly from variable metadata. Small stores without
-    a pyramid are sampled directly. Only variables configured with the ``mean``
-    reducer are treated as continuous; integer classes and event-year rasters
-    are left alone.
+    a pyramid are sampled directly. Only variables whose reducer (configured or
+    inferred) is ``mean`` are treated as continuous; integer classes and
+    event-year rasters are left alone.
     """
     source = source.rstrip("/")
     pyramid = (pyramid or pyramid_path(source)).rstrip("/")
-    variables = [name for name, method in reducers.items() if method == "mean"]
+    # Configured reducers only name the exceptions; infer the rest as the
+    # pyramid build does (ULS, Xu and GAMI age classes configure none)
+    ds = open_store(fs, source)
+    plan = reducer_plan(ds, *detect_spatial_dims(ds.dims), reducers)
+    variables = [name for name, method in plan.items() if method == "mean"]
     if not variables:
         log("  display ranges: no continuous variables")
         return {}

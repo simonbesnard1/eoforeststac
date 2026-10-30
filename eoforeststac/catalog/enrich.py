@@ -44,14 +44,17 @@ def gsd_from_label(label: str) -> float | None:
     if not m:
         return None
     value, unit = float(m[1]), m[2].lower()
-    return round(value * 111_320 if unit == "deg" else value * 1000 if unit == "km" else value, 2)
+    return round(
+        value * 111_320 if unit == "deg" else value * 1000 if unit == "km" else value, 2
+    )
 
 
 @lru_cache(maxsize=512)
 def pyramid_levels(store_href: str) -> int:
     """Number of contiguous completed levels in ``<store>_pyramid.zarr``."""
     root = (
-        store_href.replace("s3://", "https://s3.gfz.de/", 1).removesuffix(".zarr") + "_pyramid.zarr"
+        store_href.replace("s3://", "https://s3.gfz.de/", 1).removesuffix(".zarr")
+        + "_pyramid.zarr"
     )
     try:
         with urllib.request.urlopen(f"{root}/.zattrs", timeout=20) as response:
@@ -75,10 +78,14 @@ def pyramid_levels(store_href: str) -> int:
 
 
 def _zarr_assets(item: pystac.Item) -> list[tuple[str, pystac.Asset]]:
-    return [(k, a) for k, a in item.assets.items() if a.href.rstrip("/").endswith(".zarr")]
+    return [
+        (k, a) for k, a in item.assets.items() if a.href.rstrip("/").endswith(".zarr")
+    ]
 
 
-def enrich_collection(collection: pystac.Collection, check_pyramids: bool = True) -> None:
+def enrich_collection(
+    collection: pystac.Collection, check_pyramids: bool = True
+) -> None:
     items = sorted(collection.get_items(), key=_version_key)
     if not items:
         return
@@ -97,14 +104,20 @@ def enrich_collection(collection: pystac.Collection, check_pyramids: bool = True
             item.stac_extensions.append(VERSION_EXTENSION)
         if item is latest:
             continue
-        item.add_link(pystac.Link("latest-version", latest, media_type="application/json"))
+        item.add_link(
+            pystac.Link("latest-version", latest, media_type="application/json")
+        )
         if i > 0:
             item.add_link(
-                pystac.Link("predecessor-version", items[i - 1], media_type="application/json")
+                pystac.Link(
+                    "predecessor-version", items[i - 1], media_type="application/json"
+                )
             )
         if i + 1 < len(items):
             item.add_link(
-                pystac.Link("successor-version", items[i + 1], media_type="application/json")
+                pystac.Link(
+                    "successor-version", items[i + 1], media_type="application/json"
+                )
             )
 
     for item in items:
@@ -123,7 +136,8 @@ def enrich_collection(collection: pystac.Collection, check_pyramids: bool = True
                 latest.add_asset(
                     f"{key}_overview",
                     pystac.Asset(
-                        href=asset.href.rstrip("/").removesuffix(".zarr") + "_pyramid.zarr",
+                        href=asset.href.rstrip("/").removesuffix(".zarr")
+                        + "_pyramid.zarr",
                         media_type="application/vnd.zarr",
                         title=f"Map overviews of {asset.title or key}",
                         description="Coarsened copies for display (eoforeststac.pyramids); "
@@ -134,7 +148,9 @@ def enrich_collection(collection: pystac.Collection, check_pyramids: bool = True
                 )
 
 
-def enrich_tree(collections: Iterable[pystac.Collection], check_pyramids: bool = True) -> None:
+def enrich_tree(
+    collections: Iterable[pystac.Collection], check_pyramids: bool = True
+) -> None:
     """Enrich every collection that holds items (site collections included)."""
     for collection in collections:
         enrich_collection(collection, check_pyramids=check_pyramids)

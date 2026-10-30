@@ -42,21 +42,18 @@ def test_a_layer_draws_tiles_and_a_legend(page):
 
 def test_pyramid_level_matches_display_resolution(page):
     """Global 100 m products use overviews until the map can show native detail."""
-    levels = page.evaluate(
-        """() => {
+    levels = page.evaluate("""() => {
           const layer = {
             pyramidUrl: 'test', numPyramidLevels: 7, nativeMinZoom: 7,
             bounds: [-180, -60, 180, 80], width: 415158, height: 161272,
           };
           return Object.fromEntries([2, 5, 7, 11].map(z => [z, getPyramidLevel(layer, z)]));
-        }"""
-    )
+        }""")
     assert levels == {"2": 6, "5": 5, "7": 3, "11": 0}
 
 
 def test_turning_off_a_loading_layer_cancels_activation(page):
-    state = page.evaluate(
-        f"""async () => {{
+    state = page.evaluate(f"""async () => {{
           const opening = toggleDataset('{GAMI}', true);
           await new Promise(resolve => setTimeout(resolve, 10));
           await toggleDataset('{GAMI}', false);
@@ -66,9 +63,24 @@ def test_turning_off_a_loading_layer_cancels_activation(page):
             pending: PENDING_ACTIVATIONS.has('{GAMI}'),
             checked: Boolean(document.querySelector('#ds-{GAMI} input')?.checked),
           }};
-        }}"""
-    )
+        }}""")
     assert state == {"active": False, "pending": False, "checked": False}
+
+
+def test_turning_a_layer_off_and_on_again_opens_it(page):
+    """The second activation reuses metadata requests the first one started;
+    cancelling the first must not fail them for the second."""
+    state = page.evaluate(f"""async () => {{
+          const first = toggleDataset('{GAMI}', true);
+          await new Promise(resolve => setTimeout(resolve, 10));
+          await toggleDataset('{GAMI}', false);
+          await toggleDataset('{GAMI}', true);
+          await Promise.allSettled([first]);
+          const layer = S.layers.get('{GAMI}');
+          return {{ active: Boolean(layer), variables: layer?.variables || [] }};
+        }}""")
+    assert state["active"], state
+    assert "data" not in state["variables"] and state["variables"], state
 
 
 def test_resolution_and_member_pickers(page):

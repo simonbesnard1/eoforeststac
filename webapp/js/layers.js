@@ -11,6 +11,10 @@ const PENDING_ACTIVATIONS = new Map();
    responses for the browser session so reopening a layer does not repeat API
    and S3 metadata reads. Rejected/aborted requests are never cached. */
 const LAYER_META_CACHE = new Map();
+/* The loads behind it take no abort signal: one pending load is shared by
+   every caller, so a toggled-off activation must not abort it for the next
+   one (that left the layer missing or with fallback variables). Callers
+   check their own signal after awaiting. */
 async function cachedLayerMeta(key, load) {
   if (LAYER_META_CACHE.has(key)) return LAYER_META_CACHE.get(key);
   try {
@@ -115,29 +119,24 @@ async function toggleDataset(id, on) {
    `variables` property is often absent or stale. `/dataset/keys` is the
    registered endpoint here; `/variables` is NOT mounted by titiler.xarray's
    default app, so asking for it just 404s. */
-async function fetchVariables(zarrUrl, fallback = [], signal) {
-  const key = `variables:${zarrUrl}`;
-  try {
-    return await cachedLayerMeta(key, async () => {
-      if (S.tiOk) {
+async function fetchVariables(zarrUrl, fallback = []) {
+  if (S.tiOk) {
+    try {
+      // Only a real answer is cached: the fallback must not stick for the session
+      return await cachedLayerMeta(`variables:${zarrUrl}`, async () => {
         for (const route of ['/dataset/keys', '/variables']) {
           try {
-            const keys = await fetchJSON(`${S.tiTiler}${route}?` + new URLSearchParams({ url: zarrUrl }), { signal });
+            const keys = await fetchJSON(`${S.tiTiler}${route}?` + new URLSearchParams({ url: zarrUrl }));
             const usable = (Array.isArray(keys) ? keys : []).filter(k => !CFG.skipVars.has(k));
             if (usable.length) return usable;
-          } catch (error) {
-            if (signal?.aborted) throw error;
-          }
+          } catch { /* try next route */ }
         }
-      }
-      const fb = fallback.filter(k => !CFG.skipVars.has(k));
-      return fb.length ? fb : ['data'];
-    });
-  } catch (error) {
-    if (signal?.aborted) throw error;
-    const fb = fallback.filter(k => !CFG.skipVars.has(k));
-    return fb.length ? fb : ['data'];
+        throw new Error('no variables');
+      });
+    } catch { /* fall back to the catalog's list */ }
   }
+  const fb = fallback.filter(k => !CFG.skipVars.has(k));
+  return fb.length ? fb : ['data'];
 }
 
 /* Pull everything that depends on the chosen variable: dimensions, value
@@ -149,8 +148,8 @@ async function fetchVariableMeta(layer, { resetRange = true, signal } = {}) {
   for (const s of extraSels(layer)) qs.append('sel', s);
 
   const [info, tj] = await Promise.all([
-    cachedLayerMeta(`info:${qs}`, () => fetchJSON(`${S.tiTiler}/info?${qs}`, { signal })).catch(() => null),
-    cachedLayerMeta(`tilejson:${qs}`, () => fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`, { signal })).catch(() => null),
+    cachedLayerMeta(`info:${qs}`, () => fetchJSON(`${S.tiTiler}/info?${qs}`)).catch(() => null),
+    cachedLayerMeta(`tilejson:${qs}`, () => fetchJSON(`${S.tiTiler}/WebMercatorQuad/tilejson.json?${qs}`)).catch(() => null),
   ]);
   if (signal?.aborted) return;
 
@@ -160,7 +159,7 @@ async function fetchVariableMeta(layer, { resetRange = true, signal } = {}) {
   if (!info && !layer.extraDims) {
     const dimsQs = new URLSearchParams({ url: layer.zarrUrl, variable: layer.activeVar });
     const res = await cachedLayerMeta(`dims:${dimsQs}`, () =>
-      fetchJSON(`${S.tiTiler}/dataset/dims?${dimsQs}`, { signal })).catch(() => null);
+      fetchJSON(`${S.tiTiler}/dataset/dims?${dimsQs}`)).catch(() => null);
     if (signal?.aborted) return;
     const dims = res?.dims || [];
     if (dims.length >= 2) {
@@ -227,21 +226,16 @@ async function fetchVariableMeta(layer, { resetRange = true, signal } = {}) {
    gets a _SUCCESS marker; an interrupted build leaves levels that exist but
    are partly or wholly empty (HANSEN's level 1 had no loss_year chunks), which
    rendered blank maps and empty statistics. Read straight from S3. */
-async function completePyramidLevels(pyramidUrl, signal) {
+async function completePyramidLevels(pyramidUrl) {
   const key = `pyramid-levels:${pyramidUrl}`;
   return cachedLayerMeta(key, async () => {
     /* These are independent object-store probes. Doing them sequentially made
        every layer activation pay the sum of up to ten S3 round trips. */
     const found = await Promise.all(Array.from({ length: 10 }, async (_, i) => {
       try {
-        const r = await fetch(`${pyramidUrl}/${i + 1}/_SUCCESS`, {
-          method: 'HEAD', cache: 'no-store', signal,
-        });
+        const r = await fetch(`${pyramidUrl}/${i + 1}/_SUCCESS`, { method: 'HEAD', cache: 'no-store' });
         return r.ok;
-      } catch (error) {
-        if (signal?.aborted) throw error;
-        return false;
-      }
+      } catch { return false; }
     }));
     const firstMissing = found.indexOf(false);
     return firstMissing < 0 ? found.length : firstMissing;
@@ -567,8 +561,8 @@ async function activateLayer(col, { slot, signal } = {}) {
   const pyramidUrl = zarr.overview || zarrUrl.replace(/\.zarr\/?$/, '_pyramid.zarr');
   const [variables, numLevels] = S.tiOk
     ? await Promise.all([
-        fetchVariables(zarrUrl, col.variables, signal),
-        zarr.overviewLevels || completePyramidLevels(pyramidUrl, signal),
+        fetchVariables(zarrUrl, col.variables),
+        zarr.overviewLevels || completePyramidLevels(pyramidUrl),
       ])
     : [col.variables?.length ? col.variables : ['data'], 0];
   if (signal?.aborted) return null;

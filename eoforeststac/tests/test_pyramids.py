@@ -182,7 +182,8 @@ def test_build_pyramid_end_to_end_and_resume(fs):
     np.testing.assert_allclose(level1.v.values[0, 0, 0], np.mean([0, 1, 8, 9]))
     assert xr.open_zarr(fs.get_mapper(f"{out}/2"), consolidated=True).sizes["x"] == 2
 
-    ranges = add_store_display_ranges(fs, path, {"v": "mean"}, log=lambda m: None)
+    # No configured reducers: "v" is inferred as continuous, as in the build
+    ranges = add_store_display_ranges(fs, path, {}, log=lambda m: None)
     assert "v" in ranges
     for target in (path, f"{out}/1", f"{out}/2"):
         attrs = xr.open_zarr(fs.get_mapper(target), consolidated=True).v.attrs

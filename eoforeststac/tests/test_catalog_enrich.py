@@ -17,7 +17,9 @@ class _Response(io.BytesIO):
 
 
 def test_pyramid_levels_counts_only_contiguous_success_markers():
-    attrs = {"multiscales": [{"datasets": [{"path": "1"}, {"path": "2"}, {"path": "3"}]}]}
+    attrs = {
+        "multiscales": [{"datasets": [{"path": "1"}, {"path": "2"}, {"path": "3"}]}]
+    }
 
     def open_url(request, **_):
         url = request if isinstance(request, str) else request.full_url
