@@ -84,6 +84,12 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--target-size", type=int, default=8192)
     parser.add_argument("--chunk-size", type=int, default=512)
     parser.add_argument(
+        "--strip-chunks",
+        type=int,
+        default=16,
+        help="Chunk rows written per strip; lower it if a build runs out of memory",
+    )
+    parser.add_argument(
         "--display-ranges",
         action="store_true",
         help="Calculate missing p2-p98 display ranges from the coarsest pyramid "
@@ -143,6 +149,7 @@ def main(argv: list[str] | None = None) -> None:
                 t.reducers,
                 target_size=args.target_size,
                 chunk_size=args.chunk_size,
+                strip_chunks=args.strip_chunks,
                 workers=args.workers,
                 log=lambda m: print(m, flush=True),
             )

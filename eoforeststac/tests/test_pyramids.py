@@ -198,6 +198,44 @@ def test_build_pyramid_end_to_end_and_resume(fs):
     assert any("level 2: replacing an unfinished level" in m for m in messages)
 
 
+def test_levels_are_written_in_strips_and_resume(fs):
+    """Small strips give the same values as one write; a crash mid-level
+    resumes from the first strip without a marker."""
+    path = f"{PREFIX}/S/S_v1.0.zarr"
+    values = np.arange(14 * 12, dtype="float32").reshape(14, 12)
+    values[3, 5] = np.nan
+    classes = (np.arange(14 * 12).reshape(14, 12) % 7).astype("int16")
+    ds = xr.Dataset(
+        {"v": (("y", "x"), values), "c": (("y", "x"), classes)},
+        coords={"y": np.arange(14.0)[::-1], "x": np.arange(12.0)},
+    )
+    try:
+        ds.to_zarr(fs.get_mapper(path), consolidated=True, zarr_format=2)
+    except TypeError:
+        ds.to_zarr(fs.get_mapper(path), consolidated=True)
+    reducers = {"v": "mean", "c": "first"}
+    kwargs = dict(target_size=3, chunk_size=2, strip_chunks=1)
+
+    messages = []
+    out = build_pyramid(fs, path, reducers, **kwargs, log=messages.append)
+    assert any("level 1: writing 7 x 6 px in 4 strip(s)" in m for m in messages)
+    expected = coarsen_level(ds, "y", "x", reducers, "float32")
+    level1 = xr.open_zarr(fs.get_mapper(f"{out}/1"), consolidated=True)
+    xr.testing.assert_allclose(level1[["v", "c"]].load(), expected[["v", "c"]])
+    assert not fs.glob(f"{out}/1/_strip_*")
+
+    # Crash after two strips of level 1: the rest is rewritten, not the level
+    fs.rm(f"{out}/1/_SUCCESS")
+    for i in (0, 1):
+        fs.touch(f"{out}/1/_strip_{i}")
+    fs.rm(f"{out}/1/v/3.0")  # a chunk of strip 3, lost in the crash
+    messages = []
+    build_pyramid(fs, path, reducers, **kwargs, log=messages.append)
+    assert any("level 1: resuming, 2/4 strips done" in m for m in messages)
+    level1 = xr.open_zarr(fs.get_mapper(f"{out}/1"), consolidated=True)
+    xr.testing.assert_allclose(level1[["v", "c"]].load(), expected[["v", "c"]])
+
+
 def test_every_configured_reducer_is_valid():
     for cid, config in product_configs().items():
         for var, reducer in config.get("pyramid", {}).get("reducers", {}).items():

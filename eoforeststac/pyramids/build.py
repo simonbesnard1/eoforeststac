@@ -200,13 +200,114 @@ class RetryingStore(MutableMapping):
         return len(self.store)
 
 
-def _to_zarr(ds: xr.Dataset, mapper: Any) -> None:
+def _to_zarr(ds: xr.Dataset, mapper: Any, **kwargs: Any) -> None:
     # Zarr 2 (pinned) takes any mapping; Zarr 3 wants its own store types
     store = RetryingStore(mapper) if zarr.__version__.startswith("2") else mapper
+    if "region" in kwargs:  # metadata exists already; only chunks are written
+        ds.to_zarr(store, **kwargs)
+        return
+    kwargs = {"mode": "w", "consolidated": True, **kwargs}
     try:
-        ds.to_zarr(store, mode="w", consolidated=True, zarr_format=2)
+        ds.to_zarr(store, zarr_format=2, **kwargs)
     except TypeError:  # older xarray
-        ds.to_zarr(store, mode="w", consolidated=True, zarr_version=2)
+        ds.to_zarr(store, zarr_version=2, **kwargs)
+
+
+def _write_level(
+    fs: fsspec.AbstractFileSystem,
+    parent: xr.Dataset,
+    level_path: str,
+    y_dim: str,
+    x_dim: str,
+    plan: Mapping[str, str],
+    *,
+    output_dtype: str | None,
+    chunk_size: int,
+    strip_chunks: int,
+    workers: int,
+    log: Callable[[str], None],
+    label: str,
+) -> None:
+    """Write one overview level in strips of rows, each with a marker.
+
+    Writing a whole level at once plans every chunk in one dask graph: for
+    JRC TMF level 2 (built from ~1.6 M level-1 chunks) that exhausted mefe's
+    memory and killed the run without an error. Each strip of
+    ``strip_chunks`` chunk rows is planned from its own slice of the parent,
+    so memory stays bounded, and a crash resumes from the first strip
+    without a marker instead of redoing the level.
+    """
+
+    def overview(ds: xr.Dataset) -> xr.Dataset:
+        result = coarsen_level(ds, y_dim, x_dim, plan, output_dtype)
+        chunks = {dim: 1 for dim in result.dims}
+        chunks.update({y_dim: chunk_size, x_dim: chunk_size})
+        return result.chunk(chunks)
+
+    mapper = fs.get_mapper(level_path)
+    rows = chunk_size * strip_chunks
+    # Even an unwritten overview of the whole level is costly: to_zarr builds
+    # its full task graph (5.5 GB for one TMF variable). The metadata comes
+    # from a stand-in instead: the first strip's variables, attributes and
+    # encodings, with lazy zeros of the level's full size in one dask chunk
+    # each (one task per variable; the Zarr chunks are set in the encoding).
+    first = overview(parent.isel({y_dim: slice(0, 2 * rows)}))
+    # The same window-centre coordinates the reducers produce
+    full_y = parent[y_dim].coarsen({y_dim: 2}, boundary="pad").mean().values
+    height, width = len(full_y), first.sizes[x_dim]
+    data_vars = {}
+    for name, var in first.data_vars.items():
+        if y_dim not in var.dims:
+            data_vars[name] = var
+            continue
+        shape = tuple(height if d == y_dim else var.sizes[d] for d in var.dims)
+        stand_in = xr.DataArray(
+            dask.array.zeros(shape, dtype=var.dtype, chunks=-1),
+            dims=var.dims,
+            attrs=var.attrs,
+        )
+        stand_in.encoding = {
+            **{k: v for k, v in var.encoding.items() if k != "preferred_chunks"},
+            "chunks": tuple(chunk_size if d in (y_dim, x_dim) else 1 for d in var.dims),
+        }
+        data_vars[name] = stand_in
+    coords = {k: c for k, c in first.coords.items() if y_dim not in c.dims}
+    template = xr.Dataset(
+        data_vars, coords={**coords, y_dim: full_y}, attrs=first.attrs
+    )
+    strips = math.ceil(height / rows)
+    done = {
+        int(p.rsplit("_", 1)[-1])
+        for p in fs.glob(f"{level_path}/_strip_*")
+        if p.rsplit("_", 1)[-1].isdigit()
+    }
+    if done and fs.exists(f"{level_path}/.zmetadata"):
+        log(f"  {label}: resuming, {len(done)}/{strips} strips done")
+    else:
+        if fs.exists(level_path):
+            log(f"  {label}: replacing an unfinished level")
+            fs.rm(level_path, recursive=True)
+        done = set()
+        # Metadata and the small non-gridded variables only; no chunks yet
+        _to_zarr(template, mapper, compute=False)
+    log(f"  {label}: writing {height:,} x {width:,} px in {strips} strip(s)")
+
+    for i in range(strips):
+        if i in done:
+            continue
+        start, stop = i * rows, min((i + 1) * rows, height)
+        # Overview row r comes from parent rows 2r and 2r+1
+        strip = overview(parent.isel({y_dim: slice(2 * start, 2 * stop)}))
+        strip = strip.drop_vars(
+            [n for n, v in strip.variables.items() if y_dim not in v.dims]
+        )
+        with dask.config.set(scheduler="threads", num_workers=workers):
+            _to_zarr(strip, mapper, region={y_dim: slice(start, stop)})
+        fs.touch(f"{level_path}/_strip_{i}")
+        if strips > 1:
+            log(f"  {label}: strip {i + 1}/{strips} done")
+    for p in fs.glob(f"{level_path}/_strip_*"):
+        fs.rm(p)
 
 
 def build_pyramid(
@@ -216,6 +317,7 @@ def build_pyramid(
     *,
     target_size: int = 8192,
     chunk_size: int = 512,
+    strip_chunks: int = 16,
     workers: int = 4,
     output_dtype: str | None = "float32",
     log: Callable[[str], None] = print,
@@ -223,7 +325,8 @@ def build_pyramid(
     """Build (or finish) the pyramid of the store at ``source`` (bucket/key).
 
     Completed levels are kept; a level left unfinished by an interrupted run
-    is replaced. Returns the pyramid's path.
+    resumes from its last completed strip of ``strip_chunks`` chunk rows.
+    Returns the pyramid's path.
     """
     source = source.rstrip("/")
     output = pyramid_path(source)
@@ -244,18 +347,20 @@ def build_pyramid(
             log(f"  level {level}: already complete")
             parent = open_store(fs, level_path)
             continue
-        if fs.exists(level_path):
-            log(f"  level {level}: replacing an unfinished level")
-            fs.rm(level_path, recursive=True)
-        overview = coarsen_level(parent, y_dim, x_dim, plan, output_dtype)
-        chunks = {dim: 1 for dim in overview.dims}
-        chunks.update({y_dim: chunk_size, x_dim: chunk_size})
-        overview = overview.chunk(chunks)
-        log(
-            f"  level {level}: writing {overview.sizes[y_dim]:,} x {overview.sizes[x_dim]:,} px"
+        _write_level(
+            fs,
+            parent,
+            level_path,
+            y_dim,
+            x_dim,
+            plan,
+            output_dtype=output_dtype,
+            chunk_size=chunk_size,
+            strip_chunks=strip_chunks,
+            workers=workers,
+            log=log,
+            label=f"level {level}",
         )
-        with dask.config.set(scheduler="threads", num_workers=workers):
-            _to_zarr(overview, fs.get_mapper(level_path))
         fs.touch(f"{level_path}/_SUCCESS")
         parent = open_store(fs, level_path)
     log(f"  complete: {output}")
